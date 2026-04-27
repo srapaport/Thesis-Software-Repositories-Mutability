@@ -1,0 +1,197 @@
+%
+% File: chap02.tex
+% Author: Solal Rapaport
+% Description: Background chapter.
+%
+\chapter{Background}
+\label{chap:background}
+
+\initial{T}his chapter introduces the technical concepts required to study mutability in public software repositories. The thesis focuses on a tension that is easy to miss in ordinary Git usage: developers, package managers, build systems, and auditors often reason about repositories as if published states were stable, while Git deliberately exposes mechanisms that allow references and histories to be rewritten. This tension is not an implementation accident. It follows from the distinction between immutable content-addressed objects and mutable names that point to those objects.
+
+The chapter is grounded in the background material and empirical framing of the contributions on altered histories and tag alterations~\cite{DBLP:conf/kbse/RapaportPTZ25,rapaport2026tagalterations}. It first presents the Git object model and the role of commits, trees, blobs, branches, and tags. It then explains how history rewriting and reference updates make repositories practically mutable, even when many workflows treat public repository states as stable. Finally, it connects repository mutability to releases, provenance, reproducibility, software supply-chain integrity, and source-code archiving.
+
+\section{Git Repositories as Versioned Software Artifacts}
+\label{sec:bg-git-repositories}
+
+Git is a distributed version control system in which each clone contains a local copy of the repository history. Developers usually create commits locally, share them by pushing to a public repository, and incorporate collaborators' work by pulling from that repository. Public repositories therefore serve two roles at once: they are collaboration points for developers and source distribution points for downstream users, package managers, continuous integration systems, and researchers.
+
+This dual role matters for the rest of the thesis. A repository can be manipulated as a local development workspace, where rewriting recent work is an accepted practice, while also being consumed as an external artifact, where stability is often expected. Understanding this tension requires first separating Git's immutable data model from its mutable naming layer.
+
+\subsection{Commits, Trees, and Blobs}
+\label{subsec:bg-commits-trees-blobs}
+
+Git stores repository data in a content-addressable object store. Objects are addressed by cryptographic digests computed from their content and metadata, historically using SHA-1 and, in newer configurations, SHA-256~\cite{ProGit2014}. The main object types relevant to this thesis are blobs, trees, commits, and annotated tags. Blobs store file contents. Trees describe directory structures by linking names to blobs and other trees. Commits point to a source tree and to zero or more parent commits, and also contain metadata such as author, committer, timestamps, and commit message.
+
+Because commit identifiers are computed recursively over commit content and metadata, a commit identifier commits not only to the source tree but also to its ancestry. If any part of a commit changes, including a timestamp or message, the commit receives a new identifier. If a later commit has the modified commit as an ancestor, that later commit also receives a new identifier because its parent link changed. This recursive property forms a Merkle directed acyclic graph (DAG): the identity of a visible root commit can be used to verify the identities of all commits reachable from it.
+
+This model provides strong integrity properties at the object level. Once a specific object identifier is known, a client can verify that the object retrieved under that identifier has not changed. However, the guarantee applies to objects, not to the human-readable names that users normally manipulate. The distinction between object identity and reference identity is central to the mutability phenomena studied in this thesis.
+
+\subsection{Branches, Tags, and References}
+\label{subsec:bg-branches-tags-references}
+
+Git users rarely interact directly with raw object identifiers. They usually interact with references, or refs, which are names that point to objects. Branches are refs under the \texttt{refs/heads/} namespace. Tags are refs under the \texttt{refs/tags/} namespace. Remote-tracking branches, pull-request refs, and other forge-specific names follow similar principles.
+
+Branches are expected to move during development. A branch such as \texttt{main} points to the latest commit considered part of that line of development, and each new accepted commit advances the branch. This mutability is ordinary and visible: the purpose of a branch is to represent an evolving development line.
+
+Tags have a different social role. They are commonly used as human-readable identifiers for particular repository states, especially software releases. A package recipe, build script, or continuous integration workflow may refer to a dependency through a tag such as \texttt{v1.0.0}. In that setting, the tag name is often interpreted as a stable release identifier, even though Git itself treats the tag name as a reference that can be deleted or updated.
+
+Git supports two main kinds of tags. A lightweight tag is a ref that points directly to another object, usually a commit. An annotated tag is a distinct Git object containing metadata such as tagger identity, timestamp, and message; the tag ref points to that tag object, which in turn points to the release target. Annotated tags therefore add a metadata layer, but they do not remove the mutability of the tag name. The tag ref can still be updated to point to a different object, and the same visible tag name can later designate a different repository state.
+
+\subsection{Local and Remote Repository Synchronization}
+\label{subsec:bg-local-remote-synchronization}
+
+Git synchronization is built around exchanging objects and updating references. When a developer pushes, the remote repository receives objects that it does not already have and updates one or more refs. When another developer pulls, their local clone fetches the remote objects and updates local views of the corresponding remote refs.
+
+In the common append-only case, synchronization is straightforward. A branch advances from an old commit to a descendant commit; existing history remains reachable, and downstream clones can fast-forward. The previous state is still present in the graph, and the new state extends it.
+
+History rewriting breaks this simple model. If a public branch is updated to point to a commit that is not a descendant of the previous branch tip, the remote ref has changed in a non-fast-forward way. Downstream users who previously observed the old branch state may now hold commits that are no longer reachable from the public branch. Users who clone after the rewrite may never see those commits at all. This is the practical setting in which repository mutability becomes observable and consequential.
+
+\section{Mutability in Git}
+\label{sec:bg-mutability-git}
+
+Git combines immutable objects with mutable references. This design is useful because it supports local experimentation, branch movement, release correction, and repository maintenance. It also creates ambiguity when mutable names are used as if they were stable identifiers. The contributions on altered histories and tag alterations study two forms of this ambiguity: changes to the commit graph reachable from public branches, and changes to tag names used as release anchors.
+
+\subsection{History Rewriting Mechanisms}
+\label{subsec:bg-history-rewriting}
+
+Git provides several mechanisms for rewriting recorded history. The \texttt{commit --amend} operation creates a replacement for a recent commit, often to modify the commit message, adjust metadata, or add forgotten file changes. Rebase operations replay, reorder, squash, split, or otherwise transform a sequence of commits. These operations are common in local or work-in-progress development because they help developers prepare a cleaner sequence of commits before sharing it.
+
+At the object level, rewriting does not mutate an existing commit object in place. Instead, Git creates new commit objects. The old commits remain in object storage as long as they are retained locally or by another archive, but they may become unreachable from the public refs of the repository. Because commit identifiers cover parent links, a direct change to one commit can propagate to descendants: later commits that point to the modified commit must also be replaced by new commits. The altered-histories contribution describes this as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+
+History rewriting is therefore not inherently suspicious. It is a normal part of some development workflows, particularly for pull-request branches and automated maintenance branches. It becomes problematic when performed on public branches that downstream users treat as stable. In that case, the rewrite can disrupt pull workflows, invalidate previously observed commit identifiers, complicate audit trails, and make it harder to distinguish benign cleanup from malicious tampering.
+
+\subsection{Force Pushes and Reference Updates}
+\label{subsec:bg-force-pushes-reference-updates}
+
+Public history rewriting is usually made visible through reference updates. A remote repository may reject non-fast-forward updates by default, but maintainers can often override this protection through force pushes or platform-specific settings. A force push changes the public ref to point to a new commit even when that commit does not extend the previous public history.
+
+The same principle applies to tags. Although users often describe tags as release anchors, Git allows tag refs to be deleted, recreated, or force-updated. A maintainer can remove a tag, create it again, or retarget an existing tag name to a different commit. These operations can be legitimate, for example when correcting a release mistake, cleaning a repository, or migrating project history. The security and reproducibility issue is not that such operations are always malicious, but that downstream tools may not record enough information to detect their consequences.
+
+For this thesis, a tag alteration is an observable change in the state of a tag across repository snapshots. The tag-alterations contribution distinguishes two main cases. A tag move occurs when a tag is observed before and after an alteration but resolves to a different target, including deletion followed by later recreation with a different target. A tag deletion occurs when a previously observed tag disappears from a later snapshot~\cite{rapaport2026tagalterations}. Moves and deletions have different downstream effects: a deletion is often visible as an inability to resolve the reference, while a move can preserve the familiar tag name while changing the object retrieved through it.
+
+\subsection{Apparent Immutability and Practical Mutability}
+\label{subsec:bg-apparent-immutability}
+
+The central conceptual distinction is between object immutability and reference mutability. Git objects are content-addressed and verifiable. A commit identifier, tree identifier, or blob identifier denotes a specific object. By contrast, branch names and tag names are mutable labels. They can continue to exist while pointing to different objects, or disappear from the public repository state.
+
+This distinction explains why Git can support both strong integrity and practical mutability. If a workflow pins a source dependency to a full commit identifier, the source identity is stable under Git's object model. If the same workflow pins the dependency to a branch or tag name, the source identity depends on the future behavior of that reference. A repeated resolution of the same name may not produce the same object.
+
+The resulting risk is semantic as much as technical. Developers and tools assign meanings to references. A branch is usually understood as moving, while a release tag is often understood as stable. Git itself does not enforce that difference. When social expectations about references diverge from the guarantees provided by the version control system, downstream users can make reproducibility and integrity assumptions that the system does not satisfy.
+
+\section{Releases, Provenance, and Reproducibility}
+\label{sec:bg-releases-provenance-reproducibility}
+
+Software releases connect repository history to downstream consumption. They provide names, version numbers, source archives, build inputs, and provenance claims. In a reproducibility context, the key question is whether a recorded release reference continues to identify the same source artifact over time.
+
+\subsection{Tags as Release Identifiers}
+\label{subsec:bg-tags-release-identifiers}
+
+Tags are widely used to mark releases because they provide stable-looking, human-readable names for repository states. Project documentation, dependency files, package recipes, and continuous integration workflows can refer to tags instead of raw commit hashes. This makes configurations easier to read and maintain. It also aligns with common versioning practices, where names such as \texttt{v2.3.1} are expected to refer to release versions rather than arbitrary commits.
+
+The difficulty is that a tag name and the object it resolves to are different entities. A tag name can remain unchanged while its target changes. A downstream user who records only the tag name has therefore recorded a mutable symbolic reference, not an immutable source identity. If the tag is later moved, two builds that specify the same tag-based dependency may retrieve different source trees at different times.
+
+The tag-alterations contribution frames this as a structural mismatch: current software practices often treat tag names as stable release identifiers, while Git semantics allow those identifiers to be reassigned or removed~\cite{rapaport2026tagalterations}. This mismatch is especially relevant for computational research workflows and package ecosystems, where later rebuilds depend on the ability to recover the same source state.
+
+\subsection{Stable References and Downstream Dependency Resolution}
+\label{subsec:bg-stable-references-dependency-resolution}
+
+Downstream tooling consumes repository references in many ways. Some package ecosystems support direct dependencies on Git repositories. Build scripts may fetch source archives generated from tag names. Continuous integration workflows may use third-party actions or tools by specifying a tag. In all these cases, the repository reference becomes part of a larger software supply chain.
+
+If a dependency specification records a commit identifier, the source identity is stable as long as the object remains available. If it records a tag name, stability depends on whether the tag is preserved, deleted, or moved. A deleted tag can cause a fetch failure. A moved tag can cause the fetch to succeed while producing a different source state. The second case is more subtle because the dependency name still resolves.
+
+This distinction is visible in package managers that record integrity metadata. Nix, for example, stores expected hashes for fixed-output sources. If a tag later resolves to different content, the build does not silently accept the new source; it fails with a hash mismatch. This behavior avoids silent substitution, but it also shows that tag mutability can become an availability and rebuildability problem. A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching an upstream tag that no longer matches the recorded hash.
+
+\subsection{Implications for Provenance and Reproducible Builds}
+\label{subsec:bg-provenance-reproducible-builds}
+
+Reproducible builds aim to increase confidence that generated binaries correspond to auditable source code~\cite{DBLP:journals/software/LambZ22}. This goal depends not only on deterministic build processes, but also on stable identification of build inputs. If the source input is identified by a mutable name, then even a deterministic build process may fail to reproduce the same artifact because the input has changed.
+
+The background problem is therefore prior to compilation. It concerns source provenance: what exact source state was intended, where did it come from, and can the same state be recovered later? Mutable references weaken provenance because they do not by themselves preserve the link between a dependency declaration and a specific source tree.
+
+Content-addressed identifiers address this problem more directly. A cryptographic commit identifier or a Software Heritage persistent identifier denotes an object or archived artifact rather than a mutable repository name~\cite{cise-2020-doi}. Such identifiers are less convenient for humans than release names, but they provide stronger evidence for reproducibility and auditing. A practical system may still use human-readable release names for communication, but build-relevant resolution requires an immutable or independently verified source identity.
+
+\section{Software Repositories in the Software Supply Chain}
+\label{sec:bg-software-supply-chain}
+
+Software repositories are not only development workspaces. They are upstream nodes in dependency networks, build systems, package ecosystems, deployment pipelines, and research artifacts. A change in repository state can therefore affect actors who are not repository maintainers and who may not observe the change directly.
+
+\subsection{Repositories as Sources of Code and Metadata}
+\label{subsec:bg-repositories-code-metadata}
+
+A Git repository contains more than source files. It contains commit metadata, branch structure, tag names, annotated tag objects, release conventions, and sometimes platform-managed metadata. These elements collectively support interpretation. Commit messages and authorship metadata help auditors understand why changes were made. Branch names suggest development status. Tags identify releases. License files and documentation inform downstream usage.
+
+History alterations and tag alterations can affect different layers of this information. A history rewrite may change file contents, remove files, alter commit metadata, or move content to a different branch. A tag alteration may change the source tree behind a release name, change only commit identity, change only the tag or release layer, or delete the release reference entirely. The empirical contributions use taxonomies to separate these cases because they have different implications~\cite{DBLP:conf/kbse/RapaportPTZ25,rapaport2026tagalterations}.
+
+This layered view is important for supply-chain analysis. A change that only modifies a commit timestamp does not have the same effect as a change that removes a secret, changes a license file, or retargets a release tag to different source code. At the same time, even metadata-only changes can matter for auditability because they alter the identifiers and evidence that downstream users rely on.
+
+\subsection{Relationships with Package Ecosystems and Build Systems}
+\label{subsec:bg-package-ecosystems-build-systems}
+
+Package ecosystems and build systems translate repository states into consumable artifacts. They may fetch source archives from forges, clone repositories, resolve tags, apply patches, check hashes, and produce binary packages. The reliability of this process depends on assumptions about the upstream repository references used as inputs.
+
+The tag-alterations contribution demonstrates this relationship through a cross-analysis with Nixpkgs. Packages can refer to repositories whose tags have been altered, and some packages can directly reference altered tags. When the expected source hash no longer matches the content retrieved from the tag, the build fails rather than silently consuming the altered source. When a tag has been deleted, the source may become unavailable unless it is cached elsewhere~\cite{rapaport2026tagalterations}.
+
+The altered-histories contribution highlights a related issue for repository users and auditors. Rewritten histories may go unnoticed by users who perform fresh clones, because they see only the current public state. Users who previously cloned the repository may detect disruption when pulling, but many automated workflows do not preserve such state. As a result, repository history can change in ways that are difficult for downstream systems to observe unless they rely on external archives or dedicated monitoring tools.
+
+\subsection{Trust Dependencies Across the Software Supply Chain}
+\label{subsec:bg-trust-dependencies}
+
+Open-source software supply chains involve implicit trust relationships among maintainers, forges, package managers, build systems, and users. Prior work on supply-chain attacks emphasizes that dependency resolution and externally controlled infrastructure are recurring sources of risk~\cite{ladisa2023supplychain}. Repository mutability belongs in this setting because mutable references can alter the source code that downstream systems retrieve without changing the dependency name.
+
+The risk should not be overstated. Not every history rewrite or tag alteration is malicious. Many rewrites are local cleanup, pull-request maintenance, bot-driven dependency updates, or release corrections. The background issue is narrower: downstream trust decisions often rely on repository identifiers whose stability is not guaranteed by Git. When a mutable reference is interpreted as a stable artifact identity, it can become a point where benign maintenance practices, reproducibility failures, and attack opportunities overlap.
+
+This thesis therefore treats repository mutability as a supply-chain integrity problem when three conditions coincide. First, a public reference or history state is consumed by downstream users. Second, those users rely on the stability or auditability of that state. Third, later repository changes invalidate that reliance by making previous source states inaccessible, ambiguous, or indistinguishable from altered ones without external evidence.
+
+\section{Secrets in Source Code Repositories}
+\label{sec:bg-secrets}
+
+\TODO{perhaps later}
+\lipsum[1]
+
+\section{Social Engineering in Software Ecosystems}
+\label{sec:bg-social-engineering}
+
+\TODO{perhaps later}
+\lipsum[1]
+
+\section{Software Heritage and Archival Observation}
+\label{sec:bg-software-heritage}
+
+The empirical contributions in this thesis rely on an archival view of public repositories. This view is necessary because repository mutability is difficult to study after the fact. Once a branch has been force-pushed or a tag has been moved, the previous public state may no longer be available from the original forge. Without an independent archive, the evidence needed to compare the before and after states may have disappeared.
+
+Software Heritage is a universal archive of publicly available source code~\cite{swhcacm2018,swh-msr-2020-challenge}. It periodically visits software origins, such as repository URLs, and stores observed repository states as snapshots. For Git repositories, a snapshot records visible references and the archived objects designated by those references. Software Heritage stores these artifacts in a global Merkle DAG and assigns persistent identifiers to archived objects, including revisions, directories, releases, and snapshots~\cite{cise-2020-doi}.
+
+This archival model makes repository mutability observable. In the altered-histories contribution, consecutive snapshots of the same origin are compared to detect commits that were reachable in an earlier snapshot but missing from a later one. In the tag-alterations contribution, consecutive snapshots are compared to detect tag moves and deletions. In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository.
+
+The archival view also imposes limits. It can only observe alterations that occur between visits and remain visible long enough to be captured. If a reference is changed and restored between two archival visits, the alteration may be missed. If several changes happen between two visits, they may be observed as one aggregate transition. Counts derived from such snapshots should therefore be interpreted as lower bounds on observable alterations, not as complete records of every repository event.
+
+\section{Terminology and Conceptual Scope}
+\label{sec:bg-terminology-scope}
+
+This section fixes the main terms used throughout the thesis. The definitions are intentionally tied to observable repository states because the empirical contributions rely on archived snapshots rather than on privileged forge logs or maintainer intent.
+
+\subsection{Mutable Releases}
+\label{subsec:bg-mutable-releases}
+
+A mutable release is a release-like repository reference whose visible name remains usable as a release identifier while the object it designates can change or disappear. In this thesis, the primary example is a Git tag. A tag name may be deleted, recreated, or moved to another object. If downstream tooling records only the tag name, the release identity is mutable from the perspective of later retrieval.
+
+The term does not imply malicious intent. A mutable release may result from correction, cleanup, migration, or platform convention. It becomes security- or reproducibility-relevant when downstream users expect the release identifier to designate a stable source state.
+
+\subsection{Altered Histories}
+\label{subsec:bg-altered-histories}
+
+An altered history is an observable change in the commit graph reachable from a repository reference between two snapshots. Following the altered-histories contribution, a repository undergoes a history alteration when at least one commit reachable from an earlier snapshot is missing from a later snapshot of the same repository~\cite{DBLP:conf/kbse/RapaportPTZ25}. An altered commit is a commit that was present in the earlier snapshot and absent from the later one.
+
+This definition captures observable effects, not developer intent. It does not by itself determine whether the alteration was caused by rebasing, amendment, branch deletion, repository cleanup, or malicious tampering. Additional classification is required to describe what changed and what risks follow from it.
+
+\subsection{Secret Removal}
+\label{subsec:bg-secret-removal}
+
+Secret removal denotes attempts to remove sensitive information from repository history after it has been committed. The altered-histories contribution studies this phenomenon as a case study by identifying removed files whose names commonly denote private information, such as private keys, private certificates, or passwords~\cite{DBLP:conf/kbse/RapaportPTZ25}. In the scope of this chapter, secret removal is introduced only as a repository mutability use case; a full background on secret leakage and remediation remains to be added in \Cref{sec:bg-secrets}.
+
+\subsection{Supply-Chain Threats}
+\label{subsec:bg-supply-chain-threats}
+
+A software supply-chain threat is a threat that affects software consumers through the relationships among upstream projects, maintainers, platforms, dependency metadata, build systems, and distribution channels. In this thesis, repository mutability is relevant to supply-chain security when it can change, hide, or make ambiguous the source states consumed downstream.
+
+The scope is therefore not all possible Git changes. The thesis focuses on public repository changes that matter beyond the maintainer's local workflow: altered histories that affect auditability and provenance, tag alterations that affect release identity and rebuildability, and secret-removal rewrites that reveal limitations of post-hoc remediation.

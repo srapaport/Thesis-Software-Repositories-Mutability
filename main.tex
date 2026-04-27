@@ -38,7 +38,7 @@
 \fi
 %
 % Declare figure/table as a subfloat.
-\newsubfloat{figure}
+\newsubfloat{figure} 
 \newsubfloat{table}
 % Better page layout for A4 paper, see memoir manual.
 \settrimmedsize{297mm}{210mm}{*}
@@ -392,6 +392,9 @@
 \import{chapters/chapter01/}{chap01.tex}
 \clearemptydoublepage
 %
+\import{chapters/chapter02/}{chap02.tex}
+\clearemptydoublepage
+%
 %
 % And the appendix goes here
 \appendix
@@ -403,7 +406,7 @@
 \backmatter
 \bibliographystyle{siam}
 \refstepcounter{chapter}
-\bibliography{this}
+\bibliography{this,swh}
 \clearemptydoublepage
 % Back cover source: models/LaTeX/4eme.tex (compiled to models/LaTeX/4eme.pdf)
 \includepdf[pages=1]{models/LaTeX/4eme.pdf}

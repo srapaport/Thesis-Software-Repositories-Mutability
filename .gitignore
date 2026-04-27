@@ -13,3 +13,6 @@
 *.lot
 *.gz
 *.toc
+
+.DS_Store
+.cursor/*

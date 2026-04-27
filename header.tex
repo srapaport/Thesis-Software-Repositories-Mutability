@@ -1,0 +1,39 @@
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsthm}
+\usepackage{algorithmic}
+\usepackage{cleveref}
+\usepackage{comment}
+\usepackage{lipsum}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage{subfigure}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{xspace}
+
+\graphicspath{{images/}{pdfs/}{figs/}{svgs/}{odgs/}{figures/}}
+\DeclareGraphicsExtensions{.fig,.pdf,.png,.jpg}
+
+% Support for research question definition and cross referencing using cleveref.
+\theoremstyle{definition}
+\newtheorem{researchquestion}{RQ}
+\crefname{researchquestion}{RQ}{RQs}
+
+
+\newcommand{\FOSS}{FOSS\xspace}
+\newcommand{\SWH}{Software Heritage\xspace}
+
+\usepackage[textsize=tiny]{todonotes}
+\newcommand{\TODO}[1]{\todo[color=orange!40, inline]{\textbf{TODO} #1}}
+\newcommand{\TODOside}[1]{\todo[color=orange!40]{\textbf{TODO} #1}}
+\newcommand{\NOTE}[1]{\todo[color=green!20, inline]{#1}}
+\newcommand{\NOTEside}[1]{\todo[color=green!20]{#1}}
+\newcommand{\REVIEWNOTE}[1]{\todo[color=violet!20, inline]{\textbf{Review note: } #1}}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
