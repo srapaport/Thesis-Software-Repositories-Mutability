@@ -6,6 +6,24 @@
     note = "Archived in Software Heritage with SWHID \href{https://archive.softwareheritage.org/pending\_acceptance}{pending\_acceptance}"
 }
 
+@inproceedings{Vu21,
+author = {Vu, Duc-Ly and Massacci, Fabio and Pashchenko, Ivan and Plate, Henrik and Sabetta, Antonino},
+title = {LastPyMile: identifying the discrepancy between sources and packages},
+year = {2021},
+isbn = {9781450385626},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3468264.3468592},
+doi = {10.1145/3468264.3468592},
+abstract = {Open source packages have source code available on repositories for inspection (e.g. on GitHub) but developers use pre-built packages directly from the package repositories (such as npm for JavaScript, PyPI for Python, or RubyGems for Ruby). Such convenient practice assumes that there are no discrepancies between source code and packages. These differences pose both operational risks (e.g. making dependent projects unable to compile) and security risks (e.g. deploying malicious code during package installation) in the software supply chain. Our empirical assessment of 2438 popular packages in PyPI with an analysis of around 10M lines of code shows several differences in the wild: modifications cannot be just attributed to malicious injections. Yet, scanning again all and whole ‘most likely good but modified’ packages is hard to manage for FOSS downstream users. We propose a methodology, LastPyMile, for identifying the differences between build artifacts of software packages and the respective source code repository. We show how it can be used to extend current package scanning practices for malware injection (which only covers less than 1\% of the code of deployed packages).},
+booktitle = {Proceedings of the 29th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+pages = {780–792},
+numpages = {13},
+keywords = {software supply chain, Python, PyPI, Open source software},
+location = {Athens, Greece},
+series = {ESEC/FSE 2021}
+}
+
 @inproceedings{rapaport2026tagalterations,
   author    = {Solal Rapaport and Laurent Pautet and Samuel Tardieu and Stefano Zacchiroli and Th{\'e}o Zimmermann},
   title     = {Mutating the ``Immutable'': A Large-Scale Study of Git Tag Alterations},
@@ -691,4 +709,164 @@ Yaron Avital},
   timestamp    = {Fri, 26 Dec 2025 20:53:06 +0100},
   biburl       = {https://dblp.org/rec/conf/acmrep/DEliaDGMPPPSSV25.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{DBLP:journals/ese/GermanAH16,
+  author       = {Daniel M. Germ{\'a}n and Bram Adams and Ahmed E. Hassan},
+  title        = {Continuously mining distributed version control systems: an empirical study of how {Linux} uses {Git}},
+  journal      = {Empir. Softw. Eng.},
+  volume       = {21},
+  number       = {1},
+  pages        = {260--299},
+  year         = {2016},
+  url          = {https://doi.org/10.1007/s10664-014-0285-3},
+  doi          = {10.1007/s10664-014-0285-3},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{DBLP:journals/ese/FlintCD22,
+  author       = {Samuel W. Flint and Jigyasa Chauhan and Robert Dyer},
+  title        = {Pitfalls and guidelines for using time-based {Git} data},
+  journal      = {Empir. Softw. Eng.},
+  volume       = {27},
+  number       = {7},
+  pages        = {194},
+  year         = {2022},
+  url          = {https://doi.org/10.1007/s10664-022-10200-y},
+  doi          = {10.1007/s10664-022-10200-y},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{bird2009promisesmininggit,
+  author       = {Christian Bird and Peter C. Rigby and Earl T. Barr and David J. Hamilton and Daniel M. Germ{\'a}n and Premkumar T. Devanbu},
+  title        = {The promises and perils of mining git},
+  booktitle    = {Proceedings of the 6th International Working Conference on Mining Software Repositories, {MSR} 2009 (Co-located with {ICSE})},
+  address      = {Vancouver, BC, Canada},
+  month        = may,
+  pages        = {1--10},
+  publisher    = {{IEEE} Computer Society},
+  year         = {2009}
+}
+
+@inproceedings{torresarias2016gitmetadata,
+  author       = {Santiago Torres{-}Arias and Anil Kumar Ammula and Rosario G. Curtmola and Justin Cappos},
+  title        = {On Omitting Commits and Committing Omissions: Preventing {Git} Metadata Tampering That (Re)introduces Software Vulnerabilities},
+  booktitle    = {25th {USENIX} Security Symposium, {USENIX} Security 16},
+  address      = {Austin, TX, USA},
+  month        = aug,
+  pages        = {379--395},
+  publisher    = {{USENIX} Association},
+  year         = {2016},
+  url          = {https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/torres-arias}
+}
+
+@misc{replication-package-altered-histories,
+  title        = {Replication package for: Altered histories in version control system repositories: Evidence from the trenches},
+  author       = {Solal Rapaport and Laurent Pautet and Samuel Tardieu and Stefano Zacchiroli},
+  year         = {2025},
+  howpublished = {\url{https://doi.org/10.5281/zenodo.15544257}},
+  doi          = {10.5281/zenodo.15544257}
+}
+
+% --- Secret leakage and credential validation (Chapter on active secrets) ---
+
+@inproceedings{DBLP:conf/ndss/MeliMR19,
+  author       = {Michael Meli and
+                  Matthew R. McNiece and
+                  Bradley Reaves},
+  title        = {How Bad Can It Git? Characterizing Secret Leakage in Public GitHub
+                  Repositories},
+  booktitle    = {26th Annual Network and Distributed System Security Symposium, {NDSS}
+                  2019, San Diego, California, USA, February 24-27, 2019},
+  publisher    = {The Internet Society},
+  year         = {2019},
+  url          = {https://www.ndss-symposium.org/ndss-paper/how-bad-can-it-git-characterizing-secret-leakage-in-public-github-repositories/},
+  timestamp    = {Mon, 01 Feb 2021 08:42:24 +0100},
+  biburl       = {https://dblp.org/rec/conf/ndss/MeliMR19.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{DBLP:conf/secdev/BasakNRW22,
+  author       = {Setu Kumar Basak and
+                  Lorenzo Neil and
+                  Bradley Reaves and
+                  Laurie A. Williams},
+  title        = {What are the Practices for Secret Management in Software Artifacts?},
+  booktitle    = {{IEEE} Secure Development Conference, SecDev 2022, Atlanta, GA, USA,
+                  October 18-20, 2022},
+  pages        = {69--76},
+  publisher    = {{IEEE}},
+  year         = {2022},
+  url          = {https://doi.org/10.1109/SecDev53368.2022.00026},
+  doi          = {10.1109/SECDEV53368.2022.00026},
+  timestamp    = {Mon, 03 Mar 2025 21:21:13 +0100},
+  biburl       = {https://dblp.org/rec/conf/secdev/BasakNRW22.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@misc{segura2022secrets,
+  author       = {Thomas Segura},
+  title        = {The State of Secrets Sprawl 2022},
+  year         = {2022},
+  url          = {https://blog.gitguardian.com/the-state-of-secrets-sprawl-2022},
+  note         = {[Online; accessed December 15, 2025]}
+}
+
+@inproceedings{DBLP:conf/msr/SinhaSDPM15,
+  author       = {Vibha Singhal Sinha and
+                  Diptikalyan Saha and
+                  Pankaj Dhoolia and
+                  Rohan Padhye and
+                  Senthil Mani},
+  editor       = {Massimiliano Di Penta and
+                  Martin Pinzger and
+                  Romain Robbes},
+  title        = {Detecting and Mitigating Secret-Key Leaks in Source Code Repositories},
+  booktitle    = {12th {IEEE/ACM} Working Conference on Mining Software Repositories,
+                  {MSR} 2015, Florence, Italy, May 16-17, 2015},
+  pages        = {396--400},
+  publisher    = {{IEEE} Computer Society},
+  year         = {2015},
+  url          = {https://doi.org/10.1109/MSR.2015.48},
+  doi          = {10.1109/MSR.2015.48},
+  timestamp    = {Sat, 30 Sep 2023 09:53:41 +0200},
+  biburl       = {https://dblp.org/rec/conf/msr/SinhaSDPM15.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{DBLP:journals/corr/abs-2211-06213,
+  author       = {Alexander Krause and
+                  Jan H. Klemmer and
+                  Nicolas Huaman and
+                  Dominik Wermke and
+                  Yasemin Acar and
+                  Sascha Fahl},
+  title        = {Committed by Accident: Studying Prevention and Remediation Strategies
+                  Against Secret Leakage in Source Code Repositories},
+  journal      = {CoRR},
+  volume       = {abs/2211.06213},
+  year         = {2022},
+  url          = {https://doi.org/10.48550/arXiv.2211.06213},
+  doi          = {10.48550/ARXIV.2211.06213},
+  eprinttype    = {arXiv},
+  eprint       = {2211.06213},
+  timestamp    = {Tue, 15 Nov 2022 15:45:12 +0100},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2211-06213.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@inproceedings{yadmani2025,
+  author       = {Soufian El Yadmani and
+                  Olga Gadyatskaya and
+                  Yury Zhauniarovich},
+  title        = {The File That Contained the Keys Has Been Removed: An Empirical
+                  Analysis of Secret Leaks in Cloud Buckets and Responsible
+                  Disclosure Outcomes},
+  booktitle    = {{IEEE} Symposium on Security and Privacy, {SP} 2025, San Francisco,
+                  CA, USA, May 12-15, 2025},
+  pages        = {3180--3198},
+  publisher    = {{IEEE}},
+  year         = {2025},
+  url          = {https://doi.org/10.1109/SP61157.2025.00009},
+  doi          = {10.1109/SP61157.2025.00009}
 }

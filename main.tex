@@ -196,8 +196,48 @@
 \usepackage{comment}
 \usepackage{lipsum}
 \usepackage{listings}
+\definecolor{bashbg}{RGB}{246,248,250}
+\definecolor{bashframe}{RGB}{209,213,219}
+\definecolor{bashprompt}{RGB}{26,127,55}
+\definecolor{bashcmd}{RGB}{0,92,197}
+\definecolor{bashflag}{RGB}{130,80,223}
+\definecolor{bashstring}{RGB}{207,34,46}
+\definecolor{bashcomment}{RGB}{106,115,125}
+\definecolor{bashoutput}{RGB}{87,96,106}
+\lstdefinestyle{thesisbash}{
+  language=bash,
+  backgroundcolor=\color{bashbg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{bashcmd}\bfseries,
+  keywords=[2]{commit,amend,--amend,-m},
+  keywordstyle=[2]\color{bashflag},
+  morekeywords={git},
+  commentstyle=\color{bashcomment}\itshape,
+  stringstyle=\color{bashstring},
+  showstringspaces=false,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  frameround=ffff,
+  rulecolor=\color{bashframe},
+  framerule=0.4pt,
+  xleftmargin=0.6em,
+  framexleftmargin=0.6em,
+  aboveskip=1.2em,
+  belowskip=1.2em,
+  captionpos=b,
+  literate=
+    {\\$}{{\color{bashprompt}\$}}1
+    {[}{{\color{bashoutput}[}}1
+    {]}{{\color{bashoutput}]}}1
+}
+\renewcommand{\lstlistingname}{Listing}
+\crefname{lstlisting}{Listing}{Listings}
+\Crefname{lstlisting}{Listing}{Listings}
 \usepackage{graphicx}
 \usepackage{siunitx}
+\usepackage{multirow}
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{xspace}
@@ -376,13 +416,13 @@
 \addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
 \clearemptydoublepage
 %
-\listoftables
-\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
-\clearemptydoublepage
+% \listoftables
+% \addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
+% \clearemptydoublepage
 %
-\listoffigures
-\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
-\clearemptydoublepage
+% \listoffigures
+% \addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
+% \clearemptydoublepage
 %
 %
 % The bulk of the document is delegated to these chapter files in
@@ -393,6 +433,18 @@
 \clearemptydoublepage
 %
 \import{chapters/chapter02/}{chap02.tex}
+\clearemptydoublepage
+%
+\import{chapters/chapter03/}{chap03.tex}
+\clearemptydoublepage
+%
+\import{chapters/chapter04/}{chap04.tex}
+\clearemptydoublepage
+%
+\import{chapters/chapter05/}{chap05.tex}
+\clearemptydoublepage
+%
+\import{chapters/chapter06/}{chap06.tex}
 \clearemptydoublepage
 %
 %

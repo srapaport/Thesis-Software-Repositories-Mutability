@@ -15,4 +15,7 @@
 *.toc
 
 .DS_Store
-.cursor/*
+
+*.bkp
+
+literature_reviews/*

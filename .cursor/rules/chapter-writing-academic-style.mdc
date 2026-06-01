@@ -1,0 +1,72 @@
+---
+description: Academic chapter-writing standards for thesis .tex files
+globs: chapters/**/*.tex
+alwaysApply: false
+---
+
+# Chapter Writing Rule (Academic Thesis)
+
+When writing or editing any file in `chapters/**/*.tex`, produce text that is rigorous, explicit, and aligned with the thesis-level narrative.
+
+## Core writing style
+
+- Use formal academic English, precise terminology, and domain-appropriate vocabulary.
+- Prefer full explanations over short summaries; make reasoning explicit and readable.
+- Keep sentences clear and direct; prefer clarity over rhetorical flourish.
+- Define concepts before using them, especially if they are technical or specialized.
+- Keep a neutral scientific tone and avoid unsupported claims.
+- Use smooth transitions between paragraphs to maintain argument continuity.
+
+## Mandatory context sources
+
+Before drafting substantial chapter content, align with:
+
+1. `Training handout - Write your PhD thesis - 01-2026.pdf` (writing and structure guidance)
+2. The `contributions` directory (actual contributions and evidence to foreground)
+3. `Thesis.md` (global outline, scope, and chapter-level logic)
+4. For claims grounded in **prior work** (not your contributions): when a paper's PDF exists under `literature_reviews/library/`, treat that full text as the authority for wording, numbers, and attributions; use `literature_reviews/*.{md,bib}` as navigation and BibTeX sources, not as a substitute for the PDF when precision matters.
+
+If there is a conflict:
+
+- Prioritize factual correctness from `contributions`.
+- Then preserve thesis-wide consistency from `Thesis.md`.
+- Then adapt style and presentation using the training handout.
+- For third-party papers, prefer the PDF in `literature_reviews/library/` over paraphrases from markdown catalogs when both exist.
+
+## Content quality expectations
+
+- Motivate each section with a clear "why this matters" framing.
+- Explain assumptions, design choices, and trade-offs.
+- Distinguish clearly among background, method, results, and interpretation.
+- When referencing figures/tables/equations, explain what the reader should conclude from them.
+- End sections with a short takeaway that connects to the next section.
+
+## Evidence and argumentation
+
+- Every important claim should be justified (data, method, citation, or logical derivation).
+- Avoid hand-wavy statements such as "obvious", "clearly", or "it is known" without support.
+- When limitations exist, state them explicitly and explain practical impact.
+- Prefer comparative framing (baseline vs proposed approach, expected vs observed behavior).
+
+## Lexical precision and hyphenation discipline
+
+- Avoid empty or weak intensifiers/adjectives (for example: "substantial", "merely", "significant" without quantification, "important" without criterion).
+- Replace vague evaluative words with precise statements, measurable details, or explicit criteria.
+- Do not overuse hyphenated noun/adjective compounds (for example: "format-aware", "practitioner-derived") when a clearer non-hyphenated phrasing is possible.
+- Prefer longer explicit formulations over compact hyphenated constructions when this improves readability.
+- Use hyphenation only when grammatically required or when removing it would create ambiguity.
+
+## LaTeX and chapter hygiene
+
+- Keep one coherent idea per paragraph; avoid very long unstructured blocks.
+- Use consistent terminology and notation across all chapter files.
+- Introduce acronyms on first use, then reuse consistently.
+- Ensure labels/references are meaningful and stable (`\label{chap:...}`, `\label{sec:...}`, etc.).
+- Do not introduce TODO placeholders or outline bullets in final prose.
+
+## Suggested enhancements for better agent writing
+
+- Start each section with 2-4 sentences of roadmap/context before technical details.
+- Explicitly map section outcomes to one or more thesis contributions when relevant.
+- Include occasional synthesis paragraphs that connect methodology to empirical findings.
+- Prefer interpretive depth over listing facts: explain implications, not just observations.
