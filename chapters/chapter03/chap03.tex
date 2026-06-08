@@ -6,7 +6,7 @@
 % thorough, self-contained methodology; Chapter~\ref{chap:histories} reuses the
 % shared parts and details only the differences.
 %
-\chapter{Mutable Tags and Release Integrity}
+\chapter{Mutating the ``Immutable'': Mutable Tags and Release Integrity}
 \label{chap:tags}
 
 \section{Introduction}
@@ -16,7 +16,7 @@ Public software repositories are not only collaboration spaces: they are upstrea
 In that downstream role, a release tag is often treated as a \emph{stable handle} for a particular source state.
 Tags mark releases and specific repository states that underpin build reproducibility and software supply-chain integrity, and dependency-management ecosystems rely on them to resolve and pin versions: Go modules, as well as npm (via \texttt{git://} URLs in \texttt{package.json}), Cargo (via Git dependencies in \texttt{Cargo.toml}), and pip all support Git repository dependencies anchored to tags, while continuous integration systems such as GitHub Actions use them to anchor deployment pipelines~\cite{rapaport2026tagalterations}.
 Yet Git's reference model does not align with that social expectation.
-Tags live in the same mutable namespace as other references: both lightweight tags (implemented as ``refs'' in Git terminology) and annotated tags can be deleted or force-updated to point to different commits, while the human-readable name remains familiar~\cite{ProGit2014,rapaport2026tagalterations}.
+Tags live in the same mutable namespace as other references: both lightweight and annotated tags can be deleted or force-updated to point to different commits while the human-readable name remains familiar~\cite{ProGit2014,rapaport2026tagalterations} (the two tag kinds and their mutability are defined in \Cref{subsec:bg-branches-tags-references}).
 The tension is therefore not merely about whether two builds of the same project yield identical binaries---it is about whether two actors who agree on a dependency name can still agree on what \emph{source identity} that name denotes over time.
 
 This chapter studies \emph{tag alterations}: observable changes to the state of a tag between successive archival snapshots of the same repository.
@@ -43,6 +43,25 @@ This risk is especially acute for computational research workflows, where proven
 At ecosystem scale, the question is no longer whether such events are theoretically possible---Git documents them---but how often they occur in public archives, in what forms, and whether they already intersect with real dependency metadata~\cite{rapaport2026tagalterations}.
 A recent supply-chain attack has already demonstrated that changes to dependency references can compromise an entire software ecosystem~\cite{paloalto_unit42_2025}.
 Despite that practical relevance, no comprehensive study had focused on the phenomenon of tag alterations before the work this chapter builds on.
+Figure~\ref{fig:tags-stability-gap} summarises the core mismatch between tag names and the source identities they denote over time.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (tag name versus source identity).}
+Timeline with two downstream consumers resolving the same tag name (\texttt{v1.0.0}) at different dates.
+At $t_1$ the tag points to commit~$C_A$; at $t_2$ it points to commit~$C_B$.
+Show that the dependency string is unchanged while the retrieved source tree may differ.
+Contrast with a consumer that pinned commit~$C_A$ by hash.
+\end{minipage}%
+}
+\mycaption[Stable tag name, changing source identity]{%
+Placeholder for a conceptual timeline showing how a mutable tag name can designate different commits over time while remaining human-readable.%
+}
+\label{fig:tags-stability-gap}
+\end{figure}
 
 \paragraph{Research questions.}
 The chapter is organised around four research questions, following the underlying study~\cite{rapaport2026tagalterations}:
@@ -50,7 +69,8 @@ The chapter is organised around four research questions, following the underlyin
 (RQ2) why are tags altered---what observable forms do alterations take?
 (RQ3) does repository popularity correlate with tag alterations?
 (RQ4) to what extent do tag alterations threaten build reproducibility and supply-chain integrity?
-The remainder of the chapter answers these in turn: a thorough methodology (\Cref{sec:tags-methodology}), a taxonomy of alterations (\Cref{sec:tags-taxonomy}), prevalence and distribution (\Cref{sec:tags-prevalence}), characterization (\Cref{sec:tags-characterization}), reproducibility and supply-chain implications (\Cref{sec:tags-implications}), discussion (\Cref{sec:tags-discussion}), and threats to validity (\Cref{sec:tags-validity}).
+The remainder of the chapter answers these in turn: a thorough methodology (\Cref{sec:tags-methodology}), the prevalence and temporal evolution of alterations (\Cref{sec:tags-prevalence}), a taxonomy and characterization of how tags are altered (\Cref{sec:tags-taxonomy}), the relationship with repository popularity (\Cref{sec:tags-popularity}), reproducibility and supply-chain implications (\Cref{sec:tags-implications}), discussion (\Cref{sec:tags-discussion}), and threats to validity (\Cref{sec:tags-validity}).
+The empirical sections follow the order of the research questions: \Cref{sec:tags-prevalence} answers RQ1, \Cref{sec:tags-taxonomy} answers RQ2, \Cref{sec:tags-popularity} answers RQ3, and \Cref{sec:tags-implications} answers RQ4.
 
 \paragraph{Scope of the chapter.}
 The empirical material in this chapter summarises and extends the analysis reported in prior work~\cite{rapaport2026tagalterations}.
@@ -92,6 +112,8 @@ Software Heritage is therefore both a scientific instrument and an integrity wit
 Closer to Git's threat model, classic work on \emph{metadata manipulation} in distributed version control shows that omitting or misrepresenting commits can steer developers toward unsafe merges and inconsistent repository views; defences rely on cryptographic logs of developer-visible state~\cite{torresarias2016gitmetadata}.
 Empirical mining research has long warned that version-control histories are not a neutral ground truth for measurement: Git histories can be incomplete, biased, or unstable under real workflows~\cite{bird2009promisesmininggit,kalliamvakou2014promises}, and longitudinal Linux-focused mining shows that histories can be partially \emph{irrecoverable} once rewriting and mirroring interact at scale~\cite{DBLP:journals/ese/GermanAH16}.
 The Pro Git book itself reflects the social expectation of stability, stating that a tag is ``very much like a branch that doesn't change''~\cite{ProGit2014}; the wording is pedagogical, but it captures the widespread perception of tags as immutable release anchors.
+That perception is not endorsed by Git's own maintainers: the \texttt{git-tag} manual warns that reusing a published tag name can leave different users holding the same label on different commits, calls the practice ``insane'', and recommends issuing a new version identifier instead, a position Linus Torvalds had already argued as a security concern in 2007~\cite{git_tag_retagging_docs,torvalds_retagging_2007}.
+The gap this thesis measures is therefore between documented guidance against re-tagging and the alteration behaviour actually observed at archive scale.
 
 \subsection{Positioning of This Chapter}
 \label{subsec:tags-rw-positioning}
@@ -118,11 +140,10 @@ A \textbf{literature- and standards-informed} strand situates those measurements
 
 The central methodological bet, shared by both empirical chapters, is that \emph{observable mutability} can be studied without forge-internal logs by comparing successive public states of the same origin as recorded by an independent archive.
 Tag alterations are inherently difficult to study empirically at scale, because once a tag is altered its previous reference no longer exists in the repository and cannot be directly compared with the post-alteration state~\cite{rapaport2026tagalterations}.
-Software Heritage resolves this problem: it regularly visits origins (repository URLs) and records their observed states as snapshots, assigning Git-compatible persistent identifiers (SWHIDs) to revisions, directories, releases, and snapshots~\cite{swhcacm2018,cise-2020-doi,iso-swhid}.
-Because the archive preserves successive snapshots even when an upstream forge overwrites a reference, tag targets can be compared before and after an alteration even when the original forge state has already been lost.
+Software Heritage resolves this problem (\Cref{sec:bg-software-heritage}): because the archive preserves successive snapshots even when an upstream forge overwrites a reference, tag targets can be compared before and after an alteration even when the original forge state has already been lost, using the Git-compatible persistent identifiers (SWHIDs) it assigns to archived objects~\cite{swhcacm2018,cise-2020-doi,iso-swhid}.
 The thesis therefore treats mutability as a property of \emph{sequences of archived observations}, not as a claim about unobserved maintainer intent.
 
-Three layers that downstream actors routinely conflate are kept separate throughout:
+Three layers that downstream actors routinely conflate are kept separate throughout, refining the object--reference distinction of \Cref{subsec:bg-apparent-immutability}:
 \begin{itemize}
 \item \textbf{References} (branch names, tag names)---mutable labels;
 \item \textbf{Commits and annotated-tag/release objects}---identity-bearing nodes whose identifiers change under rewriting or metadata edits;
@@ -165,13 +186,32 @@ Overview of the workflow pipeline. Step~0 fetches all available origins from Sof
 
 For each Software Heritage origin with at least two visits, all snapshots are extracted and ordered chronologically by timestamp.
 Within each snapshot, every branch whose name matches the pattern \texttt{*/tags/*} is enumerated, because Git stores tags as special refs in the \texttt{refs/tags/} namespace.
-Each tag is classified as either \emph{lightweight} (a reference pointing directly to a commit) or \emph{annotated} (a reference pointing to a release object, which in turn references a commit), and its target commit is resolved accordingly: lightweight tags reference a commit directly, while annotated tags require traversing the release object to reach the target commit.
+Each tag is resolved to its target commit according to its kind (\Cref{subsec:bg-branches-tags-references}): a lightweight tag references a commit directly, while an annotated tag is resolved by traversing its release object to reach the target commit.
 
-For each pair of consecutive snapshots $(S_i, S_{i+1})$, tags present in $S_i$ are compared with those in $S_{i+1}$ to detect two primary event types:
+For each pair of consecutive snapshots $(S_i, S_{i+1})$, tags present in $S_i$ are compared with those in $S_{i+1}$ to detect the two event types defined in \Cref{subsec:bg-force-pushes-reference-updates}:
 a \emph{move} occurs when a tag name exists in both snapshots but resolves to a different object (identified by its SWHID), and a \emph{deletion} occurs when a tag exists in $S_i$ but not in $S_{i+1}$.
 The study also distinguishes a \emph{recreation}, where a tag is deleted in one snapshot and reappears---pointing either to the same commit or to a different one---in a later snapshot; recreations that restore a different target are counted with moves.
 For each detected alteration, metadata is recorded including repository URL, tag name, and tag type (lightweight versus annotated).
 Detection is conservative with respect to what archival visits can prove: events occurring strictly between two visits may be missed or merged, so counts are interpreted as lower bounds on observable alterations~\cite{rapaport2026tagalterations}.
+Figure~\ref{fig:tags-snapshot-detection} illustrates the snapshot-pair comparison that operationalises this definition.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (snapshot-pair tag detection).}
+Show one Software Heritage origin at snapshots $S_i$ and $S_{i+1}$.
+For each snapshot, list tag refs under \texttt{refs/tags/} with resolved SWHIDs.
+Annotate detection rules: same name + different SWHID $\Rightarrow$ move; present in $S_i$ but absent in $S_{i+1}$ $\Rightarrow$ deletion; absent then reappears $\Rightarrow$ recreation.
+Optionally show lightweight versus annotated resolution paths.
+\end{minipage}%
+}
+\mycaption[Detecting tag alterations from consecutive snapshots]{%
+Placeholder for a schematic of the snapshot-pair differencing algorithm used to detect moves, deletions, and recreations~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-snapshot-detection}
+\end{figure}
 
 \subsection{Classification Procedure}
 \label{subsec:tags-classification}
@@ -186,6 +226,25 @@ Annotated-release metadata fields (message, author, author timestamp) are checke
 Temporal patterns are also tracked, distinguishing a standard move (target updated directly between consecutive snapshots) from a recreation (deletion followed by reappearance).
 Content-changing moves are further described at field level by counting how often files are added, modified, removed, or renamed.
 This hierarchical classification distinguishes benign metadata updates (for example, a commit-message edit) from potentially disruptive source-code modifications.
+Figure~\ref{fig:tags-classification-hierarchy} summarises the three SWHID comparison layers applied to each move.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (move classification hierarchy).}
+Decision tree or layered diagram for a tag move from old target to new target.
+Compare directory SWHID (source tree), revision SWHID (commit identity), and tag/release layer (lightweight $\leftrightarrow$ annotated, deletion--recreation).
+Branch outcomes: content change, commit-metadata-only change, release-level-only change.
+Export or redraw from the paper's internal \texttt{fig\_git\_model.drawio} asset if suitable, otherwise create a dedicated taxonomy figure.
+\end{minipage}%
+}
+\mycaption[Hierarchical classification of tag moves]{%
+Placeholder for a diagram of the three-level SWHID comparison used to categorise move events~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-classification-hierarchy}
+\end{figure}
 
 \subsection{Popularity Measurement}
 \label{subsec:tags-popularity-method}
@@ -204,7 +263,7 @@ The case study examines a fork of the \texttt{tj-actions/changed-files} reposito
 The cross-analysis assesses the threat to build reproducibility by cross-referencing the dataset with the Nixpkgs ecosystem, using the Nixpkgs \texttt{master} branch at a fixed revision on the date of the experiment.\footnote{\texttt{https://github.com/NixOS/nixpkgs/archive/08ffd21f7c8f90e15216bc329855b66ffea8526d.tar.gz}}
 First, the subset of Nix packages that depend on repositories with a history of tag alterations is identified; second, the packages that directly pin their dependencies to a historically altered tag are isolated.
 For that vulnerable subset, the cryptographic hash of the source tarball expected by the Nix package is systematically compared against the actual hash of the tag's target code post-alteration, identifying concrete packages whose source-based build reproducibility is threatened.
-Nixpkgs ships a binary cache where package sources are also stored, so rebuilding a package with an altered tag may still succeed if the source tarball is available in the cache; if the cache becomes unavailable, Nix's integrity checks fail and the package will not build rather than building with altered source code.
+Because Nixpkgs verifies fixed-output source hashes and also ships a binary cache (the mechanism is described in \Cref{subsec:bg-stable-references-dependency-resolution}), a rebuild with an altered tag may still succeed from the cache; with the cache disabled, an integrity failure surfaces as a build failure rather than silent substitution.
 This avoids silent reproducibility drift or the introduction of malicious changes, but still constitutes a supply-chain \emph{availability} failure.
 
 \subsection{Validation, Interpretation Limits, and Scope}
@@ -216,8 +275,66 @@ Claims therefore focus on the existence, nature, and reproducibility implication
 The analysis is conditioned on Software Heritage coverage and visit frequency: origins captured only once are excluded from temporal differencing, and non-Git or incomplete origins are filtered out.
 Popularity stratification uses GitHub star counts where available; repositories on other forges contribute to global counts but fall into the ``unknown popularity'' bucket.
 
-\section{Taxonomy of Tag Alterations}
+\section{Prevalence and Evolution of Tag Alterations}
+\label{sec:tags-prevalence}
+
+This section answers RQ1 by establishing how often tag alterations occur and how their volume evolves over the observation window, before later sections characterise their forms (\Cref{sec:tags-taxonomy}) and stratify them by popularity (\Cref{sec:tags-popularity}).
+
+\subsection{Frequency and Temporal Evolution of Altered Tags}
+\label{subsec:tags-freq}
+
+Analysing successive snapshots establishes that tag alteration is not anecdotal: the study identifies \num{10171046} tag alterations affecting \num{188713} unique repositories---\SI{0.41}{\percent} of repositories with at least two snapshots and one tag.
+The split between event kinds is heavily skewed: \num{9545038} deletions (\SI{93.85}{\percent}) versus \num{626008} moves.
+Deletions are visible as a failure or absence and primarily threaten availability and rebuildability, whereas a move preserves the appearance of continuity while silently changing the referenced object.
+Figure~\ref{fig:tags-moves-vs-deletions} visualises this skew between event kinds.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (moves versus deletions).}
+Stacked bar chart by year or a simple two-slice breakdown: \num{9545038} deletions (\SI{93.85}{\percent}) versus \num{626008} moves (\SI{6.15}{\percent}).
+Reproduce from \texttt{analyze\_tags\_figures.ipynb} section~3.12 (\emph{Tag Moves vs Deletions Over Time}) in the paper repository; the notebook already generates this figure.
+\end{minipage}%
+}
+\mycaption[Moves versus deletions among all tag alterations]{%
+Placeholder for a chart contrasting deletion and move volumes across the observation window~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-moves-vs-deletions}
+\end{figure}
+
+Although the proportion of affected repositories is small, the number of alterations per affected repository is high: \num{53.9} on average (median \num{3}).
+That average is driven in part by concentrated deletion bursts: the JetBrains \texttt{intellij-community} repository, which had to delete tens of thousands of tags because of Git performance issues, together with 28 of its forks accounts for \num{742919} tag deletions.
+
+The temporal analysis (Figure~\ref{fig:tags-temporal-evolution}) shows that alterations are not confined to a short-lived historical period: over the window from 23~February~2016 to 8~October~2025, the cumulative count grows continuously to \num{10171046}, and the monthly view shows persistent accumulation rather than isolated bursts.
+If alterations were caused mainly by early ecosystem instability, the curve would flatten; instead the sustained growth indicates a recurring maintenance or release-management behaviour.
+Because the method only captures alterations visible between snapshots, this trajectory is a lower bound, which further strengthens the conclusion that tag mutability is widespread.
+The core implication answers RQ1: any reproducibility or supply-chain model that treats tags as de facto immutable is misaligned with observed practice.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{temporal_evolution.png}
+\mycaption[Temporal evolution of tag alterations]{%
+Evolution of the number of observable tags in Software Heritage versus the number of tag alterations (note the different scales): cumulative growth on the left, monthly deltas on the right~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-temporal-evolution}
+\end{figure}
+
+\subsection{Distribution Across Repositories}
+\label{subsec:tags-dist-repos}
+
+The distribution of alterations across repositories is heavy-tailed: most events concentrate in relatively few origins, while a long tail exhibits sporadic moves or deletions.
+The \texttt{intellij-community} cluster discussed above is the documented outlier, explaining a large share of deletion events tied to operational tag cleanup.
+Interpreting raw counts therefore requires separating ``bulk maintenance'' from ``typical small-project behaviour''---both are real ecosystem phenomena, but they imply different monitoring strategies.
+
+\section{Taxonomy and Characterization of Tag Alterations}
 \label{sec:tags-taxonomy}
+
+This section answers RQ2: \emph{how} are tags altered?
+Deletions dominate the overall volume of alterations (\Cref{sec:tags-prevalence}), so the taxonomy here concentrates on \emph{moves}, where the tag name survives while its target may change, and then reads each category for its downstream impact.
+Each move is assigned to one of three mutually exclusive classes by comparing source-tree, commit, and tag/release identities, following the classification procedure of \Cref{subsec:tags-classification}.
+In most observed moves the underlying content actually changes, so the typical move is not a purely administrative correction; metadata-only and release-level moves nonetheless remain integrity-relevant for audit trails that reason about commit hashes even when the source tree is unchanged.
 
 \subsection{Reference Moves}
 \label{subsec:tags-tax-moves}
@@ -236,7 +353,24 @@ A tag move observed between two snapshots of the same Git repository: the tag na
 \end{figure}
 
 Table~\ref{tab:tags-move-categories} summarises the three mutually exclusive coarse outcomes of the move taxonomy.
+Figure~\ref{fig:tags-move-categories-chart} presents the same distribution visually.
 Of \num{626008} moves, content-changing moves dominate (\num{426595}; \SI{68.15}{\percent}), followed by commit-metadata-only moves (\num{188974}; \SI{30.19}{\percent}) and release-level-only changes (\num{10439}; \SI{1.67}{\percent}).
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (move category distribution).}
+Bar chart or pie chart reproducing Table~\ref{tab:tags-move-categories}: content changes (\SI{68.15}{\percent}), commit metadata diffs (\SI{30.19}{\percent}), release-level changes (\SI{1.67}{\percent}).
+Generate from the paper analysis notebooks (\texttt{analyze\_tags\_figures.ipynb}) or export directly from the dataset counts already in the table.
+\end{minipage}%
+}
+\mycaption[Distribution of move categories]{%
+Placeholder for a visual summary of the move taxonomy counts (currently tabulated in Table~\ref{tab:tags-move-categories}).%
+}
+\label{fig:tags-move-categories-chart}
+\end{figure}
 
 \begin{table}[t]
 \centering
@@ -299,42 +433,42 @@ Such events are consistent with history-rewriting workflows that replace commits
 Release-level-only changes (\num{10439} moves; \SI{1.67}{\percent}) keep both tree and revision identifiers fixed while still recording an alteration at the tag or release layer.
 Within this subset there are no annotated-release metadata differences; the observed cases are structural reference changes, namely lightweight~$\leftrightarrow$~annotated transitions (\num{7555} lightweight~$\rightarrow$~annotated, \num{2724} annotated~$\rightarrow$~lightweight) and temporary deletion--recreation with the same target (\num{160}).
 Separately, deletions constitute the bulk of \emph{all} alteration events; they are operationally loud for fresh fetches but still create long-term availability and mirror-drift problems at scale~\cite{rapaport2026tagalterations}.
-
-\section{Prevalence and Distribution of Tag Alterations}
-\label{sec:tags-prevalence}
-
-\subsection{Frequency of Altered Tags (RQ1)}
-\label{subsec:tags-freq}
-
-Analysing successive snapshots establishes that tag alteration is not anecdotal: the study identifies \num{10171046} tag alterations affecting \num{188713} unique repositories---\SI{0.41}{\percent} of repositories with at least two snapshots and one tag.
-The split between event kinds is heavily skewed: \num{9545038} deletions (\SI{93.85}{\percent}) versus \num{626008} moves.
-Deletions are visible as a failure or absence and primarily threaten availability and rebuildability, whereas a move preserves the appearance of continuity while silently changing the referenced object.
-Although the proportion of affected repositories is small, the number of alterations per affected repository is high: \num{53.9} on average (median \num{3}).
-That average is driven in part by concentrated deletion bursts: the JetBrains \texttt{intellij-community} repository, which had to delete tens of thousands of tags because of Git performance issues, together with 28 of its forks accounts for \num{742919} tag deletions.
-
-The temporal analysis (Figure~\ref{fig:tags-temporal-evolution}) shows that alterations are not confined to a short-lived historical period: over the window from 23~February~2016 to 8~October~2025, the cumulative count grows continuously to \num{10171046}, and the monthly view shows persistent accumulation rather than isolated bursts.
-If alterations were caused mainly by early ecosystem instability, the curve would flatten; instead the sustained growth indicates a recurring maintenance or release-management behaviour.
-Because the method only captures alterations visible between snapshots, this trajectory is a lower bound, which further strengthens the conclusion that tag mutability is widespread.
-The core implication answers RQ1: any reproducibility or supply-chain model that treats tags as de facto immutable is misaligned with observed practice.
+Figure~\ref{fig:tags-deletion-schematic} complements Figure~\ref{fig:tags-move-schematic} by illustrating the deletion case.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{temporal_evolution.png}
-\mycaption[Temporal evolution of tag alterations]{%
-Evolution of the number of observable tags in Software Heritage versus the number of tag alterations (note the different scales): cumulative growth on the left, monthly deltas on the right~\cite{rapaport2026tagalterations}.%
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (tag deletion schematic).}
+Two-snapshot view: tag \texttt{v1.0.0} resolves to commit~$C$ in $S_i$ but is absent from $S_{i+1}$.
+Show downstream fetch failure for a dependency that records only the tag name.
+Pair visually with the move schematic (Figure~\ref{fig:tags-move-schematic}) as a two-panel or sibling figure.
+\end{minipage}%
 }
-\label{fig:tags-temporal-evolution}
+\mycaption[Illustration of a tag deletion]{%
+Placeholder for a conceptual diagram of a tag deletion observed between consecutive snapshots~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-deletion-schematic}
 \end{figure}
 
-\subsection{Distribution Across Repositories}
-\label{subsec:tags-dist-repos}
+\subsection{Build and Packaging Files Affected by Tag Alterations}
+\label{subsec:tags-build-packaging}
 
-The distribution of alterations across repositories is heavy-tailed: most events concentrate in relatively few origins, while a long tail exhibits sporadic moves or deletions.
-The \texttt{intellij-community} cluster discussed above is the documented outlier, explaining a large share of deletion events tied to operational tag cleanup.
-Interpreting raw counts therefore requires separating ``bulk maintenance'' from ``typical small-project behaviour''---both are real ecosystem phenomena, but they imply different monitoring strategies.
+Among content-changing moves, file-level diffs show frequent edits to ordinary source files; build and packaging manifests are also plausible loci of change, though the study emphasises aggregate file-operation signals rather than a curated classifier for ``build files only''.
+\NOTEside{If the paper provides a dedicated breakdown for \texttt{Dockerfile}, \texttt{package.json}, \texttt{pyproject.toml}, etc., insert a short paragraph here with exact counts; otherwise extend the miner to tag those paths.}
+Where such a breakdown is unavailable, the conservative claim stands: content-changing moves routinely touch files that can influence builds, which is sufficient to treat them as supply-chain integrity events rather than cosmetic metadata churn.
 
-\subsection{Project and Ecosystem Characteristics (RQ3)}
-\label{subsec:tags-project-eco}
+\subsection{Implications for Released Artifacts}
+\label{subsec:tags-released-artifacts}
+
+Release artefacts---archives, signatures, container images---are downstream of the source states that tags designate.
+If a tag moves after an artefact was published, the relationship between ``what the release page claims'' and ``what the tag resolves to today'' can become ambiguous unless artefacts are addressed by content digest independently of the tag.
+
+\section{Popularity and Tag Alterations}
+\label{sec:tags-popularity}
+
+This section answers RQ3 by relating alteration behaviour to repository popularity, measured through GitHub star ranges (\Cref{subsec:tags-popularity-method}).
 
 In absolute terms, tag alterations are overwhelmingly concentrated in the least popular repositories.
 Repositories with only 0--1 stars account for \num{7555751} alterations (\SI{74.29}{\percent} of all analysed alterations) and \num{103453} repositories (\SI{54.82}{\percent} of all affected repositories), as shown in Figure~\ref{fig:tags-popularity-volume}.
@@ -362,32 +496,26 @@ The \emph{likelihood} that a repository exhibits at least one alteration, howeve
 Highly visible projects also accumulate more alterations per affected repository: among repositories with at least one tag alteration, the average is \num{73} for 0--1 stars and \num{98} for 501+ stars.
 Popularity is therefore meaningfully associated with alteration behaviour, but not monotonically in raw counts: the long tail of low-star repositories explains most alterations in aggregate, whereas highly popular repositories show the highest proportion of affected repositories and the strongest per-repository intensity.
 Tag mutability should thus not be framed solely as a problem of obscure repositories or solely of prominent ones; popularity changes how the phenomenon manifests.
+Figure~\ref{fig:tags-platform-breakdown} shows how alterations distribute across forges.
 
-\section{Characterization of Altered Releases (RQ2)}
-\label{sec:tags-characterization}
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (alterations by forge/platform).}
+Stacked yearly bar chart or cumulative line chart of tag alterations by platform (GitHub, GitLab, Bitbucket, Codeberg, SourceHut, Other).
+Reproduce from \texttt{analyze\_tags\_figures.ipynb} section~3.2 (\emph{Platform Comparison}).
+GitHub dominates (\SI{94.9}{\percent} of all alterations; \SI{87.8}{\percent} of moves) but non-GitHub forges still contribute measurable volume.
+\end{minipage}%
+}
+\mycaption[Tag alterations by software forge]{%
+Placeholder for a platform-stratified view of tag alterations (analysis figure not included in the published paper).%
+}
+\label{fig:tags-platform-breakdown}
+\end{figure}
 
-\subsection{Nature of the Changes Behind Moved Tags}
-\label{subsec:tags-changes-nature}
-
-The dominant observable behaviour across all alterations is deletion (\num{9545038}; \SI{93.85}{\percent}), which shows that the most common alteration pattern is removal rather than silent retargeting.
-Among moves, however, the typical event is not merely administrative: content-changing moves are the majority (\SI{68.15}{\percent}), meaning that ``the same release string'' can correspond to materially different source trees across time.
-A move could be a harmless correction---for example, converting a lightweight tag to an annotated one without changing commit or tree, or temporarily deleting and recreating the same target---but in most observed moves the underlying content actually changes.
-Metadata-only moves remain integrity-relevant for audit trails that reason about commit hashes, even when trees match.
-
-\subsection{Build and Packaging Files Affected by Tag Alterations}
-\label{subsec:tags-build-packaging}
-
-Among content-changing moves, file-level diffs show frequent edits to ordinary source files; build and packaging manifests are also plausible loci of change, though the study emphasises aggregate file-operation signals rather than a curated classifier for ``build files only''.
-\NOTEside{If the paper provides a dedicated breakdown for \texttt{Dockerfile}, \texttt{package.json}, \texttt{pyproject.toml}, etc., insert a short paragraph here with exact counts; otherwise extend the miner to tag those paths.}
-Where such a breakdown is unavailable, the conservative claim stands: content-changing moves routinely touch files that can influence builds, which is sufficient to treat them as supply-chain integrity events rather than cosmetic metadata churn.
-
-\subsection{Implications for Released Artifacts}
-\label{subsec:tags-released-artifacts}
-
-Release artefacts---archives, signatures, container images---are downstream of the source states that tags designate.
-If a tag moves after an artefact was published, the relationship between ``what the release page claims'' and ``what the tag resolves to today'' can become ambiguous unless artefacts are addressed by content digest independently of the tag.
-
-\section{Implications for Release Integrity (RQ4)}
+\section{Implications for Release Integrity}
 \label{sec:tags-implications}
 
 The final research question is whether tag alterations pose a practical threat to build reproducibility and supply-chain security.
@@ -407,18 +535,57 @@ The threat model is not hypothetical.
 The dataset captures a concrete supply-chain attack in the repository \texttt{zendesk/changed-files}, a fork or mirror of \texttt{tj-actions/changed-files}.
 On 14~March~2025, \num{346} tags are observed being moved so that they all resolve to the same malicious commit, identified in Software Heritage as \texttt{swh:1:rev:0e58ed8671d6b60d0890c21b07f8835ace038e67}.
 This pattern is highly atypical from a release-engineering perspective: a large set of pre-existing version labels is simultaneously retargeted to one identical commit.
+The payload makes the consequences concrete.
+According to incident reports~\cite{paloalto_unit42_2025}, the injected code dumped the memory of the continuous integration runner into the workflow logs, exposing environment variables and secrets---API tokens, credentials, and other sensitive values---of every project whose pipeline invoked the action.
+Because \texttt{tj-actions/changed-files} is a widely reused GitHub Action, the retargeting did not affect one consumer in isolation: any workflow that resolved the action by an existing version tag would run the same payload on its next execution, even when maintainers believed they had pinned a fixed release by referencing a specific tag such as \texttt{v39} or \texttt{v47}.
+This is precisely the failure mode this thesis isolates: pinning to a tag name conveys an illusion of stability that the reference model does not enforce, so the remediation reported for affected teams was operational and immediate---audit workflow logs for leaked secrets, rotate compromised credentials, and rewrite workflow definitions to reference verified commit hashes rather than mutable tag names.
 The temporal profile reinforces the reproducibility risk: before being altered, \num{340} of the affected tags had remained stable for at least \num{148} days, with a few shorter lower-bound intervals of 6, 37, 81, and 127 days.
 These tags were not ephemeral placeholders changed immediately after creation; many had existed long enough to plausibly be consumed, cached, mirrored, or trusted as stable release references, so any downstream workflow that fetched the same tag name again would no longer obtain the same source tree.
+Figure~\ref{fig:tags-tj-actions-case} summarises the retargeting pattern.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (\texttt{tj-actions/changed-files} supply-chain attack).}
+Timeline for \texttt{zendesk/changed-files} on 14~March~2025: \num{346} existing version tags (\texttt{v39}, \texttt{v47}, \ldots) all retargeted to one malicious commit (\texttt{swh:1:rev:0e58ed8671d6b60d0890c21b07f8835ace038e67}).
+Show before/after snapshot states and the GitHub Actions consumption path (workflow resolves action by tag $\rightarrow$ runs injected payload).
+This figure is not in the published paper but is central to RQ4.
+\end{minipage}%
+}
+\mycaption[Tag retargeting in the \texttt{tj-actions/changed-files} incident]{%
+Placeholder for a case-study schematic of the March~2025 supply-chain attack observed in the dataset~\cite{paloalto_unit42_2025,rapaport2026tagalterations}.%
+}
+\label{fig:tags-tj-actions-case}
+\end{figure}
 
 \subsection{Reproducibility Implications and the Nixpkgs Cross-Analysis}
 \label{subsec:tags-reproducibility}
 
 When ecosystems record expected content hashes, tag mutability surfaces as rebuild failure rather than silent substitution.
+Figure~\ref{fig:tags-nix-funnel} traces the Nixpkgs cross-analysis from altered repositories to concrete build failures.
 The Nixpkgs cross-analysis identifies \num{2407} packages whose source references point to repositories in the dataset that altered at least one tag, and within that set \num{32} distinct altered tags are explicitly referenced in Nix packages.
 Most importantly, \num{7} packages fail to build when the NixOS binary cache is disabled: \num{4} because the tag was deleted and the source could not be fetched, and \num{3} because the fetched content no longer matches the previously stored hash.
 For the remaining \num{25} packages there is no hash mismatch, meaning the Nix definitions were created (or, less likely, updated) after the alteration so their recorded hashes already match the post-move state.
 The detailed enumeration of the failing packages is given in Table~\ref{tab:tags-nix-failures}, and Figure~\ref{fig:tags-nix-hash-mismatch} shows a concrete rebuild failure for \texttt{libv3270.src} caused by a fixed-output hash mismatch after tag retargeting.
 This establishes an evidence chain from tag alteration, to an explicit dependency reference, to an observable reproducibility failure in a major Linux distribution: tag mutability is not only a conceptual threat; it has already materialised as divergence between expected and obtained source artifacts.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (Nixpkgs cross-analysis funnel).}
+Funnel or flow diagram: Nixpkgs packages at fixed revision $\rightarrow$ \num{2407} packages depending on repos with $\geq 1$ tag alteration $\rightarrow$ \num{32} packages pinning an altered tag directly $\rightarrow$ \num{7} packages failing to build with cache disabled (\num{4} deletion/fetch failure, \num{3} hash mismatch).
+Link to Table~\ref{tab:tags-nix-failures} and Figure~\ref{fig:tags-nix-hash-mismatch}.
+\end{minipage}%
+}
+\mycaption[Nixpkgs cross-analysis funnel]{%
+Placeholder for a funnel diagram tracing package-level reproducibility impact from the tag-alteration dataset to concrete Nix build failures~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-nix-funnel}
+\end{figure}
 
 \begin{table}[t]
 \centering
@@ -479,6 +646,25 @@ The GitHub Actions ecosystem illustrates the underlying tension.
 Some official guidance encourages maintainers to move major-version tags as compatibility aliases~\cite{github_actions_versioning_recommendations}, while security guidance for consumers emphasises pinning third-party actions to immutable commit SHAs~\cite{github_secure_use_third_party_actions}.
 This does not make the ecosystem incoherent so much as it reveals that tags play two conflicting roles at once: for maintainers, a mutable tag can act as a moving compatibility label; for consumers, the same tag may be read as a stable release anchor.
 The problem is not simply that developers are unaware tags can move, but that different communities and tools assign different normative meanings to the same reference type, and reproducibility failures emerge when those meanings are conflated.
+Figure~\ref{fig:tags-dual-role} illustrates this maintainer--consumer tension.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (dual role of release tags).}
+Two-column diagram.
+Left (\emph{maintainer view}): major-version tag as a moving compatibility alias (for example, \texttt{v4} tracks latest \texttt{v4.x}), aligned with GitHub Actions versioning guidance.
+Right (\emph{consumer view}): same tag read as a fixed release anchor for CI pinning or dependency resolution.
+Show how the same ref type supports both readings and why hash pinning resolves the ambiguity.
+\end{minipage}%
+}
+\mycaption[Conflicting roles of the same tag reference]{%
+Placeholder for a conceptual diagram of the maintainer--consumer semantic mismatch around release tags, especially in the GitHub Actions ecosystem~\cite{github_actions_versioning_recommendations,github_secure_use_third_party_actions}.%
+}
+\label{fig:tags-dual-role}
+\end{figure}
 
 \subsection{What Mutable Tags Reveal About Repository Trust}
 \label{subsec:tags-disc-trust}
@@ -491,7 +677,11 @@ Tag mutability is best understood as a socio-technical reproducibility problem r
 \label{subsec:tags-disc-practical}
 
 Practical guidance follows from the measurements: record commit hashes (or SWHIDs) for security-sensitive pins, treat tags as human-friendly aliases rather than integrity anchors, and monitor tag mutations where organisational policy requires stable release identities.
-Build tools and package managers that target reproducibility should avoid resolving dependencies from tag names alone, and code-hosting platforms could improve transparency by exposing native audit trails for tag creation, movement, and deletion.
+Build tools and package managers that target reproducibility should not treat tag names as sufficient dependency anchors on their own.
+A workable compromise preserves the convenience of tag-based version selection while pinning the artefact: record both the human-readable tag name and the cryptographic commit or content hash it resolved to at the time of reference, as Nixpkgs does when it stores expected source hashes.
+This recommendation is not merely precautionary, because re-tagging has repeatedly caused concrete breakage in deployed ecosystems.
+In Go modules, a 2025 incident on \texttt{google/go-containerregistry} is illustrative: after \texttt{v0.20.4} was deleted and recreated with additional commits, consumers hit a checksum mismatch against \texttt{go.sum}, which forced the maintainers to publish \texttt{v0.20.5} and to document \texttt{v0.20.4} as unusable as a Go module~\cite{go_containerregistry_retagging_issue}.
+Code-hosting platforms could improve transparency by exposing native audit trails for tag creation, movement, and deletion, making reference mutability easier to monitor and reason about.
 An example of a platform-level response is GitHub's introduction of immutable releases in August~2025~\cite{github_immutable_releases}: once enabled, the associated Git tag cannot be moved or deleted and release assets cannot be modified.
 This directly addresses the most common tag-manipulation patterns documented here, but its scope is limited: the feature is opt-in and disabled by default, it must be enabled per repository, and it applies only to GitHub Releases rather than to arbitrary Git tags.
 Because immutability is enforced at the platform level rather than in the Git protocol itself, the protection does not extend to other forges or to direct Git operations outside GitHub's infrastructure.
@@ -513,6 +703,24 @@ Less active repositories are archived less frequently, leading to longer interva
 As shown in Table~\ref{tab:tags-snapshot-frequency}, observed snapshot frequency increases with repository popularity, so fewer alterations may be captured from less popular repositories, and even high-frequency repositories can hide tags pushed and overwritten between archival visits.
 Because popular repositories are more likely to contain at least one tag, they are also more likely to exhibit at least one alteration, which may bias the proportion of impacted repositories.
 If low-popularity repositories are under-observed, the true ecosystem-wide prevalence of alterations is likely higher than reported.
+Figure~\ref{fig:tags-snapshot-frequency} complements Table~\ref{tab:tags-snapshot-frequency} by visualising the observation-gap problem.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (archival snapshot frequency by popularity).}
+Box plot or bar chart of Software Heritage visit frequency (snapshots/year) by GitHub star bucket, reproducing Table~\ref{tab:tags-snapshot-frequency}.
+Highlight that low-star repositories are visited less often, widening the window in which tag push--overwrite--restore cycles can be missed.
+Optional companion: histogram of minimal time between consecutive snapshots for all alterations (from \texttt{analyze\_tags\_figures.ipynb} section~3.5).
+\end{minipage}%
+}
+\mycaption[Archival observation frequency and validity limits]{%
+Placeholder for a visualisation of snapshot cadence by repository popularity, supporting the internal-validity discussion~\cite{rapaport2026tagalterations}.%
+}
+\label{fig:tags-snapshot-frequency}
+\end{figure}
 
 \begin{table}[t]
 \centering

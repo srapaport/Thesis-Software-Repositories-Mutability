@@ -559,6 +559,38 @@ Yaron Avital},
   note         = {Documentation for immutable releases feature preventing tags and release assets from being changed after publication (feature commit dated 2025-08-26).}
 }
 
+@online{git_tag_retagging_docs,
+  author       = {{Git Project}},
+  organization = {Git Documentation},
+  title        = {git-tag --- On Re-tagging},
+  year         = {2025},
+  month        = nov,
+  url          = {https://git-scm.com/docs/git-tag#_on_re_tagging},
+  urldate      = {2026-06-08},
+  note         = {Official guidance recommending a new version label rather than reusing a published tag name.}
+}
+
+@online{torvalds_retagging_2007,
+  author       = {Linus Torvalds},
+  title        = {Re: git-pull and tag objects},
+  year         = {2007},
+  month        = feb,
+  url          = {http://public-inbox.org/git/Pine.LNX.4.64.0702100938540.8424@woody.linux-foundation.org/},
+  urldate      = {2026-06-08},
+  note         = {Mailing-list post arguing that silently overwriting a fetched tag would be a security problem and that maintainers must announce forced tag updates explicitly.}
+}
+
+@online{go_containerregistry_retagging_issue,
+  author       = {WanzenBug and Jason Hall and others},
+  organization = {google/go-containerregistry},
+  title        = {ggcr: retagging v0.20.4 causes ``verifying module: checksum mismatch''},
+  year         = {2025},
+  month        = may,
+  url          = {https://github.com/google/go-containerregistry/issues/2107},
+  urldate      = {2026-06-08},
+  note         = {Bug report and maintainer response after \texttt{v0.20.4} was deleted and recreated, causing \texttt{go.sum} checksum mismatches for direct fetches.}
+}
+
 @misc{tamanna2024analyzingchallengesdeploymentslsa,
       title={Analyzing Challenges in Deployment of the SLSA Framework for Software Supply Chain Security}, 
       author={Mahzabin Tamanna and Sivana Hamer and Mindy Tran and Sascha Fahl and Yasemin Acar and Laurie Williams},

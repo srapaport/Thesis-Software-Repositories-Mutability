@@ -169,6 +169,18 @@ When an agent drafts a section that requires one of the unresolved entries:
 
 ## Chapter 2 — Background
 
+### SYNC-CH2-paper-reviews — Port background re-tagging additions from REP review — 2026-06-08
+
+- **Target file**: `chapters/chapter02/chap02.tex`
+- **Status**: done
+- **What was produced**: ported the two background-level additions from the paper's post-review commit (`29a8174`) that were deferred during the Ch.3 sync:
+  1. `subsec:bg-branches-tags-references`: added the distributed-design rationale for tag mutability (CVS/Subversion central revision IDs vs. independently-created refs reconciled at sync; name-uniqueness argument), with a forward `\Cref{subsec:tags-disc-practical}` to platform-level mitigations.
+  2. `subsec:bg-force-pushes-reference-updates`: added the documented caution against re-tagging (`git-tag` manual "issue X.1 rather than force-update X" + Torvalds 2007 security argument), cites `git_tag_retagging_docs`, `torvalds_retagging_2007` (already in `this.bib`).
+- **Verify**:
+  - [ ] `latexmk` resolves the cross-chapter `\Cref{subsec:tags-disc-practical}` and the 2 cites.
+  - [ ] Check the distributed-design paragraph does not overlap with `subsec:bg-local-remote-synchronization`.
+- **Follow-ups**: optional `composer_retagging_issue` example was left out (not imported to `this.bib`); add if you want a second ecosystem anecdote here.
+
 ### P3 — Drop social-engineering section — 2026-05-04
 
 - **Target file**: `chapters/chapter02/chap02.tex`
@@ -176,7 +188,7 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **What was produced**: removed `\section{Social Engineering in Software Ecosystems}` (with its `\label{sec:bg-social-engineering}`) and its `\TODO{perhaps later} \lipsum[1]` body. Section ordering after this drop: 2.1–2.4 (existing), 2.5 Secrets, 2.6 Software Heritage, 2.7 Terminology.
 - **Verify**:
   - [x] Confirm no other `.tex` file references `sec:bg-social-engineering`.
-  - [ ] Confirm `Thesis.md` outline drift is acceptable (`Thesis.md` is read-only; numbering in chap02 will not match `Thesis.md` §2.6 onwards).
+  - [x] Confirm `Thesis.md` outline drift is acceptable (`Thesis.md` is read-only; numbering in chap02 will not match `Thesis.md` §2.6 onwards).
 - **TODO markers introduced**: none.
 - **Follow-ups**: when drafting Chapter 1 (Research Questions, Research Objectives) and Chapter 7, ensure the social-engineering thread is also dropped (already noted in `THESIS_PLAN.md`).
 
@@ -197,12 +209,61 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done
 - **What was produced**: drafted §3.1--3.7 as thesis-level methodology only; defers pipeline detail to `sec:tags-methodology` / `sec:hist-methodology` (Ch.5). Ends with `\section*{Transition to the empirical chapters}` (`\label{sec:meth-transition-empirical}`) leading into Chapter~\ref{chap:tags}. Cross-references Chapters~\ref{chap:background}, \ref{chap:tags}, \ref{chap:histories}, \ref{chap:secrets}.
 - **Verify**:
-  - [ ] Compile once: confirm all `\ref`/`\Cref` to Ch.4--5 labels resolve (Chapter~5 is now drafted in `chap05.tex`).
+  - [x] Compile once: confirm all `\ref`/`\Cref` to Ch.4--5 labels resolve (Chapter~5 is now drafted in `chap05.tex`).
   - [x] Chapter~5 `sec:hist-methodology` opens with a mirror paragraph pointing back to Chapter~\ref{chap:methods} (same pattern as Chapter~\ref{chap:tags}).
 - **TODO markers introduced**: none.
 - **Follow-ups**: keep Ch.3 stable; if Ch.4/5 methodology text grows, delete duplicated prose there rather than expanding Ch.3.
 
 ## Chapter 4 — Mutable Tags and Release Integrity
+
+### DEDUP-CH2-CH4 — Remove Background/Chapter-3 redundancy, cross-reference instead — 2026-06-08
+
+- **Target files**: `chapters/chapter03/chap03.tex`, `chapters/chapter02/chap02.tex`
+- **Status**: done
+- **Principle applied**: Background (Ch.2) owns the general Git / Software Heritage concepts; Chapter 3 references them rather than re-explaining. Conversely, where Background previewed a Chapter 3 empirical result in detail, that was converted to a forward pointer.
+- **Chapter 3 edits** (concept re-explanations trimmed + back-references added):
+  - Intro: removed the re-definition of lightweight/annotated tag kinds; now points to `subsec:bg-branches-tags-references`.
+  - Methodology (research design): removed the re-explanation of how Software Heritage visits origins / assigns SWHIDs; now points to `sec:bg-software-heritage` (kept the SWHID acronym intro).
+  - Methodology (three-layer model): cross-referenced `subsec:bg-apparent-immutability`.
+  - Methodology (detection): replaced the tag-kind re-definition with a pointer to `subsec:bg-branches-tags-references`; move/deletion detection now points to the conceptual definition in `subsec:bg-force-pushes-reference-updates`.
+  - Methodology (Nix case study): trimmed the re-explanation of Nix fixed-output + binary-cache mechanism; now points to `subsec:bg-stable-references-dependency-resolution`.
+- **Chapter 2 edits**:
+  - `subsec:bg-stable-references-dependency-resolution`: the detailed Nixpkgs-result preview replaced with a forward pointer to `subsec:tags-reproducibility`.
+  - `subsec:bg-tags-release-identifiers`: structural-mismatch framing now points forward to `subsec:tags-stability-assumptions`.
+- **Left intentionally (not redundant)**: Chapter 3 Related Work's Nix/reproducibility discussion (prior-literature positioning, distinct from Background's mechanism explanation); the repeated "lower-bound" caveat (chapter's own methodological discipline); the operational move/deletion definition (needed for the algorithm).
+- **Verify**:
+  - [ ] `latexmk`: confirm all new cross-chapter `\Cref`s resolve and no concept is now used before introduction.
+- **Follow-ups**: none blocking.
+
+### RESTRUCT-CH4-rq-order — Reorder empirical sections to RQ1→RQ4, merge taxonomy+characterization — 2026-06-08
+
+- **Target file**: `chapters/chapter03/chap03.tex`
+- **Status**: done
+- **What was produced**: fixed three structural defects relative to the paper:
+  1. **RQ answering order**: empirical sections now follow RQ1→RQ2→RQ3→RQ4. New order: §Prevalence and Evolution (RQ1, `sec:tags-prevalence`) → §Taxonomy and Characterization (RQ2, `sec:tags-taxonomy`) → §Popularity and Tag Alterations (RQ3, new `sec:tags-popularity`) → §Implications for Release Integrity (RQ4, `sec:tags-implications`). Previously the body answered RQ1, RQ3, RQ2, RQ4.
+  2. **De-duplication**: merged the standalone Taxonomy section with the old Characterization (RQ2) section. Dropped the redundant `subsec:tags-changes-nature` (it restated the deletion-dominance and content-majority numbers already in RQ1/taxonomy); folded its one unique nuance into a new RQ2 section intro. `Build and Packaging Files` and `Implications for Released Artifacts` subsections moved under the merged RQ2 section.
+  3. **Ordering inversion**: prevalence (headline magnitude) now precedes the move taxonomy, instead of following it.
+- **Label changes**: dropped `sec:tags-characterization` and `subsec:tags-changes-nature` (confirmed unreferenced anywhere in the thesis). Added `sec:tags-popularity`. RQ3 content promoted from `subsec:tags-project-eco` to its own section. All other labels (figures, tables, subsections) preserved. Intro roadmap rewritten + explicit RQ-to-section mapping sentence added.
+- **Verify**:
+  - [ ] `latexmk` once: confirm no undefined references and that figure/table floats still place sensibly under the new order.
+  - [ ] Read the new RQ2 section intro for overlap with the subsection bodies.
+- **Follow-ups**: none blocking. Related Work remains at the front (kept deliberately; paper moved it to the end, but front placement is fine for a thesis chapter with a separate Background chapter).
+
+### SYNC-CH4-paper-reviews — Resync with REP camera-ready review changes — 2026-06-08
+
+- **Target file**: `chapters/chapter03/chap03.tex` (+ `this.bib`)
+- **Status**: done
+- **What was produced**: brought the chapter in sync with the paper's post-review commit (`29a8174`). Three additions, paraphrased rather than pasted, with light "this thesis" voice:
+  1. §attack case (`subsec:tags-attack-case`): added the `tj-actions/changed-files` payload (CI-runner memory dump leaking env vars/secrets), the fact that pinning a specific tag (`v39`/`v47`) did not protect consumers, and the operational remediation (audit logs, rotate credentials, repin to commit hashes).
+  2. §practical implications (`subsec:tags-disc-practical`): added the record-both (tag name + resolved hash) compromise and the 2025 Go modules `google/go-containerregistry` re-tagging incident (`v0.20.4` deleted/recreated → `go.sum` checksum mismatch → `v0.20.5`).
+  3. §related work (`subsec:tags-rw-refs-integrity`): added the `git-tag` manual "insane" re-tagging warning and the 2007 Torvalds security argument.
+- **Bib**: added `git_tag_retagging_docs`, `torvalds_retagging_2007`, `go_containerregistry_retagging_issue` to `this.bib` (copied from paper's `tag_alteration.bib`, keys unchanged to match existing `github_*`/`paloalto_unit42_2025` style).
+- **Scope note**: the paper's background.tex changes (CVS/SVN-vs-Git re-tagging framing, `composer_retagging_issue`) were intentionally skipped per request; they belong to the thesis background chapter (`chap02`) if wanted later.
+- **Verify**:
+  - [ ] Read the three new passages for voice overlap with the paper; trim if any reads like a paste.
+  - [ ] Confirm `latexmk` resolves the 3 new `\cite` keys.
+  - [ ] Optional: port the git-tag/Torvalds re-tagging guidance into `chap02` background if you want it there too.
+- **Follow-ups**: none blocking.
 
 ### T-CH4-01..10 — Full chapter draft (mutable tags) — 2026-05-05
 

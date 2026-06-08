@@ -37,7 +37,23 @@ Commits point to a source tree and to zero or more parent commits, and also cont
 Because commit identifiers are computed recursively over commit content and metadata, a commit identifier refers not only to the source tree but also to its ancestry.
 If any part of a commit changes, including a timestamp or message, the commit receives a new identifier.
 If a later commit has the modified commit as an ancestor, that later commit also receives a new identifier because its parent link changed.
-This recursive property forms a Merkle directed acyclic graph (DAG): the identity of a visible root commit can be used to verify the identities of all commits reachable from it.
+This recursive property forms a Merkle directed acyclic graph (DAG): the identity of a visible root commit can be used to verify the identities of all commits reachable from it (Figure~\ref{fig:bg-object-model}).
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (Git object model).}
+Draw the four object types (blob, tree, commit, annotated tag) and their pointer relationships: blobs hold file contents; trees map names to blobs and subtrees; commits point to a root tree and to parent commit(s); annotated tags point to a commit (or tag object) via a tag object layer.
+Highlight that each object is addressed by a content hash and that parent links form a Merkle DAG.
+\end{minipage}%
+}
+\mycaption[Git object model and Merkle commit DAG]{%
+Placeholder for a schematic of Git blobs, trees, commits, and annotated tags, showing content-addressed identifiers and parent links forming a Merkle DAG.%
+}
+\label{fig:bg-object-model}
+\end{figure}
 
 This model provides strong integrity properties at the object level.
 Once a specific object identifier is known, one can verify that the object retrieved under that identifier has not changed.
@@ -65,6 +81,30 @@ A lightweight tag is a reference that points directly to another object, usually
 An annotated tag is a distinct Git object containing metadata such as tagger identity, timestamp, and message; the tag ref points to that tag object, which in turn points to the release target.
 Annotated tags therefore add a metadata layer, but they do not remove the mutability of the tag name.
 The tag ref can still be updated to point to a different object, and the same visible tag name can later designate a different repository state.
+Figure~\ref{fig:bg-refs-tags} contrasts branch refs, lightweight tags, and annotated tags.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (refs, branches, and tag types).}
+Show the \texttt{refs/heads/} and \texttt{refs/tags/} namespaces side by side.
+For branches, depict a moving pointer (\texttt{main}) advancing along a commit line.
+For tags, contrast a lightweight tag (ref $\rightarrow$ commit) with an annotated tag (ref $\rightarrow$ tag object $\rightarrow$ commit), and indicate that either ref can be deleted or retargeted while the name string stays the same.
+\end{minipage}%
+}
+\mycaption[Branch refs versus lightweight and annotated tags]{%
+Placeholder for a diagram of Git reference namespaces and the two tag kinds, emphasising that tag names are mutable pointers rather than immutable identities.%
+}
+\label{fig:bg-refs-tags}
+\end{figure}
+
+This mutability is not incidental; it follows from Git's distributed design.
+Centralized version control systems such as CVS and Subversion assign revision identifiers from a single authoritative server, so a given revision number denotes one canonical changeset across all clients.
+In a distributed model, references are instead created independently in separate clones and must be reconciled when repositories synchronize: if two clones bind the same tag name to different commits, the protocol cannot preserve both bindings without violating name uniqueness.
+Git therefore treats tags as mutable refs, prioritizing distributed flexibility over protocol-level immutability of release labels.
+Platform-level mechanisms can partially compensate (\Cref{subsec:tags-disc-practical}), but they operate outside the core Git protocol and do not extend to plain Git operations or to other forges.
 
 \subsection{Local and Remote Repository Synchronization}
 \label{subsec:bg-local-remote-synchronization}
@@ -81,7 +121,26 @@ History rewriting breaks this simple model.
 If a public branch is updated to point to a commit that is not a descendant of the previous branch tip, the remote ref has changed in a non-fast-forward way.
 Downstream users who previously observed the old branch state may now hold commits that are no longer reachable from the public branch.
 Users who clone after the rewrite may never see those commits at all.
+Figure~\ref{fig:bg-sync-rewrite} contrasts the append-only and rewritten cases.
 This is the practical setting in which repository mutability becomes observable and consequential.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (fast-forward versus history rewrite).}
+Two-panel figure for the same public branch ref.
+Left panel: a fast-forward push where the branch tip moves to a descendant commit and all prior history remains reachable.
+Right panel: a force push where the branch tip jumps to a commit that is not a descendant; previously public commits become unreachable from the branch while possibly still existing in object storage.
+Annotate downstream effects for an early clone versus a post-rewrite clone.
+\end{minipage}%
+}
+\mycaption[Fast-forward update versus non-fast-forward rewrite]{%
+Placeholder for a before/after diagram of branch synchronization, contrasting append-only advancement with a history rewrite that orphans previously public commits.%
+}
+\label{fig:bg-sync-rewrite}
+\end{figure}
 
 \section{Mutability in Git}
 \label{sec:bg-mutability-git}
@@ -118,7 +177,24 @@ At the object level, rewriting does not mutate an existing commit object in plac
 Instead, Git creates new commit objects.
 The old commits remain in object storage as long as they are retained locally or by another archive, but they may become unreachable from the public refs of the repository.
 Because commit identifiers cover parent links, a direct change to one commit can propagate to descendants: later commits that point to the modified commit must also be replaced by new commits.
-The thesis describes this phenomenon as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot.
+The thesis describes this phenomenon as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot (Figure~\ref{fig:bg-snowball-effect}).
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (snowball effect of history rewriting).}
+Show a linear commit chain $C_0 \rightarrow C_1 \rightarrow C_2 \rightarrow C_3$.
+Amend or rebase $C_1$ to produce $C_1'$, then show that $C_2$ and $C_3$ must be replaced by new commits $C_2'$ and $C_3'$ because parent links changed.
+Use colour or strike-through to mark old commit IDs that remain in storage but disappear from the public branch view after a force push.
+\end{minipage}%
+}
+\mycaption[Snowball effect after rewriting an ancestor commit]{%
+Placeholder for a commit-chain diagram showing how changing one ancestor propagates new identifiers to all descendants.%
+}
+\label{fig:bg-snowball-effect}
+\end{figure}
 
 History rewriting is therefore not inherently suspicious.
 It is a normal part of some development workflows, particularly for pull-request branches and automated maintenance branches.
@@ -133,13 +209,30 @@ A force push changes the public ref to point to a new commit even when that comm
 
 The same principle applies to tags (\Cref{subsec:bg-branches-tags-references}).
 Tag deletion, recreation, and force-update are often legitimate, for example when correcting a release mistake or cleaning a repository.
-The security and reproducibility issue is not that such operations are always malicious, but that downstream tools may not record enough information to detect their consequences.
+Git's own documentation nonetheless discourages reusing a published tag name: the \texttt{git-tag} manual recommends issuing a new version label (for example, ``X.1'') rather than force-updating ``X'', because two clones may then both claim ``version X'' while resolving to different commits, and Linus Torvalds argued as early as 2007 that silently overwriting an already fetched tag is a security problem that maintainers must announce explicitly rather than perform quietly~\cite{git_tag_retagging_docs,torvalds_retagging_2007}.
+The security and reproducibility issue is therefore not that such operations are always malicious, but that the practice runs against documented guidance and that downstream tools may not record enough information to detect its consequences.
 
 For this thesis, a tag alteration is an observable change in the state of a tag across repository snapshots.
 The tag-alterations contribution distinguishes two main cases.
 A tag move occurs when a tag is observed before and after an alteration but resolves to a different target, including deletion followed by later recreation with a different target.
 A tag deletion occurs when a previously observed tag disappears from a later snapshot.
-Moves and deletions differ in observability: a deletion breaks resolution, whereas a move preserves the tag name while changing the retrieved object (\Cref{subsec:bg-stable-references-dependency-resolution}).
+Moves and deletions differ in observability: a deletion breaks resolution, whereas a move preserves the tag name while changing the retrieved object (Figure~\ref{fig:bg-tag-alteration-types}; \Cref{subsec:bg-stable-references-dependency-resolution}).
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (tag move versus tag deletion).}
+Three small timelines of the same tag name (for example, \texttt{v1.0.0}) across two repository snapshots $S_i$ and $S_{i+1}$: (1)~move---tag present in both snapshots but resolving to different commits; (2)~deletion---tag present in $S_i$ and absent in $S_{i+1}$; (3)~recreation---deletion followed by reappearance, optionally with the same or a different target.
+Adapt or simplify the tag-move schematic from Chapter~\ref{chap:tags} for background use.
+\end{minipage}%
+}
+\mycaption[Tag move, deletion, and recreation]{%
+Placeholder for a conceptual comparison of the tag-alteration cases defined in this thesis.%
+}
+\label{fig:bg-tag-alteration-types}
+\end{figure}
 
 \subsection{Apparent Immutability and Practical Mutability}
 \label{subsec:bg-apparent-immutability}
@@ -148,7 +241,26 @@ Object identifiers are stable under Git's content-addressed model; ref names are
 The resulting risk is therefore semantic as much as technical.
 Developers and tools assign meanings to references: a branch is usually understood as moving, while a release tag is often understood as stable, yet Git enforces neither convention.
 When social expectations about references diverge from the guarantees provided by the version control system, downstream users can make reproducibility and integrity assumptions that the system does not satisfy.
+Figure~\ref{fig:bg-object-ref-layers} summarises the two-layer model.
 How dependency specifications and build tooling translate that gap into concrete failures is examined in \Cref{sec:bg-releases-provenance-reproducibility}.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (immutable objects versus mutable refs).}
+Two-layer diagram.
+Bottom layer: content-addressed object store (blobs, trees, commits) with stable cryptographic identifiers.
+Top layer: human-readable refs (\texttt{main}, \texttt{v1.0.0}) as mutable pointers into the object store.
+Show that verifying an object ID guarantees content integrity, while resolving a ref name only yields whatever object the ref currently designates.
+\end{minipage}%
+}
+\mycaption[Immutable object identities versus mutable references]{%
+Placeholder for a layered view of Git's content-addressed store and the mutable naming layer that users and tools normally consume.%
+}
+\label{fig:bg-object-ref-layers}
+\end{figure}
 
 \section{Releases, Provenance, and Reproducibility}
 \label{sec:bg-releases-provenance-reproducibility}
@@ -165,7 +277,7 @@ Project documentation, dependency files, package recipes, and continuous integra
 \NOTEside{citation}
 
 Recording only a tag name fixes a mutable ref, not an immutable source identity (\Cref{subsec:bg-apparent-immutability}).
-The tag-alterations contribution frames the resulting gap as a structural mismatch between practices that treat tag names as stable release identifiers and Git semantics that allow reassignment or removal.
+The tag-alterations contribution frames the resulting gap as a structural mismatch between practices that treat tag names as stable release identifiers and Git semantics that allow reassignment or removal, developed in \Cref{subsec:tags-stability-assumptions}.
 This mismatch matters especially for computational research workflows and package ecosystems, where later rebuilds depend on recovering the same source state.
 
 \subsection{Stable References and Downstream Dependency Resolution}
@@ -185,13 +297,30 @@ If it records a tag name, stability and integrity depend on whether the tag is p
 A deleted tag can cause a fetch failure.
 A moved tag can cause the fetch to succeed while producing a different source state.
 The second case is more subtle because the dependency name still resolves.
+Figure~\ref{fig:bg-dependency-resolution} summarises these downstream outcomes.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (downstream dependency resolution outcomes).}
+Flowchart from a dependency specification to fetch result.
+Three branches: (1)~pinned commit hash---stable resolution as long as the object remains available; (2)~deleted tag---fetch or resolution failure; (3)~moved tag---fetch succeeds but may retrieve different source content, with an optional sub-branch for hash-checked ecosystems (for example, Nix fixed-output mismatch) versus unchecked consumers that accept the new target silently.
+\end{minipage}%
+}
+\mycaption[Downstream outcomes when resolving Git references]{%
+Placeholder for a flowchart comparing resolution behaviour when dependencies record commit hashes versus mutable tag names.%
+}
+\label{fig:bg-dependency-resolution}
+\end{figure}
 
 This distinction is visible in package managers that record integrity metadata.
 Nix, for example, stores expected hashes for fixed-output sources.
 If a tag later resolves to different content, the build does not silently accept the new source; it fails with a hash mismatch.
 This behavior avoids silent substitution, but it also shows that tag mutability can become an availability and rebuildability problem.
 A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching an upstream tag that no longer matches the recorded hash.
-The tag-alterations contribution illustrates this relationship through a cross-analysis with Nixpkgs, where packages that reference altered or deleted tags fail hash checks or become unrebuildable under those conditions.
+The tag-alterations contribution demonstrates this relationship empirically through a cross-analysis with Nixpkgs (\Cref{subsec:tags-reproducibility}).
 \NOTEside{citation for nix hash tarball}
 
 \subsection{Implications for Reproducible Builds}
@@ -270,7 +399,25 @@ Software Heritage stores these artifacts in a global Merkle DAG and assigns pers
 This archival model makes repository mutability observable.
 In the altered-histories contribution, consecutive snapshots of the same origin are compared to detect commits that were reachable in an earlier snapshot but missing from a later one.
 In the tag-alterations contribution, consecutive snapshots are compared to detect tag moves and deletions.
-In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository.
+In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository (Figure~\ref{fig:bg-swh-snapshots}).
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (Software Heritage snapshot comparison).}
+Show one software origin visited at times $t_i$ and $t_{i+1}$, producing snapshots $S_i$ and $S_{i+1}$.
+For each snapshot, list visible refs and the commits reachable from them.
+Highlight a commit present in $S_i$ but missing from $S_{i+1}$ (history alteration) and a tag resolving to different targets across snapshots (tag alteration).
+Optionally annotate SWHIDs as persistent archival identifiers.
+\end{minipage}%
+}
+\mycaption[Comparing consecutive Software Heritage snapshots]{%
+Placeholder for a schematic of archival snapshot differencing, the observability backbone of the empirical contributions.%
+}
+\label{fig:bg-swh-snapshots}
+\end{figure}
 
 The archival view also imposes limits.
 It can only observe alterations that occur between visits and remain visible long enough to be captured.
