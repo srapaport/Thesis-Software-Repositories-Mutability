@@ -12,24 +12,36 @@
 \section{Introduction}
 \label{sec:tags-intro}
 
+Chapter~\ref{chap:background} introduced the central tension of this thesis: Git provides strong integrity guarantees for content-addressed objects, yet the human-readable references that developers, package managers, and auditors actually cite---branches, tags, and other ref names---live in a mutable namespace~\cite{ProGit2014}.
+This chapter is the thesis' first empirical pass over one of its concrete manifestations, \emph{mutable releases} (\Cref{subsec:bg-mutable-releases}).
+Where Chapter~\ref{chap:histories} will later study rewriting inside the commit graph, the present chapter stays at the boundary where symbolic release labels meet cryptographic object identity: it asks how often public tags move or disappear, in what forms, and with what consequences for the workflows that treat a tag name as a durable identifier.
+
+The question did not arise only from reading Git's reference semantics.
+In March~2025, attackers retargeted \num{346} existing version tags in \texttt{tj-actions/changed-files}, a widely reused GitHub Action, so that every familiar label from \texttt{v39} through \texttt{v47} resolved to the same malicious commit on the next workflow run~\cite{paloalto_unit42_2025}.
+The injected payload dumped continuous-integration runner memory into workflow logs, exposing environment variables, API tokens, and other secrets of every project whose pipeline invoked the action; affected teams had to audit logs, rotate credentials, and repin workflows to verified commit hashes rather than to the tag strings they had believed were fixed~\cite{paloalto_unit42_2025}.
+What stayed with me after that incident was not only the scale of the compromise, but the asymmetry in how repository state is scrutinised.
+Commits, pull requests, and packaged artifacts attract review, scanning, and archival attention; Git tags, by contrast, are widely treated as \emph{immutable release anchors} in dependency files, continuous integration configurations, and documentation, yet they are rarely audited for whether they still designate the same source state they denoted when a consumer first pinned them~\cite{commonflow2010}.
+The \texttt{changed-files} attack made that gap difficult to dismiss: a single compromised upstream repository could rewrite an entire catalogue of release names overnight, and thousands of downstream workflows that had done ``the right thing'' by pinning to a specific version tag would still execute attacker-controlled code.
+If tag names are social contracts about stability, Git does not enforce that contract---and, before the measurement programme reported here, there was little public evidence about how often the contract is broken in ordinary maintenance as opposed to headline incidents.
+
 Public software repositories are not only collaboration spaces: they are upstream artifacts whose names and references are consumed by package managers, build systems, continuous integration pipelines, and security audits.
 In that downstream role, a release tag is often treated as a \emph{stable handle} for a particular source state.
-Tags mark releases and specific repository states that underpin build reproducibility and software supply-chain integrity, and dependency-management ecosystems rely on them to resolve and pin versions: Go modules, as well as npm (via \texttt{git://} URLs in \texttt{package.json}), Cargo (via Git dependencies in \texttt{Cargo.toml}), and pip all support Git repository dependencies anchored to tags, while continuous integration systems such as GitHub Actions use them to anchor deployment pipelines~\cite{rapaport2026tagalterations}.
+Tags mark releases and specific repository states that underpin build reproducibility and software supply-chain integrity, and dependency-management ecosystems rely on them to resolve and pin versions: Go modules, as well as npm (via \texttt{git://} URLs in \texttt{package.json}), Cargo (via Git dependencies in \texttt{Cargo.toml}), and pip all support Git repository dependencies anchored to tags, while continuous integration systems such as GitHub Actions use them to anchor deployment pipelines.
 Yet Git's reference model does not align with that social expectation.
-Tags live in the same mutable namespace as other references: both lightweight and annotated tags can be deleted or force-updated to point to different commits while the human-readable name remains familiar~\cite{ProGit2014,rapaport2026tagalterations} (the two tag kinds and their mutability are defined in \Cref{subsec:bg-branches-tags-references}).
+Tags live in the same mutable namespace as other references: both lightweight and annotated tags can be deleted or force-updated to point to different commits while the human-readable name remains familiar~\cite{ProGit2014} (the two tag kinds and their mutability are defined in \Cref{subsec:bg-branches-tags-references}).
 The tension is therefore not merely about whether two builds of the same project yield identical binaries---it is about whether two actors who agree on a dependency name can still agree on what \emph{source identity} that name denotes over time.
 
 This chapter studies \emph{tag alterations}: observable changes to the state of a tag between successive archival snapshots of the same repository.
-The focus is on integrity and provenance at the boundary between symbolic release labels and cryptographic object identity.
 When a tag moves, the same version string can come to designate a different commit, a different revision identifier, or a different source tree; when a tag disappears, downstream workflows may lose the ability to resolve the reference at all.
 Both outcomes affect whether external observers can reconstruct \emph{what} was retrieved, \emph{when}, and \emph{under which name}---questions that sit upstream of build reproducibility in the narrow sense~\cite{DBLP:journals/software/LambZ22}.
+The \texttt{changed-files} incident is revisited as a concrete case study in \Cref{subsec:tags-attack-case}; the bulk of the chapter, however, measures whether such events are isolated exceptions or part of a broader pattern visible in long-running public archives.
 
 \subsection{Release Tags as Stability Assumptions}
 \label{subsec:tags-stability-assumptions}
 
 Tags are widely used to mark software releases because they provide readable anchors for automation: dependency files, CI configurations, and documentation can refer to \texttt{v1.0.0} instead of a raw commit hash.
 That convenience trades away a strict cryptographic binding between the declared dependency string and the retrieved object unless additional pinning is applied.
-The mismatch is structural: current software practices treat tag names as stable release identifiers, while Git semantics allow those identifiers to be reassigned or removed over time~\cite{commonflow2010,rapaport2026tagalterations}.
+The mismatch is structural: current software practices treat tag names as stable release identifiers, while Git semantics allow those identifiers to be reassigned or removed over time~\cite{commonflow2010}.
 In practice, two builds that declare the same tag-based dependency may resolve to different source code at different times, undermining reproducibility and opening a supply-chain attack surface.
 From a supply-chain perspective, the risk is therefore semantic: tools and humans interpret the tag as a durable label for a fixed artifact, while the version control system only guarantees stability for content-addressed objects, not for ref names~\cite{ladisa2023supplychain}.
 
@@ -40,41 +52,20 @@ Tag mutability matters because it creates a class of failures where \emph{integr
 A moved tag can preserve the outward appearance of continuity---the same string still resolves in a fetch---while changing the commit or tree that consumers obtain.
 A deleted tag fails loudly for fresh clones, but may still disrupt long-lived mirrors, forks, and audit trails that assumed the reference would remain resolvable.
 This risk is especially acute for computational research workflows, where provenance and re-executability depend on stable, time-invariant references~\cite{DBLP:journals/corr/abs-2011-10098,881708}.
-At ecosystem scale, the question is no longer whether such events are theoretically possible---Git documents them---but how often they occur in public archives, in what forms, and whether they already intersect with real dependency metadata~\cite{rapaport2026tagalterations}.
-A recent supply-chain attack has already demonstrated that changes to dependency references can compromise an entire software ecosystem~\cite{paloalto_unit42_2025}.
+At ecosystem scale, the question is no longer whether such events are theoretically possible---Git documents them---but how often they occur in public archives, in what forms, and whether they already intersect with real dependency metadata.
 Despite that practical relevance, no comprehensive study had focused on the phenomenon of tag alterations before the work this chapter builds on.
-Figure~\ref{fig:tags-stability-gap} summarises the core mismatch between tag names and the source identities they denote over time.
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (tag name versus source identity).}
-Timeline with two downstream consumers resolving the same tag name (\texttt{v1.0.0}) at different dates.
-At $t_1$ the tag points to commit~$C_A$; at $t_2$ it points to commit~$C_B$.
-Show that the dependency string is unchanged while the retrieved source tree may differ.
-Contrast with a consumer that pinned commit~$C_A$ by hash.
-\end{minipage}%
-}
-\mycaption[Stable tag name, changing source identity]{%
-Placeholder for a conceptual timeline showing how a mutable tag name can designate different commits over time while remaining human-readable.%
-}
-\label{fig:tags-stability-gap}
-\end{figure}
 
 \paragraph{Research questions.}
 The chapter is organised around four research questions, following the underlying study~\cite{rapaport2026tagalterations}:
-(RQ1) how many tag alterations occur across major software forges, and how do they evolve over time?
-(RQ2) why are tags altered---what observable forms do alterations take?
-(RQ3) does repository popularity correlate with tag alterations?
-(RQ4) to what extent do tag alterations threaten build reproducibility and supply-chain integrity?
+(RQ1) How many tag alterations occur across major software forges and how do they evolve over time?
+(RQ2) How are tags altered in software repositories?
+(RQ3) Does repository popularity correlate with tag alterations?
+(RQ4) To what extent do tag alterations constitute a threat to software build reproducibility and supply-chain integrity?
 The remainder of the chapter answers these in turn: a thorough methodology (\Cref{sec:tags-methodology}), the prevalence and temporal evolution of alterations (\Cref{sec:tags-prevalence}), a taxonomy and characterization of how tags are altered (\Cref{sec:tags-taxonomy}), the relationship with repository popularity (\Cref{sec:tags-popularity}), reproducibility and supply-chain implications (\Cref{sec:tags-implications}), discussion (\Cref{sec:tags-discussion}), and threats to validity (\Cref{sec:tags-validity}).
 The empirical sections follow the order of the research questions: \Cref{sec:tags-prevalence} answers RQ1, \Cref{sec:tags-taxonomy} answers RQ2, \Cref{sec:tags-popularity} answers RQ3, and \Cref{sec:tags-implications} answers RQ4.
 
 \paragraph{Scope of the chapter.}
 The empirical material in this chapter summarises and extends the analysis reported in prior work~\cite{rapaport2026tagalterations}.
-Unless stated otherwise, counts and classifications refer to that study: successive snapshots from Software Heritage~\cite{swhcacm2018,cise-2020-doi} are compared to detect tag moves and deletions, moves are further classified by whether they change source tree content, commit identity, or only release-level structure, and a cross-check against Nixpkgs illustrates how such events surface when package definitions record cryptographic expectations about upstream sources.
 Reproducibility appears in this chapter where it is the \emph{mechanism} that makes integrity drift visible (for example, through fixed-output hash mismatches); the primary narrative remains mutability, reference semantics, and supply-chain trust.
 
 \section{Related Work}
@@ -331,7 +322,7 @@ Interpreting raw counts therefore requires separating ``bulk maintenance'' from 
 \section{Taxonomy and Characterization of Tag Alterations}
 \label{sec:tags-taxonomy}
 
-This section answers RQ2: \emph{how} are tags altered?
+This section answers RQ2: how are tags altered in software repositories?
 Deletions dominate the overall volume of alterations (\Cref{sec:tags-prevalence}), so the taxonomy here concentrates on \emph{moves}, where the tag name survives while its target may change, and then reads each category for its downstream impact.
 Each move is assigned to one of three mutually exclusive classes by comparing source-tree, commit, and tag/release identities, following the classification procedure of \Cref{subsec:tags-classification}.
 In most observed moves the underlying content actually changes, so the typical move is not a purely administrative correction; metadata-only and release-level moves nonetheless remain integrity-relevant for audit trails that reason about commit hashes even when the source tree is unchanged.
@@ -518,7 +509,7 @@ Placeholder for a platform-stratified view of tag alterations (analysis figure n
 \section{Implications for Release Integrity}
 \label{sec:tags-implications}
 
-The final research question is whether tag alterations pose a practical threat to build reproducibility and supply-chain security.
+The final research question asks to what extent tag alterations constitute a threat to software build reproducibility and supply-chain integrity.
 The threat is real for two independent reasons: many observed moves change the actual content behind a stable tag name, and the phenomenon already intersects with real package-management metadata.
 
 \subsection{Trust in Release Identifiers}
