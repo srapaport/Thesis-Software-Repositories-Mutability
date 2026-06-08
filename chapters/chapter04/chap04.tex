@@ -87,9 +87,15 @@ The stance is forensic (compare two observed worlds) rather than inline cryptogr
 \label{subsec:hist-rw-positioning}
 
 To our knowledge, no prior work had characterised, quantitatively or qualitatively, the extent of history alterations in public code repositories, let alone at large scale.
-This chapter fills that gap: it provides a taxonomy for categorising alterations, digs into two recurrent patterns (secret suppression and retroactive license changes), and provides an automated tool to help developers detect alterations in repositories of interest.
-Chapter~\ref{chap:tags} isolates release-tag mutability; this chapter isolates \emph{branch-reachable commit mutability}; together they cover two anchors downstream actors routinely conflate: \emph{release names} and \emph{ancestry}.
-GitHistorian, discussed in Section~\ref{sec:hist-githistorian}, packages the same snapshot-differencing idea for maintainers and auditors who need actionable reports rather than global statistics alone~\cite{DBLP:conf/kbse/RapaportPTZ25,replication-package-altered-histories}.
+This chapter fills that gap: it provides a taxonomy for categorising alterations, digs into two recurrent patterns (secret suppression and retroactive license changes), and provides an automated tool to help developers detect alterations in repositories of interest~\cite{DBLP:conf/kbse/RapaportPTZ25,replication-package-altered-histories}.
+
+My work on this topic spans two complementary empirical studies in this thesis.
+In Chapter~\ref{chap:tags}, I measured tag alterations---deletions and moves of references that downstream users and tools treat as stable release anchors---and connected archive-scale prevalence to package-level consequences for dependency resolution, release identification, and rebuildability, including hash-disciplined ecosystems where integrity failures become explicit build errors rather than silent drift~\cite{rapaport2026tagalterations,replication-package}.
+The present chapter differs from that earlier study in two ways.
+First, it widens the lens from release labels to \emph{reachable commit histories}: rather than asking whether a tag still resolves to the same commit, it asks whether commits once advertised on public branches disappear or are replaced across successive archival observations.
+Second, it foregrounds consequences for forensics and repository evolution---commit identities, parent links, authorship metadata, and file-level footprints---whereas the tag study foregrounds reproducibility and supply-chain integrity at the boundary where symbolic release names meet cryptographic object identity.
+Together, the two studies isolate two reference types through which mutability enters downstream workflows---\emph{release names} and \emph{ancestry}---that actors routinely conflate when they record only a tag or branch name.
+GitHistorian, discussed in Section~\ref{sec:hist-githistorian}, packages the snapshot-differencing idea developed here for maintainers and auditors who need actionable reports rather than global statistics alone~\cite{DBLP:conf/kbse/RapaportPTZ25,replication-package-altered-histories}.
 
 \section{Methodology}
 \label{sec:hist-methodology}

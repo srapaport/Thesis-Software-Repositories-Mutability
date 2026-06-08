@@ -71,7 +71,6 @@ Reproducibility appears in this chapter where it is the \emph{mechanism} that ma
 \section{Related Work}
 \label{sec:tags-related}
 
-This section follows the positioning of the underlying ACM REP contribution~\cite{rapaport2026tagalterations}, synthesised with the thesis-side literature reviews on \emph{Git mutability and supply-chain integrity} and \emph{Git metadata as an attack surface}.
 The work lies at the intersection of several bodies of prior research---software supply chains, reproducible builds, functional package management, software preservation, and version-control alteration---each of which has treated these concerns separately, leaving the specific phenomenon of Git tag alteration unexplored.
 The goal is not to duplicate Chapter~\ref{chap:background}, but to state which prior results motivate tag-level measurement and which adjacent lines of work differ in assumptions or evidence base.
 
@@ -100,21 +99,11 @@ The problem is then not source disappearance but source \emph{ambiguity}---a sym
 Follow-on work on scholarly code references reinforces that forge URLs are fragile identifiers even when repositories remain nominally online~\cite{DBLP:conf/ercimdl/EscamillaKCRWN21,DBLP:conf/icadl/EscamillaKCRWN23}.
 Software Heritage is therefore both a scientific instrument and an integrity witness for comparing successive public states~\cite{cise-2020-doi,DBLP:conf/msr/PietriSZ20}.
 
-Closer to Git's threat model, classic work on \emph{metadata manipulation} in distributed version control shows that omitting or misrepresenting commits can steer developers toward unsafe merges and inconsistent repository views; defences rely on cryptographic logs of developer-visible state~\cite{torresarias2016gitmetadata}.
+Closer to Git's threat model, classic work on metadata manipulation in distributed version control shows that omitting or misrepresenting commits can steer developers toward unsafe merges and inconsistent repository views; defences rely on cryptographic logs of developer-visible state~\cite{torresarias2016gitmetadata}.
 Empirical mining research has long warned that version-control histories are not a neutral ground truth for measurement: Git histories can be incomplete, biased, or unstable under real workflows~\cite{bird2009promisesmininggit,kalliamvakou2014promises}, and longitudinal Linux-focused mining shows that histories can be partially \emph{irrecoverable} once rewriting and mirroring interact at scale~\cite{DBLP:journals/ese/GermanAH16}.
 The Pro Git book itself reflects the social expectation of stability, stating that a tag is ``very much like a branch that doesn't change''~\cite{ProGit2014}; the wording is pedagogical, but it captures the widespread perception of tags as immutable release anchors.
 That perception is not endorsed by Git's own maintainers: the \texttt{git-tag} manual warns that reusing a published tag name can leave different users holding the same label on different commits, calls the practice ``insane'', and recommends issuing a new version identifier instead, a position Linus Torvalds had already argued as a security concern in 2007~\cite{git_tag_retagging_docs,torvalds_retagging_2007}.
 The gap this thesis measures is therefore between documented guidance against re-tagging and the alteration behaviour actually observed at archive scale.
-
-\subsection{Positioning of This Chapter}
-\label{subsec:tags-rw-positioning}
-
-The closest prior work is the emerging literature on altered version-control history in public repositories: the altered-histories study (Chapter~\ref{chap:histories}) establishes that public repository history can be modified after publication~\cite{DBLP:conf/kbse/RapaportPTZ25}.
-This chapter differs in two ways.
-First, it focuses specifically on tag alterations---deletions and moves of references that downstream users and tools treat as stable anchors---rather than on history rewriting broadly.
-Second, it foregrounds the consequences for software reproducibility and supply-chain integrity: rewritten branches and commits matter for forensics and repository evolution, whereas rewritten tags matter directly for dependency resolution, release identification, and rebuildability.
-The chapter therefore isolates \emph{one} reference type through which mutability enters the supply chain and connects archival measurement at forge scale to package-level consequences, including hash-disciplined ecosystems where integrity failures become explicit build errors rather than silent drift~\cite{rapaport2026tagalterations,replication-package}.
-The next chapter widens the lens from release labels to \emph{reachable commit histories} (\Cref{chap:histories}).
 
 \section{Methodology}
 \label{sec:tags-methodology}
