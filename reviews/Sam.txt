@@ -1,0 +1,10 @@
+figure change M to millions, change e to million or milliard (article + these)
+
+
+3.6 too many numbers, calcul inline to avoid
+careful with significative numbers
+careful with macros
+
+3.7.2 attention to mention github
+
+Biblio check when no authors

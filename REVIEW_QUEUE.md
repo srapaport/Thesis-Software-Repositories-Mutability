@@ -216,6 +216,24 @@ When an agent drafts a section that requires one of the unresolved entries:
 
 ## Chapter 4 — Mutable Tags and Release Integrity
 
+### CH3-paper-alignment — Paper alignment and `\NOTEside{new}` tagging — 2026-06-09
+
+- **Target file**: `chapters/chapter03/chap03.tex`
+- **Status**: done-with-gaps
+- **What was produced**: From `\section{Related Work}` through `\section{Conclusion}`, aligned body text against `contributions/tag-alterations-paper/{related,methodology,results,discussion,conclusion}.tex`. Restored missing paper content (positioning paragraph, Rapaport et al.\ altered-histories comparison, supply-chain attack framing). Reverted unnecessary paraphrase to track paper wording. Added **113** `\NOTEside{new}` margin tags on every passage that differs from the paper (including allowed thesis edits: cross-refs, voice, section labels). Introduction (lines 12–69) unchanged.
+- **Verify**:
+  - [ ] Compile and scan margin notes: green `\NOTEside{new}` blocks mark deliberate departures; untagged paragraphs should be verbatim paper text.
+  - [ ] Spot-check Related Work: restored Rapaport/\Cref{chap:histories} positioning vs. thesis-only citations (`torresarias2016gitmetadata`, mining-history refs).
+  - [ ] Spot-check Methodology: thesis-only blocks (`subsec:tags-research-design`, `subsec:tags-scope-limits`, figure placeholders) still read correctly with tags.
+  - [ ] Spot-check Results sections: paper order preserved inside thesis section boundaries (Prevalence / Taxonomy / Popularity / Implications).
+  - [ ] Spot-check Discussion + Threats: expanded validity paragraphs match paper; subsection splits still navigable.
+  - [ ] Spot-check Conclusion: paper conclusion restored; final bridge to `\Cref{chap:histories}` tagged as new.
+  - [ ] Confirm `borges-2016-github-stars` cite resolves in `this.bib` (added to `this.bib` from paper bib).
+- **TODO / NOTE markers introduced**:
+  - `\NOTEside{new}` — 113 instances from Related Work through Conclusion (audit trail for paper vs. thesis text).
+  - `\NOTEside{If the paper provides...}` — unchanged at `subsec:tags-build-packaging` (evidence gap, not alignment tag).
+- **Follow-ups**: after review, remove `\NOTEside{new}` tags from passages you accept as final; optionally restore popularity bucket breakdown numbers removed when aligning RQ3 prose to paper.
+
 ### DEDUP-CH2-CH4 — Remove Background/Chapter-3 redundancy, cross-reference instead — 2026-06-08
 
 - **Target files**: `chapters/chapter03/chap03.tex`, `chapters/chapter02/chap02.tex`

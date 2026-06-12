@@ -12,24 +12,27 @@
 \section{Introduction}
 \label{sec:hist-intro}
 
-Chapter~\ref{chap:tags} studied mutability at the boundary of \emph{release names}: tags can move or vanish while the spelling of the dependency string stays familiar.
-This chapter moves one level inward, to the \emph{commit graph} that public branches make reachable at each archival observation.
-Distributed version control systems such as Git are among the most popular tools used by software developers, and for the most part Git repositories are append-only: developers add new commits and exchange them by pushing to and pulling from public repositories~\cite{ProGit2014}.
+Chapter~\ref{chap:tags} established that the \emph{named references} developers use to designate software releases---tags---are mutable in practice: they can move to a different commit, disappear entirely, or be recreated with different targets while the version string they carry remains familiar to downstream consumers.
+That chapter also noted, at its close, that mutable release labels represent only one surface of repository mutability; the other surface is the commit graph itself.
+A tag can remain perfectly stable while the commits it ultimately reaches through its ancestry have been silently replaced.
+This chapter moves the investigation inward, from the boundary of release names to the \emph{reachable commit history} that public branches advertise at each archival observation.
+
+Distributed version control systems such as Git are, for the most part, append-only in ordinary use: developers add new commits and exchange them by pushing to and pulling from public repositories~\cite{ProGit2014}.
 Git explicitly supports rewriting that graph, however---\texttt{amend}, \texttt{rebase}, \texttt{filter-repo}, interactive history editing, and force-pushed replacements of branch tips are everyday maintenance tools when used on private branches~\cite{ProGit2014}.
-The same operations on \emph{shared} history create a different class of integrity questions: commit identities, parent links, authorship fields, and timestamps are routinely treated as an audit trail, yet they are not append-only facts about a repository; they are whatever the current object graph says after the latest rewrite~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+The same operations on \emph{shared} history create a different class of integrity questions: commit identities, parent links, authorship fields, and timestamps are routinely treated as an audit trail, yet they are not append-only facts about a repository; they are whatever the current object graph says after the latest rewrite.
 
 History alterations on public branches are problematic for two converging reasons.
 First, they break the pull/push workflow, which relies on the stability of commit identifiers as checkpoints for history exchanges.
 Second, by breaking commit identities, alterations create opportunities for supply-chain attacks: alongside a legitimate history rewrite, an attacker can sneak in malicious changes that are difficult to audit because of the confusion caused by commit-identity modifications~\cite{ladisa2023supplychain,torresarias2016gitmetadata}.
 Software Heritage mitigates the observability problem that would otherwise make rewriting invisible: successive crawls retain prior object identities even when forges overwrite refs~\cite{swhcacm2018,cise-2020-doi}.
-That archival property makes it possible to ask, at ecosystem scale, how often public histories change in ways that remove or replace commits, how those events distribute across branches and project strata, and whether the file-level footprints resemble benign hygiene (for example, cleaning credentials) or governance-sensitive patterns (for example, retroactive license edits)~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+That archival property makes it possible to ask, at ecosystem scale, how often public histories change in ways that remove or replace commits, how those events distribute across branches and project strata, and whether the file-level footprints resemble benign hygiene (for example, cleaning credentials) or governance-sensitive patterns (for example, retroactive license edits).
 
 \subsection{From Mutable Releases to Altered Histories}
 \label{subsec:hist-from-tags}
 
 Tag mutability and history rewriting are not competing explanations for the same failure; they are \emph{composable} sources of drift.
 A project can keep every release tag stable while still replacing the commits those tags eventually point through, or rewrite metadata underneath a stable tree snapshot.
-Conversely, a moved tag is already a signal that some ref-changing operation occurred; the metadata-only tag moves measured in Chapter~\ref{chap:tags} are consistent with history-changing workflows that preserve directory identity while altering revision identifiers~\cite{rapaport2026tagalterations,DBLP:conf/kbse/RapaportPTZ25}.
+Conversely, a moved tag is already a signal that some ref-changing operation occurred; the metadata-only tag moves measured in Chapter~\ref{chap:tags} are consistent with history-changing workflows that preserve directory identity while altering revision identifiers~\cite{rapaport2026tagalterations}.
 This chapter therefore completes the empirical picture begun in Chapter~\ref{chap:tags}: it quantifies mutability \emph{inside} the ancestry that public heads advertise, independent of whether any particular tag ever moved.
 
 \subsection{Why History Rewriting Deserves Broader Study}
@@ -39,20 +42,20 @@ History rewriting matters for supply-chain and assurance arguments for three con
 
 First, \textbf{downstream workflows depend on stable graph identities}.
 Forks, clones, signed-release pipelines, and bisection all assume that fetching a branch name yields a coherent evolution of commits unless a maintainer explicitly announces a disruptive operation.
-Force-pushed rewrites break that assumption silently for actors who are not continuously mirroring~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+Force-pushed rewrites break that assumption silently for actors who are not continuously mirroring.
 
 Second, \textbf{metadata is itself a channel}.
-Author timestamps, names, and messages feed empirical software engineering, review analytics, and security heuristics; when they can change retroactively, analyses that treat metadata as ground truth inherit a structural blind spot unless they anchor to independently versioned snapshots~\cite{DBLP:journals/ese/FlintCD22,DBLP:conf/kbse/RapaportPTZ25}.
+Author timestamps, names, and messages feed empirical software engineering, review analytics, and security heuristics; when they can change retroactively, analyses that treat metadata as ground truth inherit a structural blind spot unless they anchor to independently versioned snapshots~\cite{DBLP:journals/ese/FlintCD22}.
 
 Third, \textbf{the same mechanism serves remediation and concealment}.
-Removing accidentally committed credentials or correcting license files is legitimate and common; it is also operationally similar, at the object-graph level, to hiding malicious commits unless independent archives or hash-disciplined consumers keep contradictory evidence~\cite{ladisa2023supplychain,DBLP:conf/kbse/RapaportPTZ25}.
+Removing accidentally committed credentials or correcting license files is legitimate and common; it is also operationally similar, at the object-graph level, to hiding malicious commits unless independent archives or hash-disciplined consumers keep contradictory evidence~\cite{ladisa2023supplychain}.
 
 The chapter is organised around five research questions following the underlying ASE~2025 study~\cite{DBLP:conf/kbse/RapaportPTZ25}:
-(RQ1) how often are public VCS histories altered in an observable way?
-(RQ2) which (a) branches and (b) repositories are impacted the most?
-(RQ3) when a history is altered, which commit parts undergo modifications?
-(RQ4) are there recurrent patterns of file alterations among observed rewrites?
-(RQ5) can an automated tool audit and detect history alterations in public repositories?
+(RQ1) How often are the histories of publicly available VCS repositories altered in an observable way?
+(RQ2) What (a) branches and (b) repositories are impacted the most by history alterations?
+(RQ3) When the history of a VCS repository is altered, which commit parts undergo modifications?
+(RQ4) Are there recurrent patterns of file alterations among observed VCS history rewrites?
+(RQ5) Can we design and implement an automated tool to audit and detect history alterations in public repositories?
 Counts, branch tables, and taxonomy percentages are taken from that paper unless this text explicitly flags a reinterpretation; frozen datasets and the GitHistorian tool are distributed alongside it~\cite{replication-package-altered-histories}.
 
 \section{Related Work}
@@ -70,6 +73,11 @@ Developers use alterations to maintain ``clean'' histories that ease code review
 \NOTEside{Optional: add citations for Githru (commit-history visual analytics), the Cort\'es R\'ios et al.\ workflow taxonomy, and rebase/merge-conflict studies if the bibliography should match the ASE paper's related-work depth.}
 The ability to modify files is also what makes history rewriting attractive for removing erroneously committed sensitive information---a use case studied directly in Chapter~\ref{chap:secrets}.
 
+\NOTEside{new}Limited tooling exists for recovering missing elements from commit history via inference rather than archival comparison.
+AST-based approaches attempt to detect file renames with high accuracy by focusing on content structure rather than metadata~\cite{DBLP:conf/apsec/FujimotoHK21}.
+Probabilistic methods have been developed to track file movements between versions---addition, removal, and relocation---using nearest-neighbour clone detection, but without capturing metadata alterations~\cite{DBLP:conf/wcre/LavoieKMZ12}.
+Neither line of work operates at the scale of an independent archive, and neither can reconstruct commits that have already been removed from the advertised graph; GitHistorian (\Cref{sec:hist-githistorian}) complements these approaches by taking the archival evidence as its primary input.
+
 \subsection{Empirical Analysis of History Alterations and Archival Comparison}
 \label{subsec:hist-rw-forensics}
 
@@ -80,7 +88,7 @@ Security research complements those caveats with explicit threat models: metadat
 
 Large-scale studies of public development increasingly rely on compressed graph representations of version-control data to make global queries feasible~\cite{saner-2020-swh-graph,DBLP:conf/msr/PietriSZ20}.
 Software Heritage has been positioned both as a preservation effort and as a dataset for provenance and reproducibility research because it retains objects and snapshots across upstream churn~\cite{swhcacm2018,cise-2020-doi}.
-The altered-histories methodology exploits that property directly: consecutive snapshots of the same origin are differenced, root-cause commits are identified, and alterations are classified along metadata-versus-directory axes~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+The altered-histories methodology exploits that property directly: consecutive snapshots of the same origin are differenced, root-cause commits are identified, and alterations are classified along metadata-versus-directory axes.
 The stance is forensic (compare two observed worlds) rather than inline cryptographic, because Git itself does not provide append-only project history to downstream clients~\cite{ladisa2023supplychain}.
 
 \subsection{Research Gap and Positioning of This Chapter}
@@ -88,20 +96,21 @@ The stance is forensic (compare two observed worlds) rather than inline cryptogr
 
 To our knowledge, no prior work had characterised, quantitatively or qualitatively, the extent of history alterations in public code repositories, let alone at large scale.
 This chapter fills that gap: it provides a taxonomy for categorising alterations, digs into two recurrent patterns (secret suppression and retroactive license changes), and provides an automated tool to help developers detect alterations in repositories of interest~\cite{DBLP:conf/kbse/RapaportPTZ25,replication-package-altered-histories}.
+The study establishes that public version-control state should not be assumed permanently stable once a repository is published.
 
 My work on this topic spans two complementary empirical studies in this thesis.
-In Chapter~\ref{chap:tags}, I measured tag alterations---deletions and moves of references that downstream users and tools treat as stable release anchors---and connected archive-scale prevalence to package-level consequences for dependency resolution, release identification, and rebuildability, including hash-disciplined ecosystems where integrity failures become explicit build errors rather than silent drift~\cite{rapaport2026tagalterations,replication-package}.
+In Chapter~\ref{chap:tags}, I measured tag alterations---deletions and moves of references that downstream users and tools often treat as stable release anchors---and connected archive-scale prevalence to package-level consequences for dependency resolution, release identification, and rebuildability, including hash-disciplined ecosystems where integrity failures become explicit build errors rather than silent drift~\cite{rapaport2026tagalterations,replication-package}.
 The present chapter differs from that earlier study in two ways.
-First, it widens the lens from release labels to \emph{reachable commit histories}: rather than asking whether a tag still resolves to the same commit, it asks whether commits once advertised on public branches disappear or are replaced across successive archival observations.
-Second, it foregrounds consequences for forensics and repository evolution---commit identities, parent links, authorship metadata, and file-level footprints---whereas the tag study foregrounds reproducibility and supply-chain integrity at the boundary where symbolic release names meet cryptographic object identity.
+First, whereas the tag study isolates \emph{tag alterations} specifically, this chapter widens the lens to \emph{reachable commit histories}: rather than asking whether a tag still resolves to the same commit, it asks whether commits once advertised on public branches disappear or are replaced across successive archival observations.
+Second, this chapter foregrounds consequences for forensics and repository evolution---commit identities, parent links, authorship metadata, and file-level footprints---whereas the tag study foregrounds reproducibility and supply-chain integrity; rewritten branches and commits matter for audit trails and repository evolution, whereas rewritten tags matter directly for dependency resolution, release identification, and rebuildability.
 Together, the two studies isolate two reference types through which mutability enters downstream workflows---\emph{release names} and \emph{ancestry}---that actors routinely conflate when they record only a tag or branch name.
-GitHistorian, discussed in Section~\ref{sec:hist-githistorian}, packages the snapshot-differencing idea developed here for maintainers and auditors who need actionable reports rather than global statistics alone~\cite{DBLP:conf/kbse/RapaportPTZ25,replication-package-altered-histories}.
+GitHistorian, discussed in Section~\ref{sec:hist-githistorian}, packages the snapshot-differencing idea developed here for maintainers and auditors who need actionable reports rather than global statistics alone~\cite{replication-package-altered-histories}.
 
 \section{Methodology}
 \label{sec:hist-methodology}
 
 This study shares the observational stance established in full in Chapter~\ref{chap:tags}.
-As in \Cref{sec:tags-methodology}, the analysis compares consecutive Software Heritage snapshots of the same Git origin, treats mutability as a property of sequences of archived observations rather than of maintainer intent, separates references from identity-bearing commit objects and from source trees, and reads every count as a conservative lower bound because events occurring between two archival visits can be missed or merged~\cite{DBLP:conf/kbse/RapaportPTZ25,swhcacm2018}.
+As in \Cref{sec:tags-methodology}, the analysis compares consecutive Software Heritage snapshots of the same Git origin, treats mutability as a property of sequences of archived observations rather than of maintainer intent, separates references from identity-bearing commit objects and from source trees, and reads every count as a conservative lower bound because events occurring between two archival visits can be missed or merged~\cite{swhcacm2018}.
 The four-phase structure is also shared: collect a large corpus of periodically crawled repositories, detect alterations by snapshot comparison, categorise them with a taxonomy, and analyse recurrent file-level patterns through targeted case studies.
 The rest of this section describes only what \emph{differs} from the tag study: the unit of differencing is the reachable commit set rather than resolved tag targets, the corpus and filters differ in their specifics, and the taxonomy and case studies are built for commit-level rewrites.
 
@@ -113,6 +122,22 @@ The Git data model is a Merkle directed acyclic graph (DAG) in which each node (
 Because of this construction, modifying any part of a commit changes its identifier, and---through a \emph{snowball effect}---changes the identifiers of every commit that transitively references it.
 Two common rewrite operations illustrate this: \texttt{amend} retroactively modifies a recorded commit (its metadata and/or content), and \texttt{rebase} merges, splits, or reattaches commits.
 In both cases the old commits disappear from the advertised graph and new ones replace them, while Software Heritage still reaches the old commits from the previous snapshot of the same origin.
+Figure~\ref{fig:hist-amend-rebase} illustrates both scenarios.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (amend and rebase scenarios).}
+Two side-by-side DAG diagrams. Left (\texttt{amend}): commit~2 is modified, producing new commit~4; commit~3 becomes commit~5 due to the snowball effect; grayed-out commits~2 and~3 are no longer reachable from the branch head, but remain accessible from the previous Software Heritage snapshot. Right (\texttt{rebase}): commits~c and~b are squashed into a single new commit~d; both predecessors disappear from the advertised graph. Arrows point from newer to older commits.
+\end{minipage}%
+}
+\mycaption[Common history-rewrite scenarios in Git]{%
+The two most common operations that alter Git history: \texttt{commit --amend} (left) and interactive \texttt{rebase} (right). Grayed-out nodes are no longer reachable after alteration but remain preserved in the Software Heritage archive.%
+}
+\label{fig:hist-amend-rebase}
+\end{figure}
 
 This yields the operational definition used throughout: a repository $R$ \emph{underwent a history alteration} if there exist two subsequent snapshots $S_1, S_2$ of $R$ such that at least one commit present in $S_1$ is missing from $S_2$.
 An \emph{altered commit} is one present in an earlier snapshot but missing from a later one.
@@ -131,12 +156,12 @@ As in the tag study, popularity-dependent analyses (RQ2b) use GitHub star counts
 \begin{minipage}{0.92\linewidth}
 \small
 \textbf{Figure placeholder (history-alteration methodology diagram).}
-Export or redraw the pipeline figure from~\cite{DBLP:conf/kbse/RapaportPTZ25} (Software Heritage snapshot acquisition, origin filtering, branch selection, commit-graph differencing, root-cause-commit extraction, and taxonomy assignment).
-Reusing the tag-pipeline figure from Chapter~\ref{chap:tags} without relabelling would mislead readers because the commit-reachability differencing stage differs materially from tag-resolution comparison~\cite{rapaport2026tagalterations,DBLP:conf/kbse/RapaportPTZ25}.
+Export or redraw the pipeline figure from the underlying paper (Software Heritage snapshot acquisition, origin filtering, branch selection, commit-graph differencing, root-cause-commit extraction, and taxonomy assignment).
+Reusing the tag-pipeline figure from Chapter~\ref{chap:tags} without relabelling would mislead readers because the commit-reachability differencing stage differs materially from tag-resolution comparison~\cite{rapaport2026tagalterations}.
 \end{minipage}%
 }
 \mycaption[History-alteration detection pipeline]{%
-Placeholder for a dedicated methodology figure for commit-graph differencing (see~\cite{DBLP:conf/kbse/RapaportPTZ25}).%
+Overview of the methodology for detecting and categorising history alterations: Software Heritage snapshot acquisition, origin filtering, commit-graph differencing, root-cause-commit extraction, and taxonomy assignment.%
 }
 \label{fig:hist-methodology-placeholder}
 \end{figure}
@@ -152,7 +177,7 @@ Because different branch naming schemes denote the same concept, branches are un
 
 \begin{table}[t]
 \centering
-\caption{Branch-name unification used before aggregating alteration statistics~\cite{DBLP:conf/kbse/RapaportPTZ25}.}
+\caption{Branch-name unification used before aggregating alteration statistics.}
 \label{tab:hist-branch-unification}
 \begin{tabular}{ll}
 \hline
@@ -183,7 +208,7 @@ The horizon of ten generations is a heuristic trade-off between analysis time an
 
 \begin{table}[t]
 \centering
-\caption{Root-cause commits by category~\cite{DBLP:conf/kbse/RapaportPTZ25}. Metadata fields within META are not mutually exclusive.}
+\caption{Root-cause commits by category. Metadata fields within META are not mutually exclusive.}
 \label{tab:hist-rootcause-categories}
 \begin{tabular}{llr}
 \hline
@@ -224,7 +249,7 @@ Applying the taxonomy of Table~\ref{tab:hist-rootcause-categories} to the \num{8
 
 \begin{table}[t]
 \centering
-\caption{Distribution of alteration categories, all repositories versus repositories with 1000+ stars~\cite{DBLP:conf/kbse/RapaportPTZ25}. Percentages are of occurrences and are not mutually exclusive.}
+\caption{Distribution of alteration categories, all repositories versus repositories with 1000+ stars. Percentages are of occurrences and are not mutually exclusive.}
 \label{tab:hist-category-distribution}
 \begin{tabular}{lrr}
 \hline
@@ -243,6 +268,21 @@ Other & \num{0.6} & \num{0.3} \\
 \hline
 \end{tabular}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (category distribution: all vs.\ 1000+ stars).}
+Grouped bar chart showing the percentage of occurrences in each taxonomy category for all repositories (light bars) and for repositories with 1000+ GitHub stars (dark bars). Categories on the horizontal axis: Author, Message, Date, Committer, CommitterDate, DifferentBranchName, FileModified, FileRemoved, ContentSplit, Other. Reproduce from the paper's Figure~6 (the grouped bar chart makes the all-versus-popular comparison immediately visible, which the table above does not convey).
+\end{minipage}%
+}
+\mycaption[Distribution of root-cause-commit categories, all versus popular repositories]{%
+Proportion of root-cause commits in each taxonomy category, for all repositories and for repositories with 1000 or more GitHub stars. Percentages are not mutually exclusive.%
+}
+\label{fig:hist-category-distribution}
+\end{figure}
 
 \subsection{Metadata-Only Alterations (META)}
 \label{subsec:hist-tax-metadata}
@@ -295,7 +335,7 @@ Even though roughly half of all alterations follow a known practice, alterations
 
 \begin{table}[t]
 \centering
-\caption{Largest shares of history alterations by branch category (after unification), from the branch distribution of~\cite{DBLP:conf/kbse/RapaportPTZ25}. \texttt{heads/...} labels are preserved as in the paper.}
+\caption{Largest shares of history alterations by branch category (after unification). \texttt{heads/...} labels are raw branch names as stored in the archive.}
 \label{tab:hist-branch-categories}
 \begin{tabular}{lr}
 \hline
@@ -315,6 +355,21 @@ Pull request & \num{37.57} \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (branch distribution bar chart).}
+Horizontal bar chart on a log-scale percentage axis showing the top-10 branch categories by share of alteration events (after unification). Bars for: pull request (37.57\%), \texttt{main} (11.39\%), \texttt{renovate} (9.56\%), \texttt{heads/gh-pages} (1.95\%), \texttt{development} (0.88\%), and the remaining five branches each below 0.25\%. The log scale makes the long tail visible. Reproduce from the paper's Figure~4.
+\end{minipage}%
+}
+\mycaption[Branch distribution of history alterations]{%
+Top-10 branches by share of observed history-alteration events (log-scale percentage axis). Pull-request branches dominate, but default (\texttt{main}/\texttt{master}) and automated (\texttt{renovate}) branches account for a substantial combined share.%
+}
+\label{fig:hist-branch-distribution}
+\end{figure}
+
 \subsection{Distribution Across Repositories (RQ2b)}
 \label{subsec:hist-affected-projects}
 
@@ -322,6 +377,21 @@ Joining the \num{1218547} altered repositories with their GitHub star counts (af
 The proportion of origins with a detected alteration in each bucket reveals a pronounced relationship between popularity and alteration likelihood: \SI{0.3}{\percent} for 0--1 star, rising to \SI{1.6}{\percent} for 2--9, \SI{3.0}{\percent} for 10--99, and stabilising around \SI{3.4}{\percent} for 100--999 and \SI{3.3}{\percent} for 1000+.
 It is therefore \emph{not} the case that less popular repositories experience more rewrites; rather, as repositories gain visibility, the likelihood of history modification increases substantially, and even mature, popular repositories (100+ stars) experience a non-negligible amount of alteration.
 Within very popular repositories (100+ stars), alterations happen mostly on pull-request branches (\SI{56}{\percent}) but remain non-negligible on main branches (\SI{1.8}{\percent}), with implications for dependency management, reproducible builds, and the reliability assumptions developers make when incorporating external repositories.
+
+\begin{figure}[t]
+\centering
+\fbox{%
+\begin{minipage}{0.92\linewidth}
+\small
+\textbf{Figure placeholder (proportion of repositories with at least one alteration per star range).}
+Bar chart with five star-range buckets on the horizontal axis (0--1, 2--9, 10--99, 100--999, 1000+) and the percentage of repositories with at least one detected alteration on the vertical axis. Values: 0.3\%, 1.6\%, 3.0\%, 3.4\%, 3.3\%. The monotonic rise (flattening at 100+ stars) illustrates the positive correlation between popularity and alteration likelihood. Reproduce from the paper's Figure~5.
+\end{minipage}%
+}
+\mycaption[Share of repositories with at least one history alteration by popularity tier]{%
+Proportion of repositories in each GitHub star bucket that exhibit at least one observed history alteration. The alteration rate rises steadily with popularity and stabilises for highly popular repositories (100+ stars).%
+}
+\label{fig:hist-popularity-proportion}
+\end{figure}
 
 \section{Security-Relevant Characteristics of Altered Histories (RQ4)}
 \label{sec:hist-security}
@@ -337,7 +407,7 @@ Documentation files (\texttt{README.md}, \texttt{CHANGELOG.md}, \texttt{index.md
 
 \begin{table}[t]
 \centering
-\caption{Top-20 most altered file names~\cite{DBLP:conf/kbse/RapaportPTZ25}.}
+\caption{Top-20 most altered file names.}
 \label{tab:hist-top-filenames}
 \small
 \begin{tabular}{rlr@{\hskip 2em}rlr}
@@ -382,7 +452,7 @@ Retroactively changing version history can make old versions, under an old licen
 \label{subsec:hist-sec-interpretation}
 
 Large counts of secret-shaped removals are \emph{consistent with} hygiene after accidental commits, which is good operational practice yet still problematic for third parties who may have cloned the old history.
-They are also \emph{indistinguishable at this layer} from attempts to scrub evidence unless independent mirrors retain the pre-rewrite objects~\cite{ladisa2023supplychain,DBLP:conf/kbse/RapaportPTZ25}.
+They are also \emph{indistinguishable at this layer} from attempts to scrub evidence unless independent mirrors retain the pre-rewrite objects~\cite{ladisa2023supplychain}.
 License changes raise complementary governance questions: recipients may rely on SPDX headers or \texttt{LICENSE} files for compliance, but those files can change retroactively in rewritten histories even when branch names stay constant.
 
 \section{GitHistorian: An Operationalization of History Alteration Detection (RQ5)}
@@ -442,7 +512,7 @@ Hooks installed:
   - post-checkout (triggered after git checkout)
 \end{verbatim}
 \mycaption[GitHistorian CLI session]{%
-Representative GitHistorian session: auditing a repository for alterations and attaching Git hooks for continuous monitoring~\cite{DBLP:conf/kbse/RapaportPTZ25}. SWHIDs are illustrative, as printed in the paper.%
+Representative GitHistorian session: auditing a repository for alterations and attaching Git hooks for continuous monitoring. SWHIDs are illustrative.%
 }
 \label{fig:hist-gh-transcript}
 \end{figure}
@@ -451,7 +521,7 @@ Representative GitHistorian session: auditing a repository for alterations and a
 \label{subsec:hist-gh-usefulness}
 
 GitHistorian shifts the cost of \emph{spot checks} from forensic expertise to tooling, but it inherits archival limits: if Software Heritage never captured the pre-rewrite state, there is nothing to diff against.
-It also does not, by itself, classify intent; it surfaces \emph{that} rewriting occurred and \emph{what} classes of tree or metadata edits accompany it~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+It also does not, by itself, classify intent; it surfaces \emph{that} rewriting occurred and \emph{what} classes of tree or metadata edits accompany it.
 
 \section{Discussion}
 \label{sec:hist-discussion}
@@ -478,12 +548,22 @@ The automation-driven nature of many alterations reveals a disconnect between to
 Security tooling faces the challenge of distinguishing legitimate maintenance from suspicious activity, requiring context analysis beyond simple pattern matching.
 The research ecosystem faces a methodological challenge as well: significant portions of repository-based studies may analyse sanitised rather than authentic development data, with implications for the reproducibility of software-engineering research that relies on commit-based metrics and temporal analysis.
 
+\subsection{Broader Research and Community Implications}
+\label{subsec:hist-disc-research}
+
+\NOTEside{new}The prevalence of history modifications raises a methodological concern for the software-engineering research community that extends beyond the security applications discussed above.
+Repository-based studies---mining commit timelines, measuring development velocity, training defect prediction models, or constructing contributor networks---implicitly treat the commit graph as a faithful record of development history.
+The measurements reported here suggest that a non-trivial portion of that data may reflect sanitised or restructured versions of the original development sequence rather than authentic event logs; researchers who mine repositories without anchoring to independent archival snapshots inherit this uncertainty.
+This blind spot is especially consequential for longitudinal studies and for research that relies on commit-based metrics and temporal analysis, where the order, authorship, and content of commits are all treated as ground truth.
+For the broader open-source ecosystem, the findings raise questions about collaborative trust and the long-term integrity of development platforms.
+Developing community standards, audit practices, and tooling to surface and communicate the presence of history alterations represents an important area for future investment.
+
 \subsection{Supply-Chain Attack Obfuscation}
 \label{subsec:hist-disc-supplychain}
 
 History alterations present a concerning attack vector: an adversary could inject malicious code while using history rewriting to erase evidence, making detection through conventional auditing extremely difficult.
 The documented normalisation of rewriting creates cover for malicious actors to disguise backdoors as legitimate maintenance, and the scale observed---affecting millions of repositories---suggests a significant blind spot, since traditional security measures focus on current repository states and may miss attacks that exploit the temporal dimension of version-control history.
-Supply-chain guidance increasingly stresses pinning and provenance; the measurements here show \emph{why} pinning to a branch tip without a cryptographic object id is fragile, and why independent archives matter when disputes arise about what was public when~\cite{ladisa2023supplychain,DBLP:conf/kbse/RapaportPTZ25}.
+Supply-chain guidance increasingly stresses pinning and provenance; the measurements here show \emph{why} pinning to a branch tip without a cryptographic object id is fragile, and why independent archives matter when disputes arise about what was public when~\cite{ladisa2023supplychain}.
 
 \section{Threats to Validity}
 \label{sec:hist-validity}
@@ -511,5 +591,10 @@ This chapter showed that history rewriting on public Git repositories is a large
 Applying a novel taxonomy, most rewriting touches files or directories (\SI{76.8}{\percent} of root-cause commits), while a smaller but material share is metadata-only (\SI{13.3}{\percent}), which matters for any audit process that trusts commit hashes without examining trees.
 Two targeted case studies showed that alterations are used to remove private information committed by mistake (for example, private keys) and to retroactively change open-source licenses; GitHistorian demonstrates that the same evidence base can feed operational tooling, not only global statistics.
 
-Future work, pursued in part in the next chapter, includes discerning legitimate from malicious alterations and designing automated detection of suspicious patterns, and studying the \emph{timing} of rewrites---distinguishing immediate corrections from long-term exposures, and, in the secret-suppression scenario, early-stage removals (when a project was young and security practices immature) from more worrisome late-stage removals.
-That last thread motivates the next chapter, which narrows the security lens to \emph{secret removal}---the most safety-critical special case of history rewriting---and asks whether the credentials developers tried to erase remain active despite the rewrite (\Cref{chap:secrets}).
+Future work includes discerning legitimate from malicious alterations and designing automated detection of suspicious patterns, and studying the \emph{timing} of rewrites---distinguishing immediate corrections from long-term exposures, and, in the secret-suppression scenario, early-stage removals (when a project was young and security practices immature) from more worrisome late-stage removals.
+
+The most urgent open question left by the secret-suppression case study is one that this chapter cannot answer from archival evidence alone.
+The \num{13000000} secret-shaped removals detected across \num{75000} repositories show that developers \emph{did} push private keys, credential files, and authentication tokens to public repositories, and then rewrote history in an attempt to erase them.
+But erasing a secret from the repository does not retract it from independent archives, forks, caches, or mirrors---and, more critically, it does nothing to the credential itself unless the credential is separately rotated.
+The secrets identified in this chapter remain recoverable from Software Heritage regardless of the rewrite; the question is whether they also remain \emph{usable}.
+Chapter~\ref{chap:secrets} takes up that question directly: it recovers secrets embedded in alteration-affected commits, characterises their types and exposure windows, and---where a responsible-disclosure protocol permits---tests whether the underlying credentials are still active after the remediation attempt (\Cref{chap:secrets}).
