@@ -183,10 +183,10 @@ Software Heritage~\cite{swhcacm2018} is leveraged to analyze repositories archiv
 The study uses the Software Heritage graph snapshot from 8~October~2025~\cite{DBLP:conf/msr/PietriSZ20}, which preserves historical repository states even after tags are altered or deleted, enabling the analysis.
 
 From the complete Software Heritage graph---Figure~\ref{fig:tags-workflow-pipeline}, step~0---, a series of filters is applied to identify repositories suitable for tag alteration analysis.
-Repositories with at least two snapshots are required to enable temporal comparison---represented in Figure~\ref{fig:tags-workflow-pipeline}, step~1---, which filters out \num{74400000} origins captured only once, leaving \num{328400000} origins with multiple snapshots.
+Repositories with at least two snapshots are required to enable temporal comparison---represented in Figure~\ref{fig:tags-workflow-pipeline}, step~1---, which filters out \OriginsFilteredOutShort origins captured only once, leaving \TotalOriginsAnalyzedShort origins with multiple snapshots.
 Due to the Git scope of this work, non-Git origins as well as incomplete ones (called ``partial'' in \SWH terminology) are filtered out.
-Only repositories containing at least one tag across their histories are then selected---Figure~\ref{fig:tags-workflow-pipeline}, step~2---, yielding \num{45500000} relevant repositories.
-Finally, alterations before 23~February~2016 are excluded, due to a Software Heritage archival artifact that produced spurious alterations, which has been confirmed with the archive operators (about \num{5000000} false positives)---Figure~\ref{fig:tags-workflow-pipeline} step~4.
+Only repositories containing at least one tag across their histories are then selected---Figure~\ref{fig:tags-workflow-pipeline}, step~2---, yielding \OriginsWithTagsShort relevant repositories.
+Finally, alterations before 23~February~2016 are excluded, due to a Software Heritage archival artifact that produced spurious alterations, which has been confirmed with the archive operators (about \NonLegitAlterationsShort false positives)---Figure~\ref{fig:tags-workflow-pipeline} step~4.
 All alterations after this date are considered legitimate.
 
 To answer RQ3, repositories are grouped by popularity using GitHub ``stars'' as a metric~\cite{borges-2016-github-stars}.
@@ -318,10 +318,10 @@ This section answers RQ1 by establishing how often tag alterations occur and how
 \label{subsec:tags-freq}
 
 A first question is whether tag alterations are anecdotal exceptions or a widespread phenomenon at ecosystem scale.
-To answer this, successive snapshots of repositories archived in Software Heritage were analyzed and \num{10171046} tag alterations affecting \num{188713} unique repositories (\SI{0.41}{\percent} of repositories with at least two snapshots and one tag) were identified.
+To answer this, successive snapshots of repositories archived in Software Heritage were analyzed and \TotalAlterations tag alterations affecting \AlteredRepositories unique repositories (\AlteredRepositoriesPercent of repositories with at least two snapshots and one tag) were identified.
 This result establishes that tag mutability is not a marginal corner case: alterations occur at a scale of more than ten million events across nearly two hundred thousand repositories.
 
-Among these alterations, \num{626008} are moves and \num{9545038} are deletions.
+Among these alterations, \LegitMoves are moves and \Deletions are deletions.
 Deletions account for the overwhelming majority of observed events, while moves represent a smaller but important subset because the tag name remains present while silently changing its target.
 This distinction matters for downstream users: a deleted tag is visible as a failure or absence, whereas a moved tag preserves the \emph{appearance} of continuity while changing the referenced object.
 Figure~\ref{fig:tags-moves-vs-deletions} visualises this skew between event kinds.
@@ -332,7 +332,7 @@ Figure~\ref{fig:tags-moves-vs-deletions} visualises this skew between event kind
 \begin{minipage}{0.92\linewidth}
 \small
 \textbf{Figure placeholder (moves versus deletions).}
-Stacked bar chart by year or a simple two-slice breakdown: \num{9545038} deletions (\SI{93.85}{\percent}) versus \num{626008} moves (\SI{6.15}{\percent}).
+Stacked bar chart by year or a simple two-slice breakdown: \Deletions deletions (\DeletionsPercent) versus \LegitMoves moves (\LegitMovesPercent).
 Reproduce from \texttt{analyze\_tags\_figures.ipynb} section~3.12 (\emph{Tag Moves vs Deletions Over Time}) in the paper repository; the notebook already generates this figure.
 \end{minipage}%
 }
@@ -340,13 +340,13 @@ Reproduce from \texttt{analyze\_tags\_figures.ipynb} section~3.12 (\emph{Tag Mov
 \label{fig:tags-moves-vs-deletions}
 \end{figure}
 
-While the proportion of repositories with tag alterations is small, the number of alterations per repository is rather high: \num{53.9} on average (median: \num{3}).
+While the proportion of repositories with tag alterations is small, the number of alterations per repository is rather high: \AlteredTagPerRepository on average (median: \AlteredTagPerRepositoryMedian).
 The sheer number of tag deletions contributes significantly to this high average and can partially be explained by edge cases such as the GitHub repository \texttt{intellij-community} from JetBrains.
 This repository had to delete tens of thousands of tags because of performance issues with Git.\footnote{https://blog.jetbrains.com/platform/2018/11/cleaning-up-tags-on-github/}
-This repository alone, together with \num{28} of its assumed forks, accounts for \num{742919} tag deletions.
+This repository alone, together with 28 of its assumed forks, accounts for \num{742919} tag deletions.
 
 The temporal analysis displayed in Figure~\ref{fig:tags-temporal-evolution} shows that tag alterations are not confined to a short-lived historical period.
-Over the observation window, the cumulative number of alterations grows continuously, reaching \num{10171046} by the end of the analyzed period.
+Over the observation window, the cumulative number of alterations grows continuously, reaching \TotalAlterations by the end of the analyzed period.
 The monthly aggregation used for plotting, which spans from 23~February~2016 to 8~October~2025, shows persistent accumulation rather than isolated bursts.
 This sustained growth indicates that tag alteration is a recurring maintenance or release-management behavior in the ecosystem, not an artifact of a few exceptional incidents.
 
@@ -382,7 +382,7 @@ The dataset allows recovery of the \emph{observable behavior} of altered tags.
 Rather than claiming to infer motives, a taxonomy is derived from the concrete transition patterns visible between snapshots.
 
 The first result is that the dominant observable behavior is \emph{deletion}.
-Out of the \num{10171046} alterations, \num{9545038} (\SI{93.85}{\percent}) correspond to tags disappearing between consecutive observations.
+Out of the \TotalAlterations alterations, \Deletions (\DeletionsPercent) correspond to tags disappearing between consecutive observations.
 This shows that the most common alteration pattern is not silent retargeting but removal.
 Deletions primarily threaten software availability and rebuildability: historical references may cease to resolve, causing previously reproducible workflows that rely on them to fail.
 
@@ -390,7 +390,7 @@ Deletions primarily threaten software availability and rebuildability: historica
 \label{subsec:tags-tax-moves}
 
 The second major observable behavior is \emph{move}, where the tag name persists but points to a different target.
-The study identifies \num{626008} such move events, including both direct moves and deletion--recreation patterns that recreate the tag with a different target.
+The study identifies \LegitMoves such move events, including both direct moves and deletion--recreation patterns that recreate the tag with a different target.
 Although numerically smaller than deletions, moves are more security-sensitive because they preserve the familiar tag identifier while changing the referenced state.
 In other words, moves are the class of alteration most directly capable of violating the intuitive assumption that a release tag designates a stable version and is immutable.
 
@@ -405,7 +405,7 @@ A tag move observed between two snapshots of the same Git repository: the tag na
 \end{figure}
 
 Table~\ref{tab:tags-move-categories} summarises the three mutually exclusive coarse outcomes of the move taxonomy.
-Among move events, content-changing moves are the dominant class (\SI{68.15}{\percent}).
+Among move events, content-changing moves are the dominant class (\PercentMovesContentChange).
 
 \begin{table}[t]
 \centering
@@ -415,11 +415,11 @@ Among move events, content-changing moves are the dominant class (\SI{68.15}{\pe
 \hline
 \textbf{Category} & \textbf{Count} & \textbf{Share (\%)} \\
 \hline
-Content changes & \num{426595} & \num{68.15} \\
-Commit metadata diffs & \num{188974} & \num{30.19} \\
-Release-level changes & \num{10439} & \num{1.67} \\
+Content changes & \DirectoryDiff & \num{68.15} \\
+Commit metadata diffs & \RevisionDiff & \num{30.19} \\
+Release-level changes & \ReleaseDiff & \num{1.67} \\
 \hline
-\textbf{Total} & \num{626008} & \num{100.00} \\
+\textbf{Total} & \LegitMoves & \num{100.00} \\
 \hline
 \end{tabular}
 \end{table}
@@ -429,8 +429,8 @@ Release-level changes & \num{10439} & \num{1.67} \\
 
 The remaining moves are refined into two distinct sub-types of metadata-only moves, consistent with \Cref{subsec:tags-classification}.
 Metadata-only moves are discussed before returning to the content-changing ones.
-First, \textit{commit-metadata-only} moves preserve the content but change the commit object; this corresponds to \num{188974} cases (\SI{30.19}{\percent}) in Table~\ref{tab:tags-move-categories}, with differences distributed across commit metadata.
-Second, \textit{release-level-only} changes preserve both commit and content targets and account for \num{10439} cases (\SI{1.67}{\percent}).
+First, \textit{commit-metadata-only} moves preserve the content but change the commit object; this corresponds to \RevisionDiff cases (\RevisionDiffPercent) in Table~\ref{tab:tags-move-categories}, with differences distributed across commit metadata.
+Second, \textit{release-level-only} changes preserve both commit and content targets and account for \ReleaseDiff cases (\ReleaseDiffPercent).
 Within this release-level subset, no annotated-release metadata differences (message, author, author timestamp) are observed; the observed cases are structural reference changes, namely lightweight $\leftrightarrow$ annotated transitions and temporary deletion--recreation with the same target.
 
 A moved tag could be a harmless correction---for example, converting a lightweight tag to an annotated tag without changing commit or source tree targets, or temporarily deleting and recreating the same tag target.
@@ -438,9 +438,9 @@ But in the majority of observed move events, the underlying content actually cha
 Therefore, the typical move in the dataset is not only administrative; it alters the code that downstream users obtain when resolving the tag.
 
 The source-tree-level breakdown further characterizes the nature of these content-changing moves.
-As shown in Table~\ref{tab:tags-field-level}, among source tree diffs ($N=\num{426595}$), file modifications are the most frequent signal (\num{333283}, \num{78.13}\%), while file additions (\num{219117}, \num{51.36}\%) and deletions (\num{217789}, \num{51.05}\%) are also common; strict renames are less frequent (\num{63496}, \num{14.88}\%).
+As shown in Table~\ref{tab:tags-field-level}, among source tree diffs ($N=\DirectoryDiff$), file modifications are the most frequent signal (\DirModifiedRows, \DirModifiedRowsPercent), while file additions (\DirAddedRows, \DirAddedRowsPercent) and deletions (\DirDeletedRows, \DirDeletedRowsPercent) are also common; strict renames are less frequent (\DirRenamedRows, \DirRenamedRowsPercent).
 Because these proportions are not mutually exclusive, they do not directly separate cosmetic from substantive edits.
-Still, they provide a conservative lower bound: at least \num{51.36}\% of source tree diffs include a file addition or deletion, indicating that structurally non-trivial changes are common among content-changing moves.
+Still, they provide a conservative lower bound: at least \DirAddedRowsPercent of source tree diffs include a file addition or deletion, indicating that structurally non-trivial changes are common among content-changing moves.
 
 \begin{table}[t]
 \centering
@@ -450,15 +450,15 @@ Still, they provide a conservative lower bound: at least \num{51.36}\% of source
 \hline
 \textbf{Field} & \textbf{Count} & \textbf{Share (\%)} \\
 \hline
-\multicolumn{3}{l}{\emph{Content changes (denominator: content diffs, $N=\num{426595}$)}} \\
-\quad File added & \num{219117} & \num{51.36} \\
-\quad File deleted & \num{217789} & \num{51.05} \\
-\quad File modified & \num{333283} & \num{78.13} \\
-\quad File renamed & \num{63496} & \num{14.88} \\
+\multicolumn{3}{l}{\emph{Content changes (denominator: content diffs, $N=\DirectoryDiff$)}} \\
+\quad File added & \DirAddedRows & \num{51.36} \\
+\quad File deleted & \DirDeletedRows & \num{51.05} \\
+\quad File modified & \DirModifiedRows & \num{78.13} \\
+\quad File renamed & \DirRenamedRows & \num{14.88} \\
 \hline
-\multicolumn{3}{l}{\emph{Commit metadata only ($N=\num{188974}$): no source-tree change}} \\
+\multicolumn{3}{l}{\emph{Commit metadata only ($N=\RevisionDiff$): no source-tree change}} \\
 \hline
-\multicolumn{3}{l}{\emph{Release-level changes (denominator: release diffs, $N=\num{10439}$)}} \\
+\multicolumn{3}{l}{\emph{Release-level changes (denominator: release diffs, $N=\ReleaseDiff$)}} \\
 \quad Deletion $\rightarrow$ recreation (temporary missing) & \num{160} & \num{1.53} \\
 \quad Lightweight $\rightarrow$ annotated & \num{7555} & \num{72.37} \\
 \quad Annotated $\rightarrow$ lightweight & \num{2724} & \num{26.09} \\
@@ -490,7 +490,7 @@ This section answers RQ3 by relating alteration behaviour to repository populari
 To examine whether repository popularity correlates with alteration behavior, GitHub star counts are used as a proxy for repository visibility and repositories are grouped into the ranges 0--1, 2--10, 11--100, 101--500, and 501+ stars.
 
 In absolute terms, tag alterations are overwhelmingly concentrated in the least popular repositories.
-Repositories with only 0--1 stars account for \num{7555751} alterations, i.e., \SI{74.29}{\percent} of all analyzed alterations, as shown in Figure~\ref{fig:tags-popularity-volume}, and represent \num{103453} repositories, or \SI{54.82}{\percent} of all affected repositories.
+Repositories with only 0--1 stars account for \StarZeroOneAlterations alterations, i.e., \StarZeroOneAlterationsPercent of all analyzed alterations, as shown in Figure~\ref{fig:tags-popularity-volume}, and represent \StarZeroOneOrigins repositories, or \StarZeroOneOriginsPercent of all affected repositories.
 This concentration shows that, at ecosystem scale, most observed tag instability comes from the long tail of low-visibility repositories rather than from a small number of highly visible projects.
 
 \begin{figure}[t]
@@ -503,7 +503,7 @@ Total number of alterations by repository star count, including an ``Unknown'' b
 \end{figure}
 
 Figure~\ref{fig:tags-popularity-proportion} provides a perspective on the proportion of repositories with at least one observed alteration in each star range.
-This proportion increases steadily with popularity: approximately \num{0.0248}\% for 0--1 stars, \num{0.1447}\% for 2--10, \num{0.3732}\% for 11--100, \num{0.5576}\% for 101--500, and \num{0.7488}\% for 501+.
+This proportion increases steadily with popularity: approximately \ProportionOriWithAltZeroOneStar for 0--1 stars, \ProportionOriWithAltTwoTenStar for 2--10, \ProportionOriWithAltElevenHundredStar for 11--100, \ProportionOriWithAltHundredFiveHundredStar for 101--500, and \ProportionOriWithAltFiveHundredPlusStar for 501+.
 Thus, although the total volume of alterations is dominated by low-star repositories, the likelihood that a repository exhibits at least one alteration increases with popularity.
 
 \begin{figure}[t]
@@ -517,7 +517,7 @@ Proportion of repositories in each star range that exhibit at least one observed
 
 Taken together, these results show that popularity correlates with alteration behavior, but not in a simple monotonic way if one considers only raw counts.
 Low-popularity repositories dominate the phenomenon in absolute volume because they are extremely numerous and collectively account for most altered repositories.
-By contrast, highly popular repositories are more likely to exhibit at least one alteration, and when they do, they can accumulate more alterations per affected repository---among repositories with at least one tag alteration, the average amount of tag alteration per repository is \num{73} for 0--1 stars and \num{98} for 501+ stars.
+By contrast, highly popular repositories are more likely to exhibit at least one alteration, and when they do, they can accumulate more alterations per affected repository---among repositories with at least one tag alteration, the average amount of tag alteration per repository is \StarZeroOneAvgAlterationsRounded for 0--1 stars and \StarFiveHundredPlusAvgAlterationsRounded for 501+ stars.
 
 Overall, repository popularity is meaningfully associated with tag alteration behavior.
 The long tail of low-star repositories explains most alterations in aggregate, whereas highly popular repositories show the highest proportion of repositories with at least one alteration and the strongest per-repository intensity.
@@ -532,7 +532,7 @@ The results show that the threat is real for two independent reasons: first, man
 \subsection{Trust in Release Identifiers}
 \label{subsec:tags-trust}
 
-Among \num{626008} move events, \num{426595} (\SI{68.15}{\percent}) change the referenced source tree content.
+Among \LegitMoves move events, \DirectoryDiff (\PercentMovesContentChange) change the referenced source tree content.
 This is the exact failure mode that undermines tag-based pinning.
 When a build, package recipe, or CI workflow resolves a dependency by tag name alone, a later content-changing move can silently substitute new code while preserving the same human-readable version identifier (e.g., v1.0).
 In other words, the same dependency specification no longer targets the same source tree, and the trust attached to a release label is undermined.
@@ -573,9 +573,9 @@ This figure is not in the published paper but is central to RQ4.
 \label{subsec:tags-reproducibility}
 
 The second line of evidence comes from the cross-analysis with Nixpkgs.
-The analysis identifies \num{2407} packages whose source references point to a repository in the dataset that altered at least one tag.
-Narrowing this set, \num{32} distinct altered tags explicitly referenced in Nix packages are found.
-Most importantly, \num{7} packages failed to build when disabling the NixOS cache: \num{4} failed because the tag was deleted and the process could not fetch the source, and \num{3} failed because the fetched content no longer matches the previously stored hash.
+The analysis identifies \NixPkgsTracked packages whose source references point to a repository in the dataset that altered at least one tag.
+Narrowing this set, \NixPkgsAffected distinct altered tags explicitly referenced in Nix packages are found.
+Most importantly, \NixPkgsHashMismatch packages failed to build when disabling the NixOS cache: 4 failed because the tag was deleted and the process could not fetch the source, and 3 failed because the fetched content no longer matches the previously stored hash.
 The detailed enumeration of packages with a build error outcome is provided in Table~\ref{tab:tags-nix-failures}.
 This evidence shows that tag alterations are not only theoretically capable of breaking the reproducibility of software builds; they have done so in real packages in a major Linux distribution.
 For the \num{25} other packages, there is no hash mismatch, meaning that the Nix package definitions were created (or updated, although that is less likely) after the alteration.
@@ -773,7 +773,7 @@ Rather, the conclusion is narrower and evidence-based: tag names alone are insuf
 \label{sec:tags-conclusion}
 
 Git tags are commonly viewed as convenient release identifiers and dependency anchors, yet Git does not guarantee that a tag name will continue to designate the same object over time.
-This chapter conducted the first large-scale empirical study of tag alterations across public code, covering \num{328400000} Git repositories observed between 23~February~2016 and 8~October~2025.
+This chapter conducted the first large-scale empirical study of tag alterations across public code, covering \TotalOriginsAnalyzedShort Git repositories observed between \CutoffDate and \DatasetDate.
 
 Across the repositories analyzed, tag names are regularly moved or deleted, and many moves correspond to changes in the underlying source content rather than to metadata-only differences.
 The chapter further shows that the phenomenon is not confined to obscure repositories: low-popularity projects dominate in absolute volume, while highly visible repositories exhibit the highest alteration prevalence and per-repository intensity.

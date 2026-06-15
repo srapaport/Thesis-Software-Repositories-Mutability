@@ -443,6 +443,7 @@ The term does not imply malicious intent---correction, cleanup, migration, and p
 An altered history is an observable change in the commit graph reachable from a repository reference between two snapshots.
 Following the altered-histories contribution, a repository undergoes a history alteration when at least one commit reachable from an earlier snapshot is missing from a later snapshot of the same repository.
 An altered commit is a commit that was present in the earlier snapshot and absent from the later one.
+Because of the snowball effect (\Cref{fig:bg-snowball-effect}), a single history alteration can yield many altered commits; for each alteration, the empirical chapters identify one or more \emph{root-cause commits}: the oldest commits, in topological order, among all altered commits---those directly altered rather than changed as a consequence of an earlier modification.
 
 This definition captures observable effects, not developer intent.
 It does not by itself determine whether the alteration was caused by rebasing, amendment, branch deletion, repository cleanup, or malicious tampering.

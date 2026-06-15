@@ -1,0 +1,50 @@
+---
+description: contributions/ holds read-only LaTeX paper sources; prefer them over PDFs
+alwaysApply: true
+---
+
+# Contribution Papers Are Read-Only LaTeX Sources
+
+The `contributions/` directory contains **local symlinks (or clones) to the LaTeX sources** of the user's published or in-progress papers, plus root-level PDF exports. Treat every path under `contributions/**/` as **read-only** in this repository.
+
+## Required behavior
+
+- **Prefer LaTeX sources over PDFs** when drafting thesis chapters: numbers, methodology, results wording, table cells, `\input{}` structure, and BibTeX keys are easier to grep and quote precisely from `.tex` than from PDF text extraction.
+- **Do not modify** any file under `contributions/**/` (`.tex`, `.bib`, figures, build artifacts, review notes, etc.).
+- **Do not run git commands** inside contribution symlinks/clones (commit, push, pull, checkout, reset, etc.).
+- **Do not read or parse** `.git/` directories under `contributions/`.
+- **You may read freely** any source file when evidence is needed for thesis drafting.
+- Fall back to the matching root PDF only when LaTeX is unavailable, figures need visual inspection, or rendered layout matters.
+
+## PDF ↔ source mapping
+
+| Root PDF | LaTeX source directory |
+|----------|------------------------|
+| `contributions/git_tag_alterations.pdf` | `contributions/tag-alterations-paper/` |
+| `contributions/altered_histories.pdf` | `contributions/altered-histories/` |
+
+## Current inventory
+
+### `contributions/tag-alterations-paper/` (ACM REP 2026 — git tag alterations)
+
+Modular ACM paper. Entry point: `main.tex`. Key files:
+
+- `data.tex` — numerical macros and dataset statistics
+- `methodology.tex`, `results.tex`, `discussion.tex`, `introduction.tex`, `background.tex`, `related.tex`, `conclusion.tex`
+- `figures/` — paper figures
+- `reviews/` — peer-review context (see nested `.cursor/rules/` if editing the paper upstream)
+
+### `contributions/altered-histories/` (IEEE — altered git histories)
+
+Single-file IEEE paper. Key files:
+
+- `main.tex` — full article body
+- `numbers.tex` — numerical macros
+
+### `contributions/secrets_removal/`
+
+Research codebase (Rust, notebooks, protocol scripts), **not** a LaTeX article. Do not treat it as a paper source unless a `.tex` tree is added later.
+
+New contribution symlinks may appear under `contributions/` over time; the same read-only rule and LaTeX-first preference applies to all of them.
+
+If a task requires changing a contribution paper, stop and tell the user to edit the upstream project, then refresh the symlink manually.

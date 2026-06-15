@@ -22,7 +22,7 @@ When writing or editing any file in `chapters/**/*.tex`, produce text that is ri
 Before drafting substantial chapter content, align with:
 
 1. `Training handout - Write your PhD thesis - 01-2026.pdf` (writing and structure guidance)
-2. The `contributions` directory (actual contributions and evidence to foreground)
+2. The `contributions/` LaTeX sources (preferred) and PDFs — see [`contributions-read-only.mdc`](contributions-read-only.mdc)
 3. `Thesis.md` (global outline, scope, and chapter-level logic)
 4. For claims grounded in **prior work** (not your contributions): when a paper's PDF exists under `literature_reviews/library/`, treat that full text as the authority for wording, numbers, and attributions; use `literature_reviews/*.{md,bib}` as navigation and BibTeX sources, not as a substitute for the PDF when precision matters.
 

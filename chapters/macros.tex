@@ -1,0 +1,374 @@
+%
+% File: chapters/macros.tex
+% Description: Unified numerical macros for the thesis empirical chapters.
+%   - Part A: tag-alteration statistics (from contributions/tag-alterations-paper/data.tex)
+%   - Part B: history-alteration statistics (from contributions/altered-histories/numbers.tex)
+%   - Part C: additional macros used in thesis chapters but not in either source file
+%
+% NAMING CONFLICT: \OriginsThousandPlusStars appears in both source files with different values.
+%   - Tag-alteration value (4,118 repos with 1000+ stars having tag alterations)
+%     is prefixed here as \TagsOriginsThousandPlusStars.
+%   - History-alteration value (17,726) keeps the original name \OriginsThousandPlusStars.
+%
+% \FileAlterationDepth = 10 in both source files; defined once below.
+%
+
+% ============================================================
+% Part A — Tag-alteration statistics
+%           (source: contributions/tag-alterations-paper/data.tex)
+% ============================================================
+
+% Dataset metadata
+\newcommand{\DatasetDate}{October 8, 2025\xspace}
+\newcommand{\CutoffDate}{February 23, 2016\xspace}
+\newcommand{\TemporalSpan}{2016--2025\xspace}
+
+% Total repositories analyzed
+\newcommand{\TotalOriginsAnalyzed}{\num{328 424 115}\xspace}
+\newcommand{\TotalOriginsAnalyzedShort}{\num{328.4}\,M\xspace}
+\newcommand{\OriginsFilteredOut}{\num{74 425 148}\xspace}
+\newcommand{\OriginsFilteredOutShort}{\num{74.4}\,M\xspace}
+\newcommand{\OriginsWithMultipleSnapshots}{\num{328 424 115}\xspace}
+\newcommand{\OriginsWithMultipleSnapshotsShort}{\num{328.4}\,M\xspace}
+\newcommand{\OriginsWithTags}{\num{45 525 442}\xspace}
+\newcommand{\OriginsWithTagsShort}{\num{45.5}\,M\xspace}
+
+% Total tags
+\newcommand{\TotalTags}{\num{3 197 620 436}\xspace}
+\newcommand{\TotalTagsShort}{\num{3.2}\,B\xspace}
+\newcommand{\TotalLightweightTags}{\num{1 417 510 761}\xspace}
+\newcommand{\TotalLightweightTagsShort}{\num{1.4}\,B\xspace}
+\newcommand{\TotalAnnotatedTags}{\num{1 780 109 675}\xspace}
+\newcommand{\TotalAnnotatedTagsShort}{\num{1.8}\,B\xspace}
+
+% Alteration statistics
+\newcommand{\TotalAlterations}{\num{10 171 046}\xspace}
+\newcommand{\TotalAlterationsShort}{\num{10.2}\,M\xspace}
+\newcommand{\AlteredRepositories}{\num{188 713}\xspace}
+\newcommand{\AlteredRepositoriesShort}{\num{189}\,k\xspace}
+\newcommand{\AlteredRepositoriesPercent}{\num{0.41}\%\xspace}
+\newcommand{\AlteredTagPerRepository}{\num{53.9}\xspace}
+\newcommand{\AlteredTagPerRepositoryMedian}{\num{3}\xspace}
+\newcommand{\AlteredTagPerRepositoryQOne}{\num{1}\xspace}
+\newcommand{\AlteredTagPerRepositoryQThree}{\num{14}\xspace}
+\newcommand{\LightweightTagsPercent}{\num{0.41}\%\xspace}
+\newcommand{\AnnotatedTagsPercent}{\num{0.25}\%\xspace}
+\newcommand{\NonLegitAlterations}{\num{4 995 107}\xspace}
+\newcommand{\NonLegitAlterationsShort}{\num{5}\,M\xspace}
+\newcommand{\LegitAlterations}{\num{10 171 046}\xspace}
+\newcommand{\LegitAlterationsShort}{\num{10.2}\,M\xspace}
+
+% Move statistics (content vs metadata changes)
+\newcommand{\LegitMoves}{\num{626 008}\xspace}
+\newcommand{\LegitMovesShort}{\num{626}\,k\xspace}
+\newcommand{\LegitMovesPercent}{\num{6.15}\%\xspace}
+\newcommand{\Deletions}{\num{9 545 038}\xspace}
+\newcommand{\DeletionsShort}{\num{9.5}\,M\xspace}
+\newcommand{\DeletionsPercent}{\num{93.85}\%\xspace}
+\newcommand{\MovesWithContentChange}{\num{426 595}\xspace}
+\newcommand{\MovesWithContentChangeShort}{\num{427}\,k\xspace}
+\newcommand{\MovesWithMetadataChange}{\num{199 413}\xspace}
+\newcommand{\MovesWithMetadataChangeShort}{\num{199}\,k\xspace}
+\newcommand{\PercentMovesContentChange}{\num{68.15}\%\xspace}
+\newcommand{\PercentMovesMetadataOnly}{\num{31.85}\%\xspace}
+
+% Taxonomy
+\newcommand{\ReleaseDiff}{\num{10 439}\xspace}
+\newcommand{\ReleaseDiffShort}{\num{10}\,k\xspace}
+\newcommand{\ReleaseDiffPercent}{\num{1.67}\%\xspace}
+\newcommand{\TransitionDiff}{\num{49 302}\xspace}
+\newcommand{\RevisionDiff}{\num{188 974}\xspace}
+\newcommand{\RevisionDiffShort}{\num{188}\,k\xspace}
+\newcommand{\RevisionDiffPercent}{\num{30.19}\%\xspace}
+\newcommand{\DirectoryDiff}{\num{426 595}\xspace}
+\newcommand{\DirectoryDiffShort}{\num{426}\,k\xspace}
+\newcommand{\DirectoryDiffPercent}{\num{68.15}\%\xspace}
+
+% Revision diff breakdown
+\newcommand{\RevisionDiffMessageDiffers}{\num{37 009}\xspace}
+\newcommand{\RevisionDiffMessageDiffersPercent}{\num{19.58}\%\xspace}
+\newcommand{\RevisionDiffAuthorDiffers}{\num{51 820}\xspace}
+\newcommand{\RevisionDiffAuthorDiffersPercent}{\num{27.42}\%\xspace}
+\newcommand{\RevisionDiffCommitterDiffers}{\num{54 322}\xspace}
+\newcommand{\RevisionDiffCommitterDiffersPercent}{\num{28.75}\%\xspace}
+\newcommand{\RevisionDiffAuthorTsDiffers}{\num{21 123}\xspace}
+\newcommand{\RevisionDiffAuthorTsDiffersPercent}{\num{11.18}\%\xspace}
+\newcommand{\RevisionDiffCommitterTsDiffers}{\num{24 746}\xspace}
+\newcommand{\RevisionDiffCommitterTsDiffersPercent}{\num{13.09}\%\xspace}
+
+% Directory diff breakdown
+\newcommand{\DirAddedRows}{\num{219 117}\xspace}
+\newcommand{\DirAddedRowsPercent}{\num{51.36}\%\xspace}
+\newcommand{\DirAddedMean}{\num{432.58}\xspace}
+\newcommand{\DirAddedTotal}{\num{184 537 915}\xspace}
+\newcommand{\DirAddedQ}{\num{0}\xspace}
+\newcommand{\DirAddedMedian}{\num{1}\xspace}
+\newcommand{\DirAddedQThree}{\num{14}\xspace}
+\newcommand{\DirAddedPNinety}{\num{216}\xspace}
+\newcommand{\DirAddedPNinetyFive}{\num{1 017}\xspace}
+\newcommand{\DirAddedPNinetyNine}{\num{6 207}\xspace}
+\newcommand{\DirDeletedRows}{\num{217 789}\xspace}
+\newcommand{\DirDeletedRowsPercent}{\num{51.05}\%\xspace}
+\newcommand{\DirDeletedMean}{\num{137.16}\xspace}
+\newcommand{\DirDeletedTotal}{\num{58 511 744}\xspace}
+\newcommand{\DirDeletedQ}{\num{0}\xspace}
+\newcommand{\DirDeletedMedian}{\num{1}\xspace}
+\newcommand{\DirDeletedQThree}{\num{13}\xspace}
+\newcommand{\DirDeletedPNinety}{\num{184}\xspace}
+\newcommand{\DirDeletedPNinetyFive}{\num{629}\xspace}
+\newcommand{\DirDeletedPNinetyNine}{\num{2 291}\xspace}
+\newcommand{\DirModifiedRows}{\num{333 283}\xspace}
+\newcommand{\DirModifiedRowsPercent}{\num{78.13}\%\xspace}
+\newcommand{\DirModifiedMean}{\num{513.55}\xspace}
+\newcommand{\DirModifiedTotal}{\num{219 076 733}\xspace}
+\newcommand{\DirModifiedQ}{\num{1}\xspace}
+\newcommand{\DirModifiedMedian}{\num{5}\xspace}
+\newcommand{\DirModifiedQThree}{\num{54}\xspace}
+\newcommand{\DirModifiedPNinety}{\num{666}\xspace}
+\newcommand{\DirModifiedPNinetyFive}{\num{1 922}\xspace}
+\newcommand{\DirModifiedPNinetyNine}{\num{16 664}\xspace}
+\newcommand{\DirRenamedRows}{\num{63 496}\xspace}
+\newcommand{\DirRenamedRowsPercent}{\num{14.88}\%\xspace}
+\newcommand{\DirRenamedMean}{\num{41.04}\xspace}
+\newcommand{\DirRenamedTotal}{\num{17 507 773}\xspace}
+\newcommand{\DirRenamedQ}{\num{0}\xspace}
+\newcommand{\DirRenamedMedian}{\num{0}\xspace}
+\newcommand{\DirRenamedQThree}{\num{0}\xspace}
+\newcommand{\DirRenamedPNinety}{\num{4}\xspace}
+\newcommand{\DirRenamedPNinetyFive}{\num{32}\xspace}
+\newcommand{\DirRenamedPNinetyNine}{\num{738}\xspace}
+
+% Star ranges for popularity analysis
+\newcommand{\StarRangeZeroOne}{0--1\xspace}
+\newcommand{\StarRangeTwoTen}{2--10\xspace}
+\newcommand{\StarRangeElevenHundred}{11--100\xspace}
+\newcommand{\StarRangeHundredFiveHundred}{101--500\xspace}
+\newcommand{\StarRangeFiveHundredPlus}{501+\xspace}
+
+% 0--1 stars
+\newcommand{\StarZeroOneAlterations}{\num{7 555 751}\xspace}
+\newcommand{\StarZeroOneAlterationsPercent}{\num{74.29}\%\xspace}
+\newcommand{\StarZeroOneOrigins}{\num{103 453}\xspace}
+\newcommand{\StarZeroOneOriginsPercent}{\num{54.82}\%\xspace}
+\newcommand{\StarZeroOneMeanStars}{\num{0.1}\xspace}
+\newcommand{\StarZeroOneMedianStars}{\num{0}\xspace}
+\newcommand{\StarZeroOneAvgAlterationsPerOrigin}{\num{73.04}\xspace}
+
+% 2--10 stars
+\newcommand{\StarTwoTenAlterations}{\num{315 953}\xspace}
+\newcommand{\StarTwoTenAlterationsPercent}{\num{3.11}\%\xspace}
+\newcommand{\StarTwoTenOrigins}{\num{19 500}\xspace}
+\newcommand{\StarTwoTenOriginsPercent}{\num{10.33}\%\xspace}
+\newcommand{\StarTwoTenMeanStars}{\num{4.7}\xspace}
+\newcommand{\StarTwoTenMedianStars}{\num{4}\xspace}
+\newcommand{\StarTwoTenAvgAlterationsPerOrigin}{\num{16.20}\xspace}
+
+% 11--100 stars
+\newcommand{\StarElevenHundredAlterations}{\num{348 457}\xspace}
+\newcommand{\StarElevenHundredAlterationsPercent}{\num{3.43}\%\xspace}
+\newcommand{\StarElevenHundredOrigins}{\num{16 287}\xspace}
+\newcommand{\StarElevenHundredOriginsPercent}{\num{8.63}\%\xspace}
+\newcommand{\StarElevenHundredMeanStars}{\num{32.9}\xspace}
+\newcommand{\StarElevenHundredMedianStars}{\num{23}\xspace}
+\newcommand{\StarElevenHundredAvgAlterationsPerOrigin}{\num{21.39}\xspace}
+
+% 101--500 stars
+\newcommand{\StarHundredFiveHundredAlterations}{\num{214 488}\xspace}
+\newcommand{\StarHundredFiveHundredAlterationsPercent}{\num{2.11}\%\xspace}
+\newcommand{\StarHundredFiveHundredOrigins}{\num{7 037}\xspace}
+\newcommand{\StarHundredFiveHundredOriginsPercent}{\num{3.73}\%\xspace}
+\newcommand{\StarHundredFiveHundredMeanStars}{\num{235.7}\xspace}
+\newcommand{\StarHundredFiveHundredMedianStars}{\num{205}\xspace}
+\newcommand{\StarHundredFiveHundredAvgAlterationsPerOrigin}{\num{30.48}\xspace}
+
+% 501+ stars
+\newcommand{\StarFiveHundredPlusAlterations}{\num{619 953}\xspace}
+\newcommand{\StarFiveHundredPlusAlterationsPercent}{\num{6.10}\%\xspace}
+\newcommand{\StarFiveHundredPlusOrigins}{\num{6 348}\xspace}
+\newcommand{\StarFiveHundredPlusOriginsPercent}{\num{3.36}\%\xspace}
+\newcommand{\StarFiveHundredPlusMeanStars}{\num{9 060.3}\xspace}
+\newcommand{\StarFiveHundredPlusMedianStars}{\num{904}\xspace}
+\newcommand{\StarFiveHundredPlusAvgAlterationsPerOrigin}{\num{97.66}\xspace}
+
+% Unknown popularity
+\newcommand{\StarUnknownAlterations}{\num{1 116 444}\xspace}
+\newcommand{\StarUnknownAlterationsPercent}{\num{10.98}\%\xspace}
+\newcommand{\StarUnknownOrigins}{\num{36 088}\xspace}
+\newcommand{\StarUnknownOriginsPercent}{\num{19.12}\%\xspace}
+\newcommand{\StarUnknownAvgAlterationsPerOrigin}{\num{30.94}\xspace}
+
+% Repository counts by popularity threshold (tag-alteration study)
+% NOTE: \OriginsThousandPlusStars is the HISTORY-alteration value (17,726); the
+%       tag-alteration equivalent is \TagsOriginsThousandPlusStars (4,118).
+\newcommand{\OriginsHundredPlusStars}{\num{13 450}\xspace}
+\newcommand{\OriginsHundredPlusStarsShort}{\num{13.5}\,k\xspace}
+\newcommand{\TagsOriginsThousandPlusStars}{\num{4 118}\xspace}
+\newcommand{\TagsOriginsThousandPlusStarsShort}{\num{4.1}\,k\xspace}
+
+% Normalization factors
+\newcommand{\NormalizationPerThousandTags}{1,000\xspace}
+
+% NixPkgs cross-analysis
+\newcommand{\NixPkgsTracked}{\num{2 407}\xspace}
+\newcommand{\NixPkgsAffected}{\num{32}\xspace}
+\newcommand{\NixPkgsHashMismatch}{\num{7}\xspace}
+
+% Minimum snapshot requirement
+\newcommand{\MinSnapshotsRequired}{2\xspace}
+
+% ============================================================
+% Part B — History-alteration statistics
+%           (source: contributions/altered-histories/numbers.tex)
+% ============================================================
+
+% Dataset metadata
+\newcommand{\FullDataset}{2024-08-23\xspace}
+
+% Software Heritage corpus size
+\newcommand{\SWHOrigins}{\num{310 334 314}\xspace}
+\newcommand{\SWHOriginShort}{\num{310}\,M\xspace}
+\newcommand{\SWHRevisions}{\num{4 264 159 529}\xspace}
+\newcommand{\SWHRevisionsShort}{\num{4.2}\,B\xspace}
+\newcommand{\SWHSnapshots}{\num{291 202 902}\xspace}
+\newcommand{\SWHSnapshotsShort}{\num{291}\,M\xspace}
+\newcommand{\OriginsTwoVisitsOrMore}{\num{111 008 539}\xspace}
+\newcommand{\OriginsTwoVisitsOrMoreShort}{\num{111}\,M\xspace}
+\newcommand{\OriginsOneVisitOrLess}{\num{199 325 775}\xspace}
+\newcommand{\OriginsOneVisitOrLessShort}{\num{199}\,M\xspace}
+\newcommand{\OriginsURLError}{\num{6}\xspace}
+
+% History-alteration prevalence
+\newcommand{\PercentOriginsAltered}{\num{1.10}\%\xspace}
+\newcommand{\AlteredCommitsShort}{\num{12.5}\,B\xspace}
+\newcommand{\PercentRootCauseCommits}{\num{0.0695}\%\xspace}
+\newcommand{\GitRootCauseCommitsShort}{\num{8.7}\,M\xspace}
+\newcommand{\GitOriginsRootCauseCommitsShort}{\num{1.22}\,M\xspace}
+\newcommand{\OriginsWithStarWithoutHistoryAlterationShort}{\num{278}\,M\xspace}
+
+% Secrets removal
+\newcommand{\PercentSecretsThousandStarsPullBranch}{\num{84}\%\xspace}
+\newcommand{\PercentSecretsPullBranch}{\num{19}\%\xspace}
+\newcommand{\PercentSecretsMainBranch}{\num{5}\%\xspace}
+\newcommand{\SecretsRemovedAllShort}{\num{13}\,M\xspace}
+\newcommand{\SecretsOriginsAllShort}{\num{75}\,k\xspace}
+\newcommand{\SecretsRemovedIdRsa}{\num{108}\xspace}
+\newcommand{\SecretsRemovedIdRsaOrigins}{\num{23}\xspace}
+\newcommand{\SecretsRemovedAllKeyShort}{\num{6.9}\,M\xspace}
+\newcommand{\SecretsRemovedAllSecretShort}{\num{805}\,k\xspace}
+\newcommand{\SecretsRemovedAllCredentialShort}{\num{545}\,k\xspace}
+
+% License changes
+\newcommand{\LicenseAll}{\num{796972}\xspace}
+\newcommand{\LicenseRemoved}{\num{719196}\xspace}
+\newcommand{\LicenseModified}{\num{77776}\xspace}
+\newcommand{\LicenseModifiedBothScanned}{\num{65688}\xspace}
+\newcommand{\LicenseUpdate}{\num{79}\%\xspace}
+\newcommand{\LicenseFullChange}{\num{14}\%\xspace}
+\newcommand{\LicensePartialChange}{\num{5}\%\xspace}
+\newcommand{\LicenseSeveralFamilies}{\num{8024}\xspace}
+\newcommand{\LicenseOrigins}{\num{32169}\xspace}
+\newcommand{\LicenseOriginsThousandPlusStars}{\num{76}\xspace}
+
+% Analysis parameters (shared; defined once)
+\newcommand{\FileAlterationDepth}{\num{10}\xspace}
+
+% GitHub star enrichment
+\newcommand{\AmountStarsEntry}{\num{437 674 730}\xspace}
+\newcommand{\AmountStarsEntryWithoutDuplicates}{\num{278 827 680}\xspace}
+\newcommand{\AmountOriZeroStar}{\num{251 333 657}\xspace}
+\newcommand{\AmountOriOneStar}{\num{15 636 483}\xspace}
+\newcommand{\AmountOriInfStar}{\num{3}\xspace}
+\newcommand{\AmountOriMoreThanOneStar}{\num{11 857 537}\xspace}
+
+% Root-cause commit counts
+\newcommand{\AlteredCommits}{\num{12 542 848 352}\xspace}
+\newcommand{\RootCauseCommits}{\num{10 264 390}\xspace}
+\newcommand{\RootCauseCommitsWihtoutHEAD}{\num{9 844 211}\xspace}
+\newcommand{\OriginsWithStarWithoutHistoryAlteration}{\num{278 827 680}\xspace}
+\newcommand{\OriginsRootCauseCommits}{\num{1 237 353}\xspace}
+\newcommand{\GitRootCauseCommits}{\num{8 720 085}\xspace}
+\newcommand{\GitOriginsRootCauseCommits}{\num{1 218 547}\xspace}
+\newcommand{\BranchNameUnique}{\num{1 233 793}\xspace}
+\newcommand{\BranchNameNormalizedUnique}{\num{1 115 052}\xspace}
+\newcommand{\OriginsUnkownStars}{\num{283 203}\xspace}
+\newcommand{\OriginsZeroOneStar}{\num{676 252}\xspace}
+\newcommand{\METARootCauseCommits}{\num{1 160 725}\xspace}
+\newcommand{\DIRRootCauseCommits}{\num{6 693 247}\xspace}
+\newcommand{\DBNRootCauseCommits}{\num{866 113}\xspace}
+\newcommand{\PercentMETARootCauseCommits}{\num{13.3}\%\xspace}
+\newcommand{\PercentDIRRootCauseCommits}{\num{76.8}\%\xspace}
+\newcommand{\PercentDBNRootCauseCommits}{\num{9.9}\%\xspace}
+
+% Taxonomy field counts
+\newcommand{\CategFileModified}{\num{5 469 080}\xspace}
+\newcommand{\CategFileRemoved}{\num{1 287 304}\xspace}
+\newcommand{\CategContentSplit}{\num{763 369}\xspace}
+\newcommand{\CategDifferentBranchName}{\num{866 113}\xspace}
+\newcommand{\CategOther}{\num{55 638}\xspace}
+\newcommand{\CategAuthor}{\num{667 424}\xspace}
+\newcommand{\CategCommitter}{\num{649 937}\xspace}
+\newcommand{\CategCommitterDate}{\num{864 607}\xspace}
+\newcommand{\CategDate}{\num{769 287}\xspace}
+\newcommand{\CategMessage}{\num{691 060}\xspace}
+
+% Popularity stratification (history-alteration study)
+\newcommand{\OriginsKnownStars}{\num{935 344}\xspace}
+\newcommand{\OriginsThousandPlusStars}{\num{17 726}\xspace}
+\newcommand{\PercentCategFileModified}{\num{62.7}\%\xspace}
+\newcommand{\PercentCategFileRemoved}{\num{14.8}\%\xspace}
+\newcommand{\PercentCategContentSplit}{\num{8.8}\%\xspace}
+\newcommand{\PercentCategDifferentBranchName}{\num{9.9}\%\xspace}
+\newcommand{\PercentCategOther}{\num{0.6}\%\xspace}
+\newcommand{\PercentCategAuthor}{\num{7.7}\%\xspace}
+\newcommand{\PercentCategCommitter}{\num{7.5}\%\xspace}
+\newcommand{\PercentCategCommitterDate}{\num{9.9}\%\xspace}
+\newcommand{\PercentCategDate}{\num{8.8}\%\xspace}
+\newcommand{\PercentCategMessage}{\num{7.9}\%\xspace}
+
+% Root-cause commits by star bucket
+\newcommand{\RootCauseCommitsZeroOnestars}{\num{2 637 899}\xspace}
+\newcommand{\PercentRootCauseCommitsZeroOnestars}{\num{36.6}\%\xspace}
+\newcommand{\RootCauseCommitsTwoNinestars}{\num{1 149 080}\xspace}
+\newcommand{\PercentRootCauseCommitsTwoNinestars}{\num{15.9}\%\xspace}
+\newcommand{\RootCauseCommitsTenNinetyNinestars}{\num{1 110 384}\xspace}
+\newcommand{\PercentRootCauseCommitsTenNinetyNinestars}{\num{15.4}\%\xspace}
+\newcommand{\RootCauseCommitsHundredNineHundredNinetyNinestars}{\num{1 077 012}\xspace}
+\newcommand{\PercentRootCauseCommitsHundredNineHundredNinetyNinestars}{\num{14.9}\%\xspace}
+\newcommand{\RootCauseCommitsThousandPlusstars}{\num{1 235 448}\xspace}
+\newcommand{\PercentRootCauseCommitsThousandPlusstars}{\num{17.1}\%\xspace}
+
+% Origins by star bucket
+\newcommand{\OriginsTwoNineStars}{\num{115 431}\xspace}
+\newcommand{\OriginsTenNinetyNineStars}{\num{82 519}\xspace}
+\newcommand{\OriginsHundredNineHundredNinetyNineStars}{\num{43 416}\xspace}
+\newcommand{\OriginsKownStars}{\num{935 344}\xspace}
+\newcommand{\PercentOriginsZeroOneStar}{\num{72.3}\%\xspace}
+\newcommand{\PercentOriginsTwoNineStars}{\num{12.3}\%\xspace}
+\newcommand{\PercentTenNinetyNineStars}{\num{8.8}\%\xspace}
+\newcommand{\PercentHundredNineHundredNinetyNineStars}{\num{4.6}\%\xspace}
+\newcommand{\PercentThousandPlusStars}{\num{1.9}\%\xspace}
+
+% Full secret counts
+\newcommand{\SecretsRemovedAll}{\num{13 053 658}\xspace}
+\newcommand{\SecretsOriginsAll}{\num{75 054}\xspace}
+\newcommand{\SecretsResultsThousandPlusStars}{\num{3 919 794}\xspace}
+\newcommand{\SecretsOriginsThousandPlusStars}{\num{4 562}\xspace}
+
+% ============================================================
+% Part C — Additional macros for thesis chapters
+%           (values present in chapters but absent from source files)
+% ============================================================
+
+% Proportion of repositories with at least one tag alteration per star bucket
+% Used in chap03.tex §Popularity (proportion of repositories with ≥1 alteration)
+\newcommand{\ProportionOriWithAltZeroOneStar}{\num{0.0248}\%\xspace}
+\newcommand{\ProportionOriWithAltTwoTenStar}{\num{0.1447}\%\xspace}
+\newcommand{\ProportionOriWithAltElevenHundredStar}{\num{0.3732}\%\xspace}
+\newcommand{\ProportionOriWithAltHundredFiveHundredStar}{\num{0.5576}\%\xspace}
+\newcommand{\ProportionOriWithAltFiveHundredPlusStar}{\num{0.7488}\%\xspace}
+
+% Average tag alterations per repository, rounded for prose
+% (exact values: 73.04 and 97.66 — see \StarZeroOneAvgAlterationsPerOrigin
+%  and \StarFiveHundredPlusAvgAlterationsPerOrigin)
+\newcommand{\StarZeroOneAvgAlterationsRounded}{\num{73}\xspace}
+\newcommand{\StarFiveHundredPlusAvgAlterationsRounded}{\num{98}\xspace}
