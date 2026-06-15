@@ -19,5 +19,7 @@
 *.bkp
 
 literature_reviews/*
-contributions/secrets_removal/*
+contributions/secrets_removal
+contributions/altered-histories
+contributions/tag-alterations-paper
 Thesis.md
