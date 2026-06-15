@@ -418,42 +418,42 @@ the \texttt{check} command audits a specific repository, querying the local data
 the \texttt{attach} command installs Git hooks that call \texttt{check-cached}, a cached variant that keys results by repository URL, target branch, and dataset version to avoid redundant queries.
 Cache validity is determined by dataset-version comparison, so results remain accurate as new alteration data becomes available while repeated queries return immediately.
 
+\begin{figure}[h]
+  \centering
+  \begin{verbatim}
+  $ git-historian check https://github.com/example/project \
+      --branch main --verbose
+  Connected to the database!
+  Found 2 altered history records for
+    'https://github.com/example/project'
+  Record #1:
+    Branch Name: refs/heads/master
+    Altered Commit: swh:1:rev:a1b2c3d4e5f6789...
+    Snapshot Destination: swh:1:snp:abcd1234...
+    Sub Category: FileModified
+  Record #2:
+    Branch Name: refs/heads/dev
+    Altered Commit: swh:1:rev:f6e5d4c3b2a1098...
+    Sub Category: CommitterDate
+  
+  $ git-historian attach . --branch main --verbose
+  git-historian successfully attached to repository
+  Hooks installed:
+    - post-merge (triggered after git pull)
+    - post-checkout (triggered after git checkout)
+  \end{verbatim}
+  \mycaption[GitHistorian CLI session]{%
+  Representative GitHistorian session: auditing a repository for alterations and attaching Git hooks for continuous monitoring. SWHIDs are illustrative.%
+  }
+  \label{fig:hist-gh-transcript}
+  \end{figure}
+
 \subsection{Example Outputs and Usage Scenarios}
 \label{subsec:hist-gh-examples}
 
 A maintainer can check whether a repository's history was altered, then attach the tool for ongoing monitoring, as illustrated in Figure~\ref{fig:hist-gh-transcript}.
 Documented scenarios include pre-merge auditing of third-party forks, periodic organisation-wide scans, and CI gates that alert when unexpected rewriting appears.
 The verbose output reports each altered commit's branch, SWHID, snapshot destination, and subcategory, and surfaces modified file paths---information that can be crucial for security auditing (for example, when a security-related file such as \texttt{src/security/auth.py} was modified in an altered commit).
-
-\begin{figure}[h]
-\centering
-\begin{verbatim}
-$ git-historian check https://github.com/example/project \
-    --branch main --verbose
-Connected to the database!
-Found 2 altered history records for
-  'https://github.com/example/project'
-Record #1:
-  Branch Name: refs/heads/master
-  Altered Commit: swh:1:rev:a1b2c3d4e5f6789...
-  Snapshot Destination: swh:1:snp:abcd1234...
-  Sub Category: FileModified
-Record #2:
-  Branch Name: refs/heads/dev
-  Altered Commit: swh:1:rev:f6e5d4c3b2a1098...
-  Sub Category: CommitterDate
-
-$ git-historian attach . --branch main --verbose
-git-historian successfully attached to repository
-Hooks installed:
-  - post-merge (triggered after git pull)
-  - post-checkout (triggered after git checkout)
-\end{verbatim}
-\mycaption[GitHistorian CLI session]{%
-Representative GitHistorian session: auditing a repository for alterations and attaching Git hooks for continuous monitoring. SWHIDs are illustrative.%
-}
-\label{fig:hist-gh-transcript}
-\end{figure}
 
 \subsection{Practical Usefulness and Limitations}
 \label{subsec:hist-gh-usefulness}
@@ -489,7 +489,7 @@ The research ecosystem faces a methodological challenge as well: significant por
 \subsection{Broader Research and Community Implications}
 \label{subsec:hist-disc-research}
 
-\NOTEside{new}The prevalence of history modifications raises a methodological concern for the software-engineering research community that extends beyond the security applications discussed above.
+The prevalence of history modifications raises a methodological concern for the software-engineering research community that extends beyond the security applications discussed above.
 Repository-based studies---mining commit timelines, measuring development velocity, training defect prediction models, or constructing contributor networks---implicitly treat the commit graph as a faithful record of development history.
 The measurements reported here suggest that a non-trivial portion of that data may reflect sanitised or restructured versions of the original development sequence rather than authentic event logs; researchers who mine repositories without anchoring to independent archival snapshots inherit this uncertainty.
 This blind spot is especially consequential for longitudinal studies and for research that relies on commit-based metrics and temporal analysis, where the order, authorship, and content of commits are all treated as ground truth.
@@ -501,7 +501,7 @@ Developing community standards, audit practices, and tooling to surface and comm
 
 History alterations present a concerning attack vector: an adversary could inject malicious code while using history rewriting to erase evidence, making detection through conventional auditing extremely difficult.
 The documented normalisation of rewriting creates cover for malicious actors to disguise backdoors as legitimate maintenance, and the scale observed---affecting millions of repositories---suggests a significant blind spot, since traditional security measures focus on current repository states and may miss attacks that exploit the temporal dimension of version-control history.
-Supply-chain guidance increasingly stresses pinning and provenance; the measurements here show \emph{why} pinning to a branch tip without a cryptographic object id is fragile, and why independent archives matter when disputes arise about what was public when~\cite{ladisa2023supplychain}.
+Supply-chain guidance increasingly stresses pinning and provenance; the measurements here show \emph{why} pinning to a branch tip without a cryptographic object id is fragile, and why independent archives matter when disputes arise about what was public when.
 
 \section{Threats to Validity}
 \label{sec:hist-validity}
@@ -511,6 +511,7 @@ Supply-chain guidance increasingly stresses pinning and provenance; the measurem
 
 History alteration is, by design, a destructive operation; observing it faithfully without information loss would require a user study on developer machines, dramatically reducing scale.
 This work takes the opposite approach---a very large-scale experiment relying on Software Heritage to collect and preserve snapshots that are then compared pairwise---and therefore depends on archival frequency: only alterations visible between successive visits are observable.
+The prevalence figures reported in this chapter should be read as a conservative lower bound on the phenomenon: missed or merged events imply undercounting, not inflation, so the true scale of history rewriting and its downstream impact on reproducibility, auditing, and supply-chain assurance may be significantly larger than the archival evidence alone establishes.
 Short-lived malicious or accidental alterations reverted between visits are missed, and multiple alterations between two visits of the same repository cannot be distinguished and are merged into one.
 Metadata changes are not detectable when file changes co-occur, due to the lack of a single reference commit to compare against; metadata could nonetheless be characterised for more than one million commits, with no claim made about the rest.
 The ten-commit search horizon for locating moved content is a deliberate trade-off: content might be found with a larger horizon, but a file reappearing many commits away is debatably the same file.
@@ -525,7 +526,7 @@ Finally, Git is also used as a storage backend for independent DVCS such as Juju
 \section{Conclusion}
 \label{sec:hist-conclusion}
 
-This chapter showed that history rewriting on public Git repositories is a large-scale, archivally observable phenomenon: across \OriginsTwoVisitsOrMoreShort repositories, the study found \AlteredCommitsShort alteration events and \GitOriginsRootCauseCommits affected repositories (\PercentOriginsAltered), with branch distributions that implicate default lines rather than only pull-request sandboxes~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+This chapter showed that history rewriting on public Git repositories is a large-scale, archivally observable phenomenon: across \OriginsTwoVisitsOrMoreShort repositories, the study found \AlteredCommitsShort alteration events and \GitOriginsRootCauseCommitsShort affected repositories (\PercentOriginsAltered), with branch distributions that implicate default lines rather than only pull-request sandboxes.
 Applying a novel taxonomy, most rewriting touches files or directories (\PercentDIRRootCauseCommits of root-cause commits), while a smaller but material share is metadata-only (\PercentMETARootCauseCommits), which matters for any audit process that trusts commit hashes without examining trees.
 Two targeted case studies showed that alterations are used to remove private information committed by mistake (for example, private keys) and to retroactively change open-source licenses; GitHistorian demonstrates that the same evidence base can feed operational tooling, not only global statistics.
 
@@ -535,4 +536,4 @@ The most urgent open question left by the secret-suppression case study is one t
 The \SecretsRemovedAllShort secret-shaped removals detected across \SecretsOriginsAllShort repositories show that developers \emph{did} push private keys, credential files, and authentication tokens to public repositories, and then rewrote history in an attempt to erase them.
 But erasing a secret from the repository does not retract it from independent archives, forks, caches, or mirrors---and, more critically, it does nothing to the credential itself unless the credential is separately rotated.
 The secrets identified in this chapter remain recoverable from Software Heritage regardless of the rewrite; the question is whether they also remain \emph{usable}.
-Chapter~\ref{chap:secrets} takes up that question directly: it recovers secrets embedded in alteration-affected commits, characterises their types and exposure windows, and---where a responsible-disclosure protocol permits---tests whether the underlying credentials are still active after the remediation attempt (\Cref{chap:secrets}).
+Chapter~\ref{chap:secrets} takes up that question directly: it recovers secrets embedded in alteration-affected commits, characterises their types and exposure windows, and establishes a responsible-disclosure protocol to test whether the underlying credentials are still active after the remediation attempt.
