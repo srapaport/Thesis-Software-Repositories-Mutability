@@ -14,7 +14,7 @@ Major restructure executed in one holistic pass (not the one-task-per-run conven
 - **Chapters renumbered** (dirs + files renamed, `main.tex` imports updated): Tags `chapter04→chapter03`, Histories `chapter05→chapter04`, Secrets `chapter06→chapter05`, Conclusion `chapter07→chapter06`. `memoir` auto-renumbers displayed numbers; all `chap:*` labels are name-based and survive.
 - **Tags (now Ch3)** carries the thesis' thorough, self-contained methodology and exhaustive coverage of `git_tag_alterations.pdf` (filter cascade, Tables 1/2/3/4 inlined, RQ3 popularity numbers, tj-actions case, Nixpkgs cross-analysis with Nix hash-mismatch transcript, GitHub immutable releases, full threats/related work/future work).
 - **Histories (now Ch4)** methodology opens by citing `\Cref{sec:tags-methodology}` for the shared snapshot-pair stance and details only the differences (commit-reachability differencing, Merkle DAG, root-cause commits, 10-generation horizon). Exhaustive coverage of `altered_histories.pdf` (RQ1–4 numbers, branch unification, root-cause taxonomy table, top-20 filenames, secret + license case studies, GitHistorian, 5 discussion subsections, threats).
-- **Secrets (now Ch5)** is no longer placeholder. Fully drafted from `secrets-removal/protocol/main.tex` + the detection notebooks (`leaks.ipynb`, `secrets.ipynb`): distinct filename→scan→tiered-validation methodology, **real detection numbers** (365,591,843 candidate records → 2,846,017 filename matches → 281,729 scanned → 25,859 with secrets = 9.18%; gitleaks/trufflehog type tables; filename + extension hit-rate tables). **Tier-C active-rate results marked pending** (`\TODO{T-CH5-RESULTS}`); no validation campaign run yet.
+- **Secrets (now Ch5)** is no longer placeholder. Fully drafted from `contributions/secrets_removal` and rewritten shorter on 2026-06-22 around the implemented detection/provenance pipeline, current early counts, validation protocol, threats, and a long perspectives section. **Real detection numbers** now follow `RESULTS.md`: 365,591,843 input rows → 2,846,017 filename-filtered pairs → 2,187,481 resolved pairs → 281,728 downloaded blobs → 25,859 blobs with findings = 9.18%. Active-credential validation remains pending (`\TODO{T-CH5-RESULTS}`); reproducibility metadata also remains pending (`\TODO{T-CH5-REPRO}`).
 - **Bibliography**: merged 5 secrets refs from `protocol/bib.bib` into `this.bib` and resolved `yadmani2025` (El Yadmani et al., IEEE S&P 2025, DOI 10.1109/SP61157.2025.00009) from the web. Added `\usepackage{multirow}` to `main.tex` (needed by the Ch4 root-cause table). gitleaks/trufflehog/CWE-798 cited as footnote URLs; ScanCode flagged with `\NOTEside` in Ch4.
 - **Figures**: Tags reuses existing assets (`workflow_pipeline`, `tag_alteration`, `temporal_evolution`, `popularity*`). Histories and Secrets pipeline figures remain boxed placeholders (no fabricated assets).
 - **No commits** made; user reviews and commits.
@@ -23,7 +23,7 @@ The per-task tables below retain the *old* chapter numbering for history; status
 
 ## Locked decisions
 
-- **Scope**: draft Chapters 1–6 fully (was 1–7 before the methods chapter was dissolved). **Drop social engineering everywhere** (RQs in Ch1, conclusion sub-thread, future-work item, etc.). **Ch5 (Active Secrets)** is now fully drafted from the secrets protocol + detection notebooks; only the Tier-C active-credential-validation results remain pending (`\TODO`).
+- **Scope**: draft Chapters 1–6 fully (was 1–7 before the methods chapter was dissolved). **Drop social engineering everywhere** (RQs in Ch1, conclusion sub-thread, future-work item, etc.). **Ch5 (Secret Removal)** is drafted from `contributions/secrets_removal` as an unfinished-study chapter; active-credential validation and final reproducibility metadata remain pending (`\TODO`).
 - **Granularity**: one task = one top-level section (e.g., "4.3 Chapter-Specific Methodology").
 - **Bibliography**: agents merge needed entries from `literature_reviews/*.bib` into `this.bib` on demand, normalized to the long-form DBLP-style keys already used in `chap02.tex`. `\bibliography{this,swh}` in `main.tex` stays unchanged. See `REVIEW_QUEUE.md` § "Bibliography normalization map" for the resolved key map produced by `P4`.
 - **Missing evidence**: agent inserts `\TODO{}` / `\NOTEside{}` inline, drafts what is supportable, logs the gap in `REVIEW_QUEUE.md`, marks task `done-with-gaps`.
@@ -235,19 +235,19 @@ Primary input: `contributions/altered_histories.pdf`. Target file: **`chapters/c
 
 ## Chapter 6→5 — Active Secrets in Version Control Archives  [now Ch5; no longer placeholder]
 
-**Fully drafted 2026-06-01** (was placeholder). Sources: `secrets-removal/protocol/main.tex` + detection notebooks `leaks.ipynb`, `secrets.ipynb` + scripts (`download_contents.sh`, `run_sensitive_filename_scan.sh`). Target file: **`chapters/chapter05/chap05.tex`** (renamed from `chapter06/chap06.tex`).
+**Fully drafted 2026-06-01** (was placeholder) and **rewritten shorter 2026-06-22** per user request. Current sources are restricted to `contributions/secrets_removal`: `METHODOLOGY.md`, `RESULTS.md`, `protocol/main.tex`, `protocol/provider_outreach_template.md`, and the implemented scripts/notebooks as evidence. Target file: **`chapters/chapter05/chap05.tex`** (renamed from `chapter06/chap06.tex`).
 
 | ID | Section | Status | Notes |
 |---|---|---|---|
-| T-CH6-01 | 5.1 Introduction | done | "push --force won't save you"; security-critical case of history rewriting; 5 RQs |
-| T-CH6-02 | 5.2 Background and Related Work | done | GitGuardian, Sinha, Meli, CWE-798, Basak, "Committed by Accident", El Yadmani 2025 |
-| T-CH6-03 | 5.3 Methodology | done | distinct filename(E1–E4)→retrieve→scan(gitleaks+trufflehog)→tiered validation (A/B/C); scope exclusions; ethics + non-response policy |
-| T-CH6-04 | 5.4 Secret-Bearing Files (RQ1/RQ2) | done | **real numbers**: 9.18% hit rate; gitleaks/trufflehog type tables; filename + extension hit-rate tables |
-| T-CH6-05 | 5.5 Validation of Leaked Secrets (RQ3/4/5) | done-with-gaps | **Tier-C active rate pending** (`\TODO{T-CH5-RESULTS}`); RQ3/RQ4 deferred to campaign |
-| T-CH6-06 | 5.6 Why Force-Pushing Is Not Sufficient | done | archival retention, third-party visibility, revocation/rotation |
-| T-CH6-07 | 5.7 Discussion | done | |
-| T-CH6-08 | 5.8 Threats to Validity | done | detection limits, coverage/sampling (281,729 of 2,846,017), conditional active rate |
-| T-CH6-09 | 5.9 Conclusion | done | bridge to `\Cref{chap:conclusion}` |
+| T-CH6-01 | 5.1 Introduction | done-with-gaps | connects directly to Ch4's recoverable-vs-usable question; marks interpretation with `\NOTEside{interpretation}` |
+| T-CH6-02 | 5.2 Study Design | done-with-gaps | compact six-stage pipeline from external `secrets.pkl` through filename filtering, SWH content resolution, S3 download, scanner run, and provenance join |
+| T-CH6-03 | 5.3 Early Detection Results | done-with-gaps | **real current-run numbers**: 9.18% hit rate over 281,728 downloaded blobs; gitleaks/trufflehog expanded row counts; attrition figure placeholder |
+| T-CH6-04 | 5.4 Validation Protocol | done-with-gaps | Tier A/B/C protocol, provider outreach, non-response handling, validation exclusions; no active-rate result claimed |
+| T-CH6-05 | 5.5 Threats to Validity | done-with-gaps | external input provenance, selection/coverage, scanner limits, and **no credential validation yet** (`\TODO{T-CH5-RESULTS}`) |
+| T-CH6-06 | 5.6 Conclusion and Perspectives | done-with-gaps | long perspectives section for unfinished work; reproducibility metadata pending (`\TODO{T-CH5-REPRO}`) |
+| T-CH6-07 | 5.7 Discussion | done | merged into compact conclusion/perspectives |
+| T-CH6-08 | 5.8 Threats to Validity | done | merged into current §5.5 |
+| T-CH6-09 | 5.9 Conclusion | done-with-gaps | merged into current §5.6; bridge to final conclusion removed in favor of unfinished-study perspectives |
 
 ## Chapter 7→6 — Conclusion and Future Work  [now Ch6]
 

@@ -324,7 +324,22 @@ When an agent drafts a section that requires one of the unresolved entries:
 
 ## Chapter 6 — Secret Removal
 
-_(empty)_
+### T-CH6-REWRITE — Short unfinished-study rewrite — 2026-06-22
+
+- **Target file**: `chapters/chapter05/chap05.tex`
+- **Status**: done-with-gaps
+- **What was produced**: Rewrote Chapter 5 as a shorter secret-removal chapter grounded in `contributions/secrets_removal`. The chapter now separates implemented detection/provenance results from the planned active-credential validation campaign, adds three boxed figure placeholders, and expands the conclusion into a perspectives section for the unfinished work.
+- **Verify**:
+  - [ ] Confirm the new title, `Secret Removal in Version Control Archives`, is preferred over the previous `Active Secrets in Version Control Archives`.
+  - [ ] Confirm that the three `\NOTEside{interpretation}` markers identify the passages you want to review.
+  - [ ] Build the document after drawing or accepting the boxed placeholders.
+- **TODO markers introduced**:
+  - `\TODO{T-CH5-RESULTS: run or document the Tier A/B/C validation campaign before claiming active, revoked, or rotated credential counts.}` in §5.5 — active-credential validation has not been executed in `contributions/secrets_removal`.
+  - `\TODO{T-CH5-REPRO: record run date, scanner versions, PostgreSQL export count, and resolve the downloaded-vs-scanned blob-count discrepancy before final submission.}` in §5.6 — `RESULTS.md` still marks run metadata and one funnel count as pending.
+  - `\NOTEside{interpretation}` in the introduction — interprets repository rewriting as acting on the wrong security object.
+  - `\NOTEside{interpretation}` in early results — interprets the 9.18% hit rate as conditional on the filtered/downloaded blob population.
+  - `\NOTEside{interpretation}` in perspectives — interprets the current evidence as showing repository-level removal without credential-level remediation.
+- **Follow-ups**: Fill validation results only after the Tier A/B/C campaign exists; stabilise run metadata; draw the pipeline, attrition funnel, and validation-flow figures.
 
 ## Chapter 7 — Conclusion and Future Work
 
