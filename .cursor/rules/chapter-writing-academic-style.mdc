@@ -23,13 +23,13 @@ Before drafting substantial chapter content, align with:
 
 1. `Training handout - Write your PhD thesis - 01-2026.pdf` (writing and structure guidance)
 2. The `contributions/` LaTeX sources (preferred) and PDFs — see [`contributions-read-only.mdc`](contributions-read-only.mdc)
-3. `Thesis.md` (global outline, scope, and chapter-level logic)
+3. Existing chapter `.tex` files and `THESIS_PLAN.md` (section structure, scope, and chapter-level logic)
 4. For claims grounded in **prior work** (not your contributions): when a paper's PDF exists under `literature_reviews/library/`, treat that full text as the authority for wording, numbers, and attributions; use `literature_reviews/*.{md,bib}` as navigation and BibTeX sources, not as a substitute for the PDF when precision matters.
 
 If there is a conflict:
 
 - Prioritize factual correctness from `contributions`.
-- Then preserve thesis-wide consistency from `Thesis.md`.
+- Then preserve thesis-wide consistency across existing chapter `.tex` files and `THESIS_PLAN.md`.
 - Then adapt style and presentation using the training handout.
 - For third-party papers, prefer the PDF in `literature_reviews/library/` over paraphrases from markdown catalogs when both exist.
 

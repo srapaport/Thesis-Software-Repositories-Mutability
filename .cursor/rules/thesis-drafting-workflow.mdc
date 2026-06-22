@@ -8,16 +8,15 @@ alwaysApply: false
 
 This rule governs how agents interact with the per-section drafting plan and the user-facing review queue. It applies to any agent run that touches `chapters/**/*.tex`, `this.bib`, `frontmatter/*.tex`, or the two workflow files (`THESIS_PLAN.md`, `REVIEW_QUEUE.md`).
 
-It composes with two existing rules:
+It composes with one existing rule:
 
 - [`chapter-writing-academic-style.mdc`](chapter-writing-academic-style.mdc) — academic style for `.tex` content. Always follow.
-- [`thesis-md-read-only.mdc`](thesis-md-read-only.mdc) — `Thesis.md` is read-only. Never edit it.
 
 ## Authoritative files
 
-- `THESIS_PLAN.md` (repo root, gitignored): master task list. The agent reads this file first, picks a task, updates its status, and stops at the end of one task. The plan defines the task ID schema and dependencies.
+- `THESIS_PLAN.md` (repo root, gitignored): master task list. The agent reads this file first, picks a task, updates its status, and stops at the end of one task. The plan defines the task ID schema, dependencies, and section scope.
 - `REVIEW_QUEUE.md` (repo root, gitignored): user-facing review backlog. The agent appends a single dated review item per completed task.
-- `Thesis.md`: read-only outline. Source of truth for chapter structure. Never edit.
+- `chapters/**/*.tex`: source of truth for chapter structure, section numbering, and labels already in the manuscript.
 - `contributions/**/` (LaTeX sources) and `contributions/*.pdf`: the user's own papers. **Prefer the LaTeX trees** (`tag-alterations-paper/`, `altered-histories/`, especially `data.tex` and `numbers.tex` for statistics) over root PDFs when looking up numbers, methodology, or wording. See [`contributions-read-only.mdc`](contributions-read-only.mdc).
 - `literature_reviews/*.md` and `literature_reviews/*.bib`: literature pool. Citations may be drawn from these. New `.bib` entries are merged into `this.bib` on demand (see Bibliography section below).
 - `literature_reviews/library/`: local copies of papers as PDFs (populated from Zotero via [`scripts/copy-zotero-pdfs.zsh`](../../scripts/copy-zotero-pdfs.zsh)). The directory is listed in [`.gitignore`](../../.gitignore) so PDFs stay on your machine. When a task needs **verbatim wording**, section-level detail, or a claim that the `.md` summary does not pin down, **open the matching PDF here** (match by title, year, or DOI in the filename) before drafting or citing. Prefer this over guessing from abstracts or secondary summaries.
@@ -82,7 +81,6 @@ Each appended item goes at the **top** of its chapter section so the freshest it
 
 ## Hard rules
 
-- Never edit `Thesis.md` (separate rule enforces this).
 - Never edit `models/LaTeX/`, `models/*.pdf`, or any cover-page PDF.
 - Never run `git commit`, `git push`, or any state-mutating git command. Agents leave changes uncommitted.
 - Never invent: citations, statistics, figure references, dataset sizes, experimental results.

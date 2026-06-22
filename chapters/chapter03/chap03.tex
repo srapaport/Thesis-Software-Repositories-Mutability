@@ -40,18 +40,13 @@ Both outcomes affect whether external observers can reconstruct \emph{what} was 
 The chapter delivers prevalence estimates across major forges, a taxonomy of alteration forms, a correlation analysis with repository popularity, and an assessment of reproducibility and supply-chain implications.
 The \texttt{changed-files} incident is revisited as a concrete case study in \Cref{subsec:tags-attack-case}; the bulk of the chapter, however, measures whether such events are isolated exceptions or part of a broader pattern visible in long-running public archives.
 
-\paragraph{Research questions.}
-The chapter is organised around four research questions, following the underlying study:
-(RQ1) How many tag alterations occur across major software forges and how do they evolve over time?
-(RQ2) How are tags altered in software repositories?
-(RQ3) Does repository popularity correlate with tag alterations?
-(RQ4) To what extent do tag alterations constitute a threat to software build reproducibility and supply-chain integrity?
-The remainder of the chapter answers these questions in order.
-\Cref{sec:tags-downstream-assumptions} makes explicit the downstream assumptions outlined above; \Cref{sec:tags-related} situates the study among prior work on reproducibility, supply-chain security, and archival comparison; and \Cref{sec:tags-methodology} describes how successive Software Heritage snapshots are compared to detect tag moves and deletions.
-\Cref{sec:tags-prevalence} addresses RQ1 by establishing whether tag mutability is anecdotal or widespread: it counts alterations across major forges and traces how that volume accumulates over the observation window.
-\Cref{sec:tags-taxonomy} addresses RQ2 by classifying the observable forms of alteration---deletions, moves, and metadata-only versus content-changing retargeting---without inferring maintainer intent.
-\Cref{sec:tags-popularity} addresses RQ3 by relating both the total volume of alterations and the share of affected repositories to repository visibility, using GitHub star counts as a proxy.
-\Cref{sec:tags-implications} addresses RQ4 by assessing the practical stakes for rebuildability and supply-chain trust: how often moves change the source tree behind a stable tag name, whether real package metadata already depends on altered references, and how a documented supply-chain attack instantiates the threat model.
+\paragraph{What this chapter establishes.}
+Closing the evidential gap introduced above requires understanding tag alterations at four complementary levels.
+At the ecosystem level, the chapter first determines whether tag mutability is anecdotal or widespread and whether the practice persists over time (\Cref{sec:tags-prevalence}).
+At the technical level, it characterises the observable forms of alteration---deletions, moves, and metadata-only versus content-changing retargeting---without inferring maintainer intent (\Cref{sec:tags-taxonomy}).
+At the distributional level, it relates both the total volume of alterations and the share of affected repositories to repository visibility, using GitHub star counts as a proxy (\Cref{sec:tags-popularity}).
+Finally, at the consequential level, it assesses the practical stakes for rebuildability and supply-chain trust: how often moves change the source tree behind a stable tag name, whether real package metadata already depends on altered references, and how a documented supply-chain attack instantiates the threat model (\Cref{sec:tags-implications}).
+The remainder of the chapter follows this order; \Cref{sec:tags-downstream-assumptions} and \Cref{sec:tags-related} supply the assumptions and prior-work context, and \Cref{sec:tags-methodology} describes the archival comparison pipeline.
 The chapter closes with interpretation (\Cref{sec:tags-discussion}) and threats to validity (\Cref{sec:tags-validity}).
 
 \section{Stability Assumptions in Downstream Workflows}
@@ -69,7 +64,7 @@ In that role, a release tag is treated as a \emph{stable handle} for a particula
 That convenience trades away a strict cryptographic binding between the declared dependency string and the retrieved object unless additional pinning is applied.
 
 Several ecosystems anchor direct Git dependencies to tags in practice.
-Go modules, npm (via \texttt{git://} URLs in \texttt{package.json}), Cargo (via Git dependencies in \texttt{Cargo.toml}), and pip all support repository dependencies resolved through tag names; continuous integration systems such as GitHub Actions likewise let workflows pin third-party actions by tag.
+Go modules, npm, Cargo, or even pip all support repository dependencies resolved through tag names; continuous integration systems such as GitHub Actions likewise let workflows pin third-party actions by tag.
 Tags therefore sit at the boundary between human-readable release naming and the object graph that build and audit tooling ultimately fetches.
 
 Yet Git's reference model does not align with that social expectation.
@@ -195,7 +190,7 @@ Second, because the method only observes states between archival visits, all cou
 \subsection{Data Collection and Repository Selection}
 \label{subsec:tags-data-collection}
 
-To answer the stated research questions, the study follows an empirical methodology consisting of four phases: (1) collect the largest existing corpus of periodically crawled public repositories for analysis (required for RQ1); (2) devise an experimental protocol to detect tag alterations (addressing RQ1 and RQ3); (3) create a taxonomy to categorize tag alterations and understand the technical scope of the changes (RQ2); and (4) assess reproducibility and security implications through case studies and threat analysis (RQ4).
+To establish prevalence, characterise observable forms, stratify by visibility, and assess downstream consequences, the study follows an empirical methodology consisting of four phases: (1) collect the largest existing corpus of periodically crawled public repositories for analysis (required to estimate prevalence); (2) devise an experimental protocol to detect tag alterations (supporting prevalence estimation and visibility stratification); (3) create a taxonomy to categorize tag alterations and understand the technical scope of the changes (to characterise observable forms); and (4) assess reproducibility and security implications through case studies and threat analysis (for the downstream-consequences analysis).
 
 Software Heritage~\cite{swhcacm2018} is leveraged to analyze repositories archived from major forges including GitHub, GitLab, Bitbucket, and others.
 The study uses the Software Heritage graph snapshot from 8~October~2025~\cite{DBLP:conf/msr/PietriSZ20}, which preserves historical repository states even after tags are altered or deleted, enabling the analysis.
@@ -207,7 +202,7 @@ Only repositories containing at least one tag across their histories are then se
 Finally, alterations before 23~February~2016 are excluded, due to a Software Heritage archival artifact that produced spurious alterations, which has been confirmed with the archive operators (about \NonLegitAlterationsShort false positives)---Figure~\ref{fig:tags-workflow-pipeline} step~4.
 All alterations after this date are considered legitimate.
 
-To answer RQ3, repositories are grouped by popularity using GitHub ``stars'' as a metric~\cite{borges-2016-github-stars}.
+To stratify alterations by repository visibility, repositories are grouped by popularity using GitHub ``stars'' as a metric~\cite{borges-2016-github-stars}.
 Although the number of stars can be artificially inflated by various means~\cite{DBLP:journals/corr/abs-2412-13459}, it remains a relevant metric in this case: a large number of stars increases repository visibility, making the repository more worthy of scrutiny.
 Due to the lack of popularity metrics on other development platforms, analyses that depend on popularity focus on GitHub repositories, while other analyses are conducted on all repositories archived by Software Heritage, regardless of the platform.
 
@@ -253,7 +248,7 @@ Optionally show lightweight versus annotated resolution paths.
 \subsection{Classification Procedure}
 \label{subsec:tags-classification}
 
-To understand the scope and potential impact of tag alterations (addressing RQ2), a classification taxonomy is developed by systematically characterizing which part undergoes modification.
+To understand the scope and potential impact of tag alterations (to characterise observable forms), a classification taxonomy is developed by systematically characterizing which part undergoes modification.
 Because a Git tag ultimately resolves to a source tree, an alteration can modify different layers of the Git object hierarchy.
 The nature of the change is categorized by comparing the old and new SWHIDs at three distinct levels:
 \begin{itemize}
@@ -289,7 +284,7 @@ Export or redraw from the paper's internal \texttt{fig\_git\_model.drawio} asset
 \subsection{Popularity Measurement}
 \label{subsec:tags-popularity-method}
 
-To address RQ3, an additional repository characteristic is collected and basic correlation analysis is performed.
+To relate alterations to repository visibility, an additional repository characteristic is collected and basic correlation analysis is performed.
 For GitHub repositories, star counts are collected as a proxy.
 
 Repositories are categorized into star ranges: 0--1, 2--10, 11--100, 101--500, and 501+ stars.
@@ -303,7 +298,7 @@ This measure indicates in which popularity range repositories are more likely to
 \subsection{Case Studies and Threat Assessment}
 \label{subsec:tags-casestudy-method}
 
-To evaluate the security implications of tag mutability (RQ4), an in-depth case study of a known software supply chain attack on the GitHub \texttt{\footnotesize{tj-actions/changed-files}} repository~\cite{paloalto_unit42_2025} is presented.
+To evaluate the security implications of tag mutability (for the downstream-consequences analysis), an in-depth case study of a known software supply chain attack on the GitHub \texttt{\footnotesize{tj-actions/changed-files}} repository~\cite{paloalto_unit42_2025} is presented.
 Specifically, a fork of that repository, which was captured in the dataset before and after the attack, is examined.
 This case study provides evidence of how attackers can leverage tag alterations to facilitate malicious code injection.
 
@@ -330,7 +325,7 @@ Popularity stratification uses GitHub star counts where available; repositories 
 \section{Prevalence and Evolution of Tag Alterations}
 \label{sec:tags-prevalence}
 
-This section answers RQ1 by establishing how often tag alterations occur and how their volume evolves over the observation window, before later sections characterize their observable forms (\Cref{sec:tags-taxonomy}) and stratify them by popularity (\Cref{sec:tags-popularity}).
+This section establishes prevalence and temporal evolution by determining how often tag alterations occur and how their volume evolves over the observation window, before later sections characterize their observable forms (\Cref{sec:tags-taxonomy}) and stratify them by popularity (\Cref{sec:tags-popularity}).
 
 \subsection{Frequency and Temporal Evolution of Altered Tags}
 \label{subsec:tags-freq}
@@ -373,7 +368,7 @@ Instead, the cumulative increase suggests that the practice remains active as th
 This interpretation is consistent with the monthly (non-cumulative) view in the bottom plot of Figure~\ref{fig:tags-temporal-evolution}: although a few months exhibit pronounced spikes, alterations are observed throughout the timeline, indicating a persistent baseline of activity rather than a one-off historical wave.
 Because the method only captures alterations visible between Software Heritage snapshots, this trajectory should be interpreted as a lower bound on observable occurrences, which further strengthens the conclusion that tag mutability is widespread.
 
-These results answer RQ1: tag alterations occur frequently and persist throughout the observation period.
+Together, these results show that tag alterations occur frequently and persist throughout the observation period.
 The core implication is that any reproducibility or supply-chain model that treats tags as \emph{de facto} immutable is misaligned with observed practice.
 
 \begin{figure}[t]
@@ -395,7 +390,7 @@ Interpreting raw counts therefore requires separating ``bulk maintenance'' from 
 \section{Taxonomy and Characterization of Tag Alterations}
 \label{sec:tags-taxonomy}
 
-This section answers RQ2: how are tags altered in software repositories?
+This section characterises the observable forms of tag alteration.
 The dataset allows recovery of the \emph{observable behavior} of altered tags.
 Rather than claiming to infer motives, a taxonomy is derived from the concrete transition patterns visible between snapshots.
 
@@ -503,7 +498,7 @@ If a tag moves after an artefact was published, the relationship between ``what 
 \section{Popularity and Tag Alterations}
 \label{sec:tags-popularity}
 
-This section answers RQ3 by relating alteration behaviour to repository popularity, measured through GitHub star ranges (\Cref{subsec:tags-popularity-method}).
+This section relates alteration behaviour to repository popularity, measured through GitHub star ranges (\Cref{subsec:tags-popularity-method}).
 
 To examine whether repository popularity correlates with alteration behavior, GitHub star counts are used as a proxy for repository visibility and repositories are grouped into the ranges 0--1, 2--10, 11--100, 101--500, and 501+ stars.
 
@@ -544,7 +539,7 @@ Tag mutability should therefore not be framed solely as a problem of obscure rep
 \section{Implications for Release Integrity}
 \label{sec:tags-implications}
 
-The final research question is whether tag alterations pose a practical threat to build reproducibility and software supply-chain security.
+The final strand of the analysis assesses whether tag alterations pose a practical threat to build reproducibility and software supply-chain security.
 The results show that the threat is real for two independent reasons: first, many observed moves change the actual content behind a stable tag name; second, the phenomenon already intersects with real package-management metadata.
 
 \subsection{Trust in Release Identifiers}
@@ -580,7 +575,7 @@ Once retargeted, any downstream workflow that fetched the same tag name again wo
 \textbf{Figure placeholder (\texttt{tj-actions/changed-files} supply-chain attack).}
 Timeline for \texttt{zendesk/changed-files} on 14~March~2025: \num{346} existing version tags (\texttt{v39}, \texttt{v47}, \ldots) all retargeted to one malicious commit (\texttt{swh:1:rev:0e58ed8671d6b60d0890c21b07f8835ace038e67}).
 Show before/after snapshot states and the GitHub Actions consumption path (workflow resolves action by tag $\rightarrow$ runs injected payload).
-This figure is not in the published paper but is central to RQ4.
+This figure is not in the published paper but is central to the downstream-consequences analysis.
 \end{minipage}%
 }
 \mycaption[Tag retargeting in the \texttt{tj-actions/changed-files} incident]{Caption TBD}
@@ -599,8 +594,7 @@ This evidence shows that tag alterations are not only theoretically capable of b
 For the \num{25} other packages, there is no hash mismatch, meaning that the Nix package definitions were created (or updated, although that is less likely) after the alteration.
 The command-level evidence in Figure~\ref{fig:tags-nix-hash-mismatch} illustrates a rebuild failure caused by source retargeting.
 
-Taken together, the tag-retargeting case study, the Nix cross-analysis, and the software supply-chain attack answer RQ4 affirmatively.
-Tag alterations constitute a practical threat to both software build reproducibility and supply-chain integrity.
+Taken together, the tag-retargeting case study, the Nix cross-analysis, and the software supply-chain attack confirm that tag alterations pose a practical threat to both software build reproducibility and supply-chain integrity.
 
 \begin{figure}[h]
 \centering
