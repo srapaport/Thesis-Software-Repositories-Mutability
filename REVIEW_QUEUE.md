@@ -324,6 +324,20 @@ When an agent drafts a section that requires one of the unresolved entries:
 
 ## Chapter 6 — Secret Removal
 
+### CH6-COMPOSITION — Integrate detection-composition results from leaks.ipynb — 2026-06-22
+
+- **Target file**: `chapters/chapter05/chap05.tex`
+- **Status**: done
+- **What was produced**: Added a new subsection "Composition of the detections" to the Early Detection Results section, with two tables and a top-filenames list, each interpreted: (1) `tab:sec-ext-hitrate` — blob-level hit-rate by file type (combined gitleaks OR TruffleHog, from notebook `any_ext_pct`); (2) `tab:sec-secret-types` — top secret types per detector (deduplicated finding rows); (3) inline top gitleaks-flagged filenames. Extended the scanner-accuracy threat to note filter-induced composition bias, and updated the Conclusion to summarize the concentration in private-key/key-material and to give the Tier A validation a family priority order.
+- **Source of numbers**: saved cell outputs of `contributions/secrets_removal/leaks.ipynb` (read-only experiment clone).
+- **Verify**:
+  - [ ] Re-check all table values against the notebook outputs: extension hit-rates (`id_dsa` 14/14, `id_rsa` 105/129, `.key` 4727/8270, `.pem` 6455/26641, `.env` 2021/14705, `.yml` 7377/69586, `.json` 1812/31190, `.properties` 248/4371, `.yaml` 1750/30924, `.ini` 119/2844, `.py` 890/58065, `.xml` 192/19647); gitleaks top-8 types (`generic-api-key` 24133, `private-key` 22275, `gcp-api-key` 739, `jwt` 200, `aws-access-token` 107, `curl-auth-user` 70, `stripe-access-token` 59, `curl-auth-header` 39); TruffleHog top-8 types (`PrivateKey` 19157, `JDBC` 6299, `Circle` 1737, `MongoDB` 801, `Postgres` 764, `GoogleGeminiAPIKey` 723, `URI` 391, `Box` 252); filenames (`secrets.yml` 8471, `config.yml` 5433, `.env` 1604, `secrets.yaml` 1424, `server.key` 1098, `config.json` 851, `key.pem` 724).
+  - [ ] Both secret-type columns are now strict top-8 by count (curated rows like `algolia-api-key`/`AWS` were dropped to avoid misrepresenting "most frequent").
+  - [ ] Units caveat: secret-type counts are over deduplicated finding rows, not blobs, and the two taxonomies are not comparable — confirm the prose states this clearly enough.
+  - [ ] Build the document (new tables use `tabular` only; no new packages needed).
+- **TODO markers introduced**: none.
+- **Follow-ups**: the 281,729-scanned vs 281,728-downloaded discrepancy is already tracked by `\TODO{T-CH5-REPRO}`; composition is described as over the scanned set.
+
 ### T-CH6-REWRITE — Short unfinished-study rewrite — 2026-06-22
 
 - **Target file**: `chapters/chapter05/chap05.tex`
