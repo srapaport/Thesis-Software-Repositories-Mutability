@@ -50,12 +50,15 @@ Author timestamps, names, and messages feed empirical software engineering, revi
 Third, \textbf{the same mechanism serves remediation and concealment}.
 Removing accidentally committed credentials or correcting license files is legitimate and common; it is also operationally similar, at the object-graph level, to hiding malicious commits unless independent archives or hash-disciplined consumers keep contradictory evidence~\cite{ladisa2023supplychain}.
 
-The chapter is organised around five research questions following the underlying ASE~2025 study~\cite{DBLP:conf/kbse/RapaportPTZ25}:
-(RQ1) How often are the histories of publicly available VCS repositories altered in an observable way?
-(RQ2) What (a) branches and (b) repositories are impacted the most by history alterations?
-(RQ3) When the history of a VCS repository is altered, which commit parts undergo modifications?
-(RQ4) Are there recurrent patterns of file alterations among observed VCS history rewrites?
-(RQ5) Can we design and implement an automated tool to audit and detect history alterations in public repositories?
+\paragraph{What this chapter establishes.}
+The chapter extends the underlying ASE~2025 study~\cite{DBLP:conf/kbse/RapaportPTZ25} along five complementary lines.
+\Cref{sec:hist-related} and \Cref{sec:hist-methodology} establish prior-work context and the archival comparison pipeline.
+It then quantifies how often publicly archived Git histories change between successive observations and how those events distribute across repositories (\Cref{subsec:hist-freq}).
+At the branch level, it identifies which branches carry the largest share of alteration events and how the likelihood of rewriting relates to repository visibility on GitHub (\Cref{subsec:hist-dist-branches,subsec:hist-affected-projects}).
+At the commit level, it applies a taxonomy that separates metadata-only rewrites from directory and file changes, and reports how alteration types vary between the full corpus and highly starred projects (\Cref{sec:hist-taxonomy}).
+At the security and governance level, it examines recurrent file-level patterns and displays two case studies in depth: retroactive license changes and secret-shaped removals that remain recoverable from the archive (\Cref{sec:hist-security}).
+Finally, it packages the detection pipeline into GitHistorian, an operational tool that can help maintainers and auditors spot alterations in repositories of interest (\Cref{sec:hist-githistorian}).
+The chapter closes with interpretation (\Cref{sec:hist-discussion}), threats to validity (\Cref{sec:hist-validity}), and a conclusion(\Cref{sec:hist-conclusion}).
 
 \section{Related Work}
 \label{sec:hist-related}
@@ -143,14 +146,14 @@ Because of the snowball effect, a single alteration can affect many commits, so 
 
 The corpus starts from the Software Heritage graph dataset, timestamp \FullDataset, which contains the VCS history of more than \SWHOriginShort repositories and packages (``origins'')~\cite{DBLP:conf/msr/PietriSZ20}.
 To avoid under-estimating the ratio of repositories that witness alterations, origins visited fewer than two times are excluded (\OriginsOneVisitOrLessShort), as are non-Git origins (\num{19000} thousand), leaving \OriginsTwoVisitsOrMoreShort origins where evidence of history alterations can potentially be found.
-As in the tag study, popularity-dependent analyses (RQ2b) use GitHub star counts made available by Software Heritage and are restricted to GitHub repositories, while all other analyses use every archived origin regardless of platform; star counts can be inflated but still indicate visibility and scrutiny-worthiness~\cite{DBLP:journals/corr/abs-2412-13459}.
+As in the tag study, popularity-dependent analyses that relate alteration likelihood to repository visibility use GitHub star counts made available by Software Heritage and are restricted to GitHub repositories, while all other analyses use every archived origin regardless of platform; star counts can be inflated but still indicate visibility and scrutiny-worthiness~\cite{DBLP:journals/corr/abs-2412-13459}.
 
 \subsection{Detection Framework and Branch Unification}
 \label{subsec:hist-detection}
 
 For each origin with at least two visits, and for each Git branch in them, all pairs of successive snapshots are compared to identify commits from the earlier snapshot missing from the later one (figure~\ref{fig:hist-methodology} step~1); within that set, root-cause commits are extracted per the definition above (figure~\ref{fig:hist-methodology} step~2).
 This step is implemented with custom code that mines the compressed graph representation of the Software Heritage archive locally, via its Rust API~\cite{saner-2020-swh-graph}.
-The framework addresses both RQ1 (by counting alterations) and RQ2 (by analysing branch-level patterns).
+The framework counts alterations at repository scale and records branch-level patterns for the distribution analyses in Section~\ref{sec:hist-prevalence}.
 
 \begin{figure}[h]
   \centering
@@ -221,7 +224,7 @@ Different Branch Name & --- & \DBNRootCauseCommits \\
 \subsection{Case-Study Design}
 \label{subsec:hist-casestudy-design}
 
-Two recurring patterns in the DIR category are examined in depth (RQ4).
+Two recurring patterns in the DIR category are examined in depth in Section~\ref{sec:hist-security}.
 The first, \emph{secret suppression}, focuses on files removed (category: File Removed) that should never have been shared via a public repository, detected by popular filenames used to store private keys or passwords, such as \texttt{id\_rsa} (without the \texttt{.pub} extension) or \texttt{credentials.txt}; the full list ships with the replication package~\cite{replication-package-altered-histories}.
 The second, \emph{retroactive license changes}, identifies modified license files (category: File Modified) on the main branch (after unification) whose names contain \texttt{LICENSE} or \texttt{LICENCE} (case-insensitive).
 ScanCode, a state-of-the-art license-detection tool~\cite{DBLP:journals/computer/Ombredanne20, scancode-home}, is run on the files before and after alteration, keeping only the highest-confidence result above \SI{90}{\percent}.
@@ -230,7 +233,7 @@ The resulting before/after license sets are categorised to gauge the magnitude o
 \section{Prevalence and Distribution of History Alterations}
 \label{sec:hist-prevalence}
 
-\subsection{Frequency Across Repositories (RQ1)}
+\subsection{Frequency Across Repositories}
 \label{subsec:hist-freq}
 
 Across the entire corpus, the study observes \AlteredCommitsShort alterations spread across all analysed branches, corresponding to \GitRootCauseCommits (\GitRootCauseCommitsShort) identified root-cause commits.
@@ -239,7 +242,7 @@ The event count is orders of magnitude larger than the repository count because 
 The proportion is modest in relative terms but not negligible in absolute ones: users of more than one million repositories can---and, assuming future stability, will---use public Git repositories that underwent history alterations during their lifetime.
 At the same time, the low percentage indicates that history rewriting remains an exception rather than standard practice, suggesting that common Git usage adheres to the expectation of immutable histories.
 
-\subsection{Distribution Across Branches (RQ2a)}
+\subsection{Distribution Across Branches}
 \label{subsec:hist-dist-branches}
 
 Alterations are not confined to obscure sandbox branches.
@@ -257,7 +260,7 @@ Even though roughly half of all alterations follow a known practice, alterations
 \label{fig:hist-branch-distribution}
 \end{figure}
 
-\subsection{Distribution Across Repositories (RQ2b)}
+\subsection{Distribution Across Repositories}
 \label{subsec:hist-affected-projects}
 
 Joining the \GitOriginsRootCauseCommitsShort altered repositories with their GitHub star counts (after removing \OriginsUnkownStars origins with unknown star counts) gives the following distribution shown in figure~\ref{fig:hist-popularity-proportion}: 0--1 star, \OriginsZeroOneStar origins (\PercentOriginsZeroOneStar); 2--9 stars, \OriginsTwoNineStars (\PercentOriginsTwoNineStars); 10--99 stars, \OriginsTenNinetyNineStars (\PercentTenNinetyNineStars); 100--999 stars, \OriginsHundredNineHundredNinetyNineStars (\PercentHundredNineHundredNinetyNineStars); and 1000+ stars, \OriginsThousandPlusStars (\PercentThousandPlusStars).
@@ -273,7 +276,7 @@ Within very popular repositories (100+ stars), alterations happen mostly on pull
 \label{fig:hist-popularity-proportion}
 \end{figure}
 
-\section{Taxonomy of History Alterations (RQ3)}
+\section{Taxonomy of History Alterations}
 \label{sec:hist-taxonomy}
 
 Applying the taxonomy of Table~\ref{tab:hist-rootcause-categories} to the \GitRootCauseCommitsShort identified root-cause commits gives the category distribution summarised in figure~\ref{fig:hist-category-distribution}, reported for the whole corpus and for the subset of repositories with 1000+ GitHub stars.
@@ -328,7 +331,7 @@ Grouping these phenomena alongside file and metadata signals ensures that preval
 Automation-heavy namespaces---for example, dependency-update bots such as Renovate and Dependabot---contribute recurring rewrite shapes that are operationally benign but still appear as alterations in the archive.
 The taxonomy therefore supports separating human-maintained default branches from bot-owned integration lines when interpreting the branch tables in Section~\ref{sec:hist-prevalence}.
 
-\section{Security-Relevant Characteristics of Altered Histories (RQ4)}
+\section{Security-Relevant Characteristics of Altered Histories}
 \label{sec:hist-security}
 
 \subsection{Recurrent File Patterns}
@@ -393,7 +396,7 @@ The prevalence of secret-shaped removals is consistent with post-leak history re
 That operation targets the canonical repository view, not the full blast radius of exposure---clones, forks, and archival snapshots may already retain the removed objects, as the case study above shows---and removal counts alone cannot establish whether credentials were rotated, how long they remained public, or whether downstream copies were accounted for.
 License changes raise complementary governance questions: recipients may rely on SPDX headers or \texttt{LICENSE} files for compliance, but those files can change retroactively in rewritten histories even when branch names stay constant.
 
-\section{GitHistorian: An Operationalization of History Alteration Detection (RQ5)}
+\section{GitHistorian: An Operationalization of History Alteration Detection}
 \label{sec:hist-githistorian}
 
 Archival counts establish prevalence; practitioners still need \emph{local} explanations---what disappeared, what replaced it, and which branch heads witnessed the change.
