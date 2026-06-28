@@ -3,7 +3,8 @@
 % Author: Solal Rapaport
 % Description: Secret removal in history-altered repositories. Grounded in
 % contributions/secrets_removal: implemented detection pipeline, current early
-% results, non-intrusive validation methodology, and unfinished perspectives.
+% results, Tier A private-key validation, non-intrusive validation methodology,
+% and unfinished perspectives.
 %
 \chapter{Secret Removal in Version Control Archives}
 \label{chap:secrets}
@@ -41,16 +42,16 @@ Private keys, database credentials, self-hosted services, certificates, copied b
 The result is a gap between repository-level deletion and credential-level remediation: the former can be observed in Git history, while the latter must be verified against the authority that accepts the credential.
 
 This chapter addresses that gap empirically.
-It does not yet claim to measure active secrets at ecosystem scale; the validation campaign remains unfinished and is constrained by responsible-disclosure requirements.
+It does not yet claim to measure active secrets at ecosystem scale; the active-validation campaign remains unfinished and is constrained by responsible-disclosure requirements.
 Instead, the chapter builds the measurement path needed to reach that result.
 It first recovers and scans archived contents associated with secret-looking history alterations, establishing how many downloaded blobs contain machine-detectable secret patterns.
-It then describes how validity should be tested without invasive access: offline syntactic checks where possible, provider-assisted validation as the preferred path, and researcher-run read-only checks only with explicit platform permission.
+It then applies offline syntactic checks to the dominant private-key family and describes how further validity should be tested without invasive access: provider-assisted validation as the preferred path, and researcher-run read-only checks only with explicit platform permission.
 The direction of the research is therefore practical as much as descriptive.
 If secrets removed from history are still active often enough to matter, the evidence can support better platform protocols: faster provider notification, clearer distinction between cleanup and rotation, and remediation workflows that close the credential rather than only hiding the repository evidence.
 
 \paragraph{What this chapter establishes.}
 The chapter first describes the implemented detection and provenance pipeline (\Cref{sec:sec-methodology}), and then reports the current early detection results: the attrition from filename-filtered candidates to downloaded blobs, and the number of blobs with at least one scanner finding (\Cref{sec:sec-bearing-files}).
-Finally, it lays out the non-intrusive validation methodology that would turn those findings into an active-credential study, before stating the threats to validity and the remaining work needed to complete the measurement (\Cref{sec:sec-validation,sec:sec-validity,sec:sec-conclusion}).
+It then reports Tier~A offline validation for private keys and lays out the non-intrusive methodology that would turn the remaining findings into an active-credential study, before stating the threats to validity and the remaining work needed to complete the measurement (\Cref{sec:sec-validation,sec:sec-validity,sec:sec-conclusion}).
 
 \section{Related Work}
 \label{sec:sec-related}
@@ -262,6 +263,7 @@ This example illustrates why the chapter reports blob-level, finding-level, and 
 
 The aggregate detection rate hides large variation across file types, and that variation is the clearest signal that the filename heuristic of \Cref{sec:sec-methodology} is doing useful work.
 \Cref{tab:sec-ext-hitrate} reports, for each extension in the scanned set, the fraction of recovered blobs in which gitleaks or TruffleHog found at least one secret.
+Given that a file extension is not the property of a blob, we borrow an extension from one repository with the blob to try to categorise them.
 The spread is wide: key-material names are almost certain to carry a detectable secret (\texttt{id\_dsa} at \SI{100}{\percent}, \texttt{id\_rsa} at \SI{81.4}{\percent}, the \texttt{.key} suffix at \SI{57.2}{\percent}), whereas the broad configuration and source extensions admitted by the first filename pass yield far less (\texttt{.yml} at \SI{10.6}{\percent}, \texttt{.json} and \texttt{.yaml} near \SI{6}{\percent}, \texttt{.py} at \SI{1.5}{\percent}, \texttt{.xml} at \SI{1.0}{\percent}).
 The reading is direct: the refined pass concentrates the candidate set on exactly the names that convert to findings, while the high-recall extensions contribute volume but little signal.
 This also gives a natural priority order for the validation work that follows, because the families that dominate the findings are the ones whose active rate matters most.
@@ -293,16 +295,23 @@ This also gives a natural priority order for the validation work that follows, b
 
 The kinds of secrets behind these findings are similarly concentrated.
 \Cref{tab:sec-secret-types} lists the eight most frequent secret types reported by each detector, ranked by count.
-These counts are over deduplicated finding rows rather than blobs, and the two detectors use different type taxonomies, so the columns are not directly comparable and should be read as separate rankings.
-%Both rankings are nonetheless dominated by private-key material: gitleaks attributes \num{22275} findings to \texttt{private-key} and TruffleHog \num{19157} to \texttt{PrivateKey}.
-The mass splits into two operationally distinct groups.
+These counts are over distinct repository locations---unique combinations of content blob and file path---rather than over deduplicated content blobs.
+The same blob can therefore contribute several rows if it appears at different paths or line ranges, and identical content reused in different repositories counts separately at this unit.
+
+The two detectors use different type taxonomies, so the columns are not directly comparable and should be read as separate rankings.
+Both rankings are nonetheless dominated by private-key material: gitleaks attributes \num{22275} locations---(\text{sha1}, \text{path}) pairs--- to \texttt{private-key} and TruffleHog \num{19157} to \texttt{PrivateKey}.
+For \emph{private keys} alone, gitleaks reports \num{12009} raw matches inside \num{11613} unique content blobs (one blob can contain several leaks), TruffleHog reports \num{10509} inside \num{9812} unique blobs.
+That is an average of \num{1.03} and \num{1.07} raw matches per flagged blob, respectively: a positive private-key file usually contains one key, not a bundle.
+The inflation from blob counts to the location totals in \Cref{tab:sec-secret-types}, and to the provenance-expanded counts of \Cref{sec:sec-bearing-files}, therefore comes mainly from the same archived content reappearing under many altered paths, not from repeated keys inside one file.
+
+Beyond this dominant family, the remaining detections split into two operationally distinct groups.
 The first is service tokens that name a reachable provider (gitleaks \texttt{gcp-api-key}, \texttt{aws-access-token}, \texttt{stripe-access-token}; TruffleHog \texttt{GoogleGeminiAPIKey} and the CircleCI \texttt{Circle} family), which are the credentials best suited to the provider-assisted validation of \Cref{sec:sec-validation}.
 The second is database and connection-string credentials (TruffleHog \texttt{JDBC}, \texttt{MongoDB}, \texttt{Postgres}), which point at private hosts and are deliberately excluded from active probing.
 The largest single bucket, gitleaks \texttt{generic-api-key} (\num{24133}), is the least actionable: it flags high-entropy strings without identifying a provider, so it inflates the raw count without yielding a validation target.
 
 \begin{table}[b]
 \centering
-\caption{Eight most frequent secret types per detector, ranked by count over deduplicated finding rows. Labels are detector-specific and not directly comparable across columns.}
+\caption{Eight most frequent secret types per detector, ranked by count over distinct repository locations \((\texttt{sha1}, \text{path}\). Labels are detector-specific and not directly comparable across columns.}
 \label{tab:sec-secret-types}
 \small
 \begin{tabular}{lr@{\hskip 1.5cm}lr}
@@ -328,24 +337,65 @@ Findings therefore cluster where developers conventionally place credentials: de
 
 These numbers answer only the detection part of the study.
 They show that the archived contents of history-altered, credential-looking paths include scanner-detectable secrets.
-They do not establish that any detected credential is valid, authorised for a particular service, or still active.
-That distinction is central to the rest of the chapter, because the active-rate result is exactly the work that remains unfinished.
+They do not establish that any detected credential is authorised for a particular service or still active on a network.
+For private keys, Tier~A offline checks (\Cref{sec:sec-pk-tier-a}) show how many flagged blobs contain cryptographically parseable key material; that syntactic filter is necessary but not sufficient for an active-rate claim.
+The distinction between parseable and active credentials is central to the rest of the chapter, because the active-rate result remains unfinished.
 
 \section{Non-Intrusive Validation and Responsible Disclosure}
 \label{sec:sec-validation}
 
-This study shows how I would separate detection from validation.
-This protocol can only be applied after this thesis was written.
-Hence it does not report on any concrete results.
+This study separates detection from validation.
 Detection reports that a blob contains a pattern recognised by gitleaks or TruffleHog.
 Validation asks whether the credential can still authenticate to a provider or service.
 Validation is organised into three tiers so that the study can measure activity without treating third-party credentials as tools for unauthorised access.
+Tier~A offline filtering has been executed for private keys (\Cref{sec:sec-pk-tier-a}); Tier~B provider-assisted checks and Tier~C researcher-run network checks have not yet been carried out, so no active-rate result is claimed.
 
 \begin{itemize}
-\item \textbf{Tier A: offline validation.} Local structural or cryptographic checks issue no network traffic. Examples include format validation, \texttt{ssh-keygen -y}, and OpenSSL parsing. Tier A can reject placeholders, truncated material, and misnamed files, but it cannot prove activity because a revoked credential can remain syntactically valid.
+\item \textbf{Tier A: offline validation.} Local structural or cryptographic checks issue no network traffic.
+Examples include PEM extraction from literal text and from base64-encoded configuration values, followed by parsing with \texttt{ssh-keygen} and OpenSSL.
+Tier~A can reject placeholders, truncated material, and misnamed files, but it cannot prove activity because a revoked credential can remain syntactically valid.
 \item \textbf{Tier B: provider-assisted validation.} The researcher contacts the affected provider through an approved security channel and asks the provider to check the credentials on its side, revoke them where appropriate, and return only aggregate activity counts.
 \item \textbf{Tier C: researcher-run network validation.} The researcher performs a single read-only or metadata-only check only after explicit written provider authorisation for the precise command.
 \end{itemize}
+
+\subsection{Tier A results for private keys}
+\label{sec:sec-pk-tier-a}
+
+Private keys dominate the detection counts (\Cref{tab:sec-secret-types}), so they are the first family subjected to Tier~A filtering.
+The check operates on unique content blobs, not on the path-level location counts of the detection tables: each of the distinct \texttt{sha1} values flagged as a private key by gitleaks or TruffleHog is validated once, regardless of how many repository paths reference it.
+The implementation extracts PEM blocks from literal file text and from base64-decoded environment variables and YAML values, then attempts offline parsing with an empty passphrase.
+No network calls are made.
+
+Each blob receives one of five statuses.
+A blob is \emph{valid} when at least one extracted PEM block parses successfully; \emph{encrypted} when key material is found but passphrase-protected (passphrases are not cracked); \emph{invalid} when PEM-shaped text is rejected by the parsers; and \emph{no\_blocks} when the scanner flagged the blob but the extractor found no PEM.
+Throughout this subsection, \emph{valid} means cryptographically parseable offline, not enrolled on a hosting platform or otherwise usable on a network.
+
+\Cref{tab:sec-pk-tier-a} summarises the results by detector flag.
+Because every TruffleHog private-key blob is also flagged by gitleaks, the TruffleHog row is a subset of the gitleaks row rather than an independent population.
+
+\begin{table}[h]
+\centering
+\caption{Tier~A offline validation of private-key findings, by detector flag and blob status. Percentages are within each detector-flagged blob set.}
+\label{tab:sec-pk-tier-a}
+\small
+\begin{tabular}{lrrrrr}
+\hline
+\textbf{Detector flag} & \textbf{Blobs} & \textbf{valid} & \textbf{encrypted} & \textbf{invalid} & \textbf{no\_blocks} \\
+\hline
+Gitleaks & \num{11613} & \num{10038} (\SI{86.4}{\percent}) & \num{1091} (\SI{9.4}{\percent}) & \num{479} (\SI{4.1}{\percent}) & \num{5} (\SI{0.04}{\percent}) \\
+TruffleHog & \num{9812} & \num{9444} (\SI{96.3}{\percent}) & \num{134} (\SI{1.4}{\percent}) & \num{232} (\SI{2.4}{\percent}) & \num{2} (\SI{0.02}{\percent}) \\
+\hline
+\end{tabular}
+\end{table}
+
+Splitting the \num{11613} validated blobs by detector overlap clarifies where scanner noise concentrates.
+Among the \num{9812} blobs flagged by both tools, \num{9444} (\SI{96.3}{\percent}) parse as valid offline.
+Among the \num{1801} blobs flagged only by gitleaks, only \num{594} (\SI{33.0}{\percent}) parse as valid; gitleaks-only matches form the main false-positive pool at this stage.
+TruffleHog therefore acts as a useful pre-filter for unparseable key-shaped text, but relying on gitleaks alone would retain substantially more scanner noise in the Tier~A denominator.
+
+Sixty-four blobs yielded valid keys only after base64 decoding from configuration lines (for example environment files or CI YAML), illustrating why literal PEM search alone would miss some genuine key material.
+Encrypted blobs (\num{1091} under gitleaks) are syntactically plausible but cannot be parsed without a passphrase; they are excluded from any future active-check numerator.
+The \num{10038} gitleaks-flagged blobs classified as valid offline form the syntactic denominator for a future Tier~B or Tier~C SSH-key activity study, subject to provider authorisation and responsible-disclosure constraints; that step has not yet been executed.
 
 The study assigns one predefined check per credential family.
 Each check is read-only or metadata-only, and the ``active'' outcome is fixed in advance.
@@ -424,16 +474,17 @@ The detection result is consequently conditioned on successfully resolved and do
 gitleaks and TruffleHog use different detector rules and type taxonomies, so their secret-type labels are not directly comparable.
 They can miss secrets outside their modeled formats, encoded or split credentials, and credentials that require repository context.
 They can also flag non-secret high-entropy values or examples.
-The planned Tier A validation step is designed to reduce this noise before any active-rate denominator is formed.
+Tier~A offline validation has been applied to private keys (\Cref{sec:sec-pk-tier-a}) to reduce scanner noise before any active-rate denominator is formed for that family; other credential families remain unfiltered at this stage.
 The type and extension composition reported in \Cref{tab:sec-ext-hitrate,tab:sec-secret-types} must be read with the same caution: it is shaped by the filename filter, which deliberately oversampled key-material names such as \texttt{.key}, \texttt{.pem}, and \texttt{id\_rsa}, so the dominance of private-key findings reflects selection bias as much as ecosystem prevalence, and the per-extension hit-rates are conditional on the candidate population rather than on all archived files.
 
 \subsection{Conclusion Validity}
 \label{subsec:sec-val-conclusion}
 
-No credential validation has been executed.
-The current results are detection results over archived content.
-This chapter explains how to measure active credentials responsibly, but the repository does not yet contain outreach logs, provider responses, authorised Tier C runs, or aggregate active-rate outputs.
-Any statement about still-active secrets must therefore remain prospective until that campaign exists.
+No active credential validation has been executed.
+Tier~A offline filtering has been run for private keys: \num{10038} of \num{11613} flagged blobs parse as valid key material offline (\Cref{tab:sec-pk-tier-a}), but that syntactic result does not establish whether any key remains enrolled or usable.
+The current detection and Tier~A results are therefore limited to archived content and offline parsing.
+This chapter explains how to measure active credentials responsibly, but the repository does not yet contain outreach logs, provider responses, authorised Tier~C runs, or aggregate active-rate outputs.
+Any statement about still-active secrets must therefore remain prospective until the Tier~B and Tier~C campaign exists.
 
 When that campaign is carried out, any confirmed active count should be read as a lower bound rather than as a representative prevalence estimate.
 The intuition here is that positive hits, if any, are likely to be few.
@@ -452,17 +503,18 @@ The implemented contribution is a pipeline that starts from history-altered, cre
 On the current run, \num{25859} of \num{281728} downloaded blobs have at least one detector finding, a blob-level rate of \SI{9.18}{\percent}.
 Those findings are not spread evenly: they concentrate in private-key material and in a small set of high-yield file types (\texttt{id\_rsa}, \texttt{.key}, \texttt{.pem}, \texttt{.env}), while the broad configuration and source extensions contribute volume but few detections.
 That result establishes that the archived contents of altered histories contain scanner-detectable secrets.
-It does not establish whether those credentials remain active.
+For private keys, Tier~A filtering further shows that \num{10038} of \num{11613} flagged blobs contain cryptographically parseable key material offline (\Cref{tab:sec-pk-tier-a}).
+It does not establish whether those credentials remain active on any network.
 
 \subsection{Perspectives}
 
-The next step is to compute Tier A denominators per credential family.
-This means applying offline structural checks before any provider contact: parsing private keys, certificates, service-account JSON files, and token formats where such checks are possible.
-The output of this step should not be an active-rate result.
+Tier~A offline denominators are now available for private keys (\Cref{sec:sec-pk-tier-a}).
+The next step is to extend the same structural filtering to the remaining credential families before any provider contact: parsing service-account JSON files, token formats, and connection strings where offline checks are possible.
+The output of that step should not be an active-rate result.
 It should be a family-by-family count of syntactically valid credentials, placeholders rejected, malformed findings, and families excluded from validation.
 That denominator design matters because it prevents raw scanner output from being mistaken for confirmed credentials.
 
-The second task is provider coordination.
+The second task is provider coordination for Tier~B and Tier~C activity checks.
 The preferred process is already defined above: contact providers through a security channel, avoid sending raw credentials in the initial email, request provider-side validation and revocation where possible, and use researcher-run network checks only with written authorisation.
 The outreach logs must record dates, channels, follow-up status, closure status, and whether the provider authorised Tier B, authorised Tier C, declined, or did not respond.
 The future active-rate result should be reported only for authorised families, together with the number of syntactically valid credentials whose status remains unknown because no authorisation was obtained.
@@ -475,5 +527,5 @@ Both analyses should keep the distinction between blobs, scanner findings, and e
 
 The broader perspective is that secret removal exposes the limit of repository-level remediation.
 The current evidence shows that history rewriting can remove a credential from the visible repository state while leaving the archived content available for later analysis.
-The unfinished part is to measure how often this archival exposure remains operationally dangerous because the credential itself was not revoked.
-Completing that measurement would turn the chapter from an early detection study into a direct evaluation of whether developers and providers close the loop after secret exposure.
+The unfinished part is to measure how often this archival exposure remains operationally dangerous because the credential itself was not revoked and is still active.
+Completing that measurement would turn the chapter from an early detection and offline-filtering study into a direct evaluation of whether developers and providers close the loop after secret exposure.
