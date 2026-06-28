@@ -1,10 +1,59 @@
 %
 % File: abstract.tex
 % Author: Solal Rapaport
-% Description: Contains the text for thesis abstract.
+% Description: Thesis abstract — English then French.
 
 \chapter*{Abstract}
 \begin{SingleSpace}
-\initial{H}ere goes the abstract \lipsum[2]
+\initial{P}ublic software repositories are the foundation on which modern software supply chains are built.
+Package managers, continuous integration pipelines, and reproducible-build systems all resolve dependencies against repository state under an implicit assumption: that a named version label designates stable, fixed content.
+Git's design, however, separates immutable content-addressed objects from mutable references.
+Tags, branches, and other symbolic names can be silently updated at any time, while the version string in a downstream configuration file remains unchanged.
+This gap between assumption and reality is the subject of this thesis.
+
+The thesis measures that gap empirically, at ecosystem scale, using \textbf{Software Heritage} --- the largest public archive of source code --- as its primary data source.
+By comparing consecutive archival snapshots of the same repository, it recovers the before-and-after states of alterations that would otherwise be irrecoverable from the forge once the repository has been updated.
+This snapshot-pair methodology is applied to hundreds of millions of origins across three empirical studies.
+
+The \textbf{first study} analyses tag alterations in 45.5 million repositories observed over nine years.
+It detects 10.2 million alterations in 189,000 repositories (0.41\% of all repositories with tags), produces a taxonomy of alteration forms distinguishing content-changing tag moves, metadata-only moves, and deletions, and demonstrates through a cross-analysis with the Nixpkgs package set that tag moves cause concrete build reproducibility failures in real downstream package ecosystems.
+
+The \textbf{second study} examines commit-graph history alterations in 111 million repositories, identifying 8.7 million root-cause rewrites across 1.22 million repositories (1.10\%).
+It characterises the distribution of alterations by branch type and repository popularity, introduces a taxonomy of alteration forms (directory-content changes, metadata-only changes, and branch relocations), and documents two security-relevant patterns at ecosystem scale: 13 million secret-shaped file removals across 75,000 repositories, and retroactive license changes in 32,000 repositories.
+The study further produces \textit{GitHistorian}, a command-line tool that operationalises history alteration detection on the Software Heritage graph for practitioner use.
+
+The \textbf{third study} pursues the question left open by the second: of the removed credential-containing files that remain archived in Software Heritage, how many contain detectable, syntactically valid secrets?
+Working from the corpus of secret-shaped file removals, it applies a multi-stage pipeline that recovers archived blobs, scans them with two independent secret detectors, and links findings back to their repository provenance.
+Among 281,728 downloaded blobs, 9.18\% yield at least one finding.
+Among private-key blobs specifically, 86.4\% of flagged blobs pass offline syntactic validation.
+Whether these credentials remain active is the central open question: the study contributes the detection infrastructure and a staged responsible-disclosure protocol designed to answer it.
+
+Together, the three studies establish that repository mutability is an active, recurring phenomenon with measurable supply-chain consequences, and that the standard intuition about history rewriting as a credential remediation strategy --- that erasing a file from history closes the exposure --- is not supported by the archival evidence.
+\end{SingleSpace}
+\clearpage
+
+\chapter*{Résumé}
+\begin{SingleSpace}
+\initial{L}es dépôts logiciels publics constituent la fondation sur laquelle reposent les chaînes d'approvisionnement logicielles modernes.
+Les gestionnaires de paquets, les pipelines d'intégration continue et les systèmes de construction reproductibles résolvent tous leurs dépendances en s'appuyant sur l'état des dépôts, sous l'hypothèse implicite qu'une étiquette de version désigne un contenu stable et fixe.
+La conception de Git sépare cependant les objets immuables adressés par contenu des références mutables~: les tags, les branches et autres noms symboliques peuvent être mis à jour silencieusement à tout moment, tandis que la chaîne de version dans les fichiers de configuration des consommateurs reste inchangée.
+Ce fossé entre l'hypothèse et la réalité est le sujet de cette thèse.
+
+La thèse mesure cet écart empiriquement, à l'échelle de l'écosystème, en utilisant \textbf{Software Heritage} --- la plus grande archive publique de code source --- comme principale source de données.
+En comparant des instantanés archivés successifs d'un même dépôt, elle rend observables les états avant et après les altérations qui seraient autrement irrecouvrables depuis la forge une fois le dépôt mis à jour.
+Cette méthodologie par paires d'instantanés est appliquée à des centaines de millions d'origines, au travers de trois études empiriques.
+
+La \textbf{première étude} analyse les altérations de tags dans 45,5~millions de dépôts observés sur neuf ans.
+Elle détecte 10,2~millions d'altérations dans 189~000~dépôts (0,41\,\% de tous les dépôts étiquetés), produit une taxonomie distinguant les déplacements de tags modifiant le contenu, les déplacements ne modifiant que les métadonnées et les suppressions, et démontre, par une analyse croisée avec l'ensemble de paquets Nixpkgs, que les déplacements de tags provoquent des échecs concrets de reproductibilité dans des écosystèmes réels.
+
+La \textbf{deuxième étude} examine les altérations de l'historique de commits dans 111~millions de dépôts, identifiant 8,7~millions de commits causes-racines dans 1,22~million de dépôts (1,10\,\%).
+Elle caractérise la distribution des altérations par type de branche et par popularité du dépôt, introduit une taxonomie des formes d'altération, et documente deux schémas à caractère sécuritaire à l'échelle de l'écosystème~: 13~millions de suppressions de fichiers à caractère secret dans 75~000~dépôts, et des modifications rétroactives de licences dans 32~000~dépôts.
+L'étude produit également \textit{GitHistorian}, un outil en ligne de commande qui opérationnalise la détection d'altérations d'historique sur le graphe Software Heritage.
+
+La \textbf{troisième étude} poursuit la question laissée ouverte par la seconde~: parmi les fichiers supprimés contenant des informations d'identification qui restent archivés dans Software Heritage, combien contiennent des secrets détectables et syntaxiquement valides~?
+Parmi 281~728~blobs téléchargés, 9,18\,\% donnent au moins un résultat de détection~; parmi les blobs de clés privées spécifiquement, 86,4\,\% passent la validation syntaxique hors ligne.
+La thèse contribue l'infrastructure de détection et un protocole de divulgation responsable par étapes pour répondre à cette question.
+
+Ensemble, les trois études établissent que la mutabilité des dépôts est un phénomène actif et récurrent avec des conséquences mesurables sur la chaîne d'approvisionnement, et que l'intuition standard selon laquelle la réécriture de l'historique constitue une remédiation suffisante pour une fuite de credentials n'est pas étayée par les données archivales.
 \end{SingleSpace}
 \clearpage

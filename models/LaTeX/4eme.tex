@@ -41,12 +41,21 @@ bottom=30mm
 
 \newcommand{\logoEd}{ed}																		%% Logo de l'école doctorale. Indiquer le sigle (EDIPP, EDMH) / Doctoral school logo. Indicate the acronym : EDMH, EDIPP
 \newcommand{\PhDTitleFR}{titre (en français)}													%% Titre de la thèse en français / Thesis title in french
-\newcommand{\keywordsFR}{3 à 6 mots clés}														%% Mots clés en français, séprarés par des , / Keywords in french, separated by ,
-\newcommand{\abstractFR}{\lipsum[1-3]}															%% Résumé en français / abstract in french
+\newcommand{\keywordsFR}{contrôle de version, intégrité des dépôts, chaîne d'approvisionnement logicielle, Git, Software Heritage, ingénierie logicielle empirique}	%% Mots clés en français, séprarés par des , / Keywords in french, separated by ,
+\newcommand{\abstractFR}{%
+Les dépôts logiciels publics sont consommés comme des artefacts stables par les gestionnaires de paquets et les pipelines CI, pourtant Git sépare les objets immuables adressés par contenu des références mutables~: tags et branches peuvent être mis à jour silencieusement.
+Cette thèse mesure cet écart à l'échelle de l'écosystème via Software Heritage, en comparant des paires d'instantanés pour observer les états avant et après altération.
+Trois études empiriques progressent du plus visible au plus profond~: 10,2~millions d'altérations de tags dans 189~000~dépôts avec des conséquences de reproductibilité dans Nixpkgs~; 8,7~millions de réécritures de commits dans 1,22~million de dépôts, incluant 13~millions de suppressions de fichiers secrets et des changements rétroactifs de licences~;
+et un pipeline de détection établissant que 9,18\,\% des blobs archivés issus de ces suppressions contiennent des secrets détectables, dont 86,4\,\% de clés privées syntaxiquement valides hors ligne.
+Ces résultats démontrent que la mutabilité des dépôts est un défi d'intégrité actif à l'échelle de l'écosystème.}															%% Résumé en français / abstract in french
 
 \newcommand{\PhDTitleEN}{titre (en anglais)}													%% Titre de la thèse en anglais / Thesis title in english
-\newcommand{\keywordsEN}{3 à 6 mots clés}														%% Mots clés en anglais, séprarés par des , / Keywords in english, separated by ,
-\newcommand{\abstractEN}{\lipsum[1-3]}															%% Résumé en anglais / abstract in english
+\newcommand{\keywordsEN}{version control, repository integrity, software supply chain, Git, Software Heritage, empirical software engineering}	%% Mots clés en anglais, séprarés par des , / Keywords in english, separated by ,
+\newcommand{\abstractEN}{%
+Public software repositories are consumed as stable artifacts by package managers and CI pipelines, yet Git separates immutable content-addressed objects from mutable references: tags and branch names can be silently updated at any time.
+This thesis measures that gap empirically, at ecosystem scale, using Software Heritage snapshot pairs to observe before-and-after repository states.
+Three studies characterise the problem from the most visible surface to its deepest security implication: 10.2~million tag alterations across 189,000~repositories with concrete reproducibility consequences in Nixpkgs; 8.7~million commit-history rewrite events across 1.22~million repositories including 13~million secret-shaped file removals and retroactive license changes; and a detection pipeline establishing that 9.18\% of archived removed-credential blobs contain scanner-detectable secrets, with 86.4\% of private-key blobs passing offline syntactic validation.
+Together, these results demonstrate that repository mutability is an active, ecosystem-wide integrity challenge.}																%% Résumé en anglais / abstract in english
 
 \label{layout}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

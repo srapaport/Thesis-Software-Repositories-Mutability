@@ -21,6 +21,27 @@ For the workflow contract, see [`/.cursor/rules/thesis-drafting-workflow.mdc`](.
 
 ---
 
+## Chapter 6 — Conclusion and Future Work
+
+### T-CH7-01…07 — Full Chapter 6 draft — 2026-06-27
+
+- **Target file**: `chapters/chapter06/chap06.tex`
+- **Status**: done-with-gaps
+- **What was produced**: Complete Chapter 6 drafted in one pass, replacing all `\TODO` scaffold. Seven sections drafted: §6.1 Summary of the Thesis (3 subsections per study), §6.2 What the Three Studies Establish About Repository Integrity (synthesis section replacing the dropped RQ-answers section; 3 subsections: mutability-norm, archive-instrument, remediation-gap), §6.3 Main Contributions (empirical/methodological/practical), §6.4 Implications for Software Supply-Chain Security (platforms/developers/consumers), §6.5 Limitations, §6.6 Directions for Future Work (observability, automated detection, developer behavior), §6.7 Final Remarks. No `\TODO` or `\NOTEside` markers introduced; no fabricated numbers.
+- **Verify**:
+  - [ ] **Build the document** to confirm all cross-references resolve: `\Cref{sec:tags-methodology}`, `\Cref{chap:tags}`, `\Cref{chap:histories}`, `\Cref{chap:secrets}`, `\Cref{sec:concl-synthesis}` (new label), `\Cref{subsec:concl-mutability-norm}`, `\Cref{subsec:concl-archive-instrument}`, `\Cref{subsec:concl-remediation-gap}`.
+  - [ ] **Citations used in Ch6** (all should resolve from `this.bib`/`swh.bib`): `rapaport2026tagalterations`, `paloalto_unit42_2025`, `github_immutable_releases`, `DBLP:conf/kbse/RapaportPTZ25`, `replication-package-altered-histories`, `swhcacm2018`, `torresarias2016gitmetadata`, `DBLP:conf/secdev/BasakNRW22`. Verify all keys exist.
+  - [ ] **Old label `sec:concl-rq-answers` removed** — confirm nothing in main.tex, chap01–05, or frontmatter still cross-references it.
+  - [ ] **Macro coverage**: Ch6 uses Ch3 macros (`\TotalAlterationsShort`, `\AlteredRepositoriesPercent`, `\DeletionsPercent`, `\PercentMovesContentChange`, `\StarZeroOneAlterationsPercent`, `\ProportionOriWithAltZeroOneStar`, `\ProportionOriWithAltFiveHundredPlusStar`, `\NixPkgsAffected`, `\NixPkgsTracked`, `\NixPkgsHashMismatch`, `\TotalOriginsAnalyzedShort`) and Ch4 macros (`\AlteredCommitsShort`, `\GitOriginsRootCauseCommitsShort`, `\PercentOriginsAltered`, `\OriginsTwoVisitsOrMoreShort`, `\GitRootCauseCommitsShort`, `\PercentDIRRootCauseCommits`, `\PercentMETARootCauseCommits`, `\PercentDBNRootCauseCommits`, `\SecretsRemovedAllShort`, `\SecretsOriginsAllShort`, `\LicenseAll`, `\LicenseOrigins`, `\LicenseFullChange`). Verify all are defined in the data macros file.
+  - [ ] **Ch5 numbers** are hardcoded as `\num{...}` values matching the actual pipeline counts (365,591,843 / 2,846,017 / 2,187,481 / 281,728 / 25,859 / 9.18% / 10,038 / 11,613 / 86.4%) — confirm they still match `RESULTS.md`.
+  - [ ] **Prose review**: §6.1.3 framing of Study 3 as honest-partial; §6.5 last paragraph on Study 3 incompleteness; §6.6.3 future-work framing. Confirm none over-claim active-credential results.
+- **TODO markers introduced**: none.
+- **Follow-ups**:
+  - Run `T-FM-01` (Abstract) once Ch6 is confirmed; the abstract should now summarise all three studies including the honest-partial framing of Study 3.
+  - Check whether `replication-package-altered-histories` bib key exists in `this.bib` (it is cited in Ch4 and reused in Ch6; if missing, add from the ASE replication package DOI).
+
+---
+
 ## Restructure — Methods chapter dissolved + full paper coverage — 2026-06-01
 
 ### RESTRUCTURE-01 — Delete Methods chapter, renumber, redistribute methodology — 2026-06-01
@@ -168,6 +189,18 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Follow-ups**: drafting tasks `T-CH1-01` through `T-CH1-06` are now ready to run.
 
 ## Chapter 2 — Background
+
+### T-CH2-05 — Secrets in Source Code Repositories — 2026-06-25
+
+- **Target file**: `chapters/chapter02/chap02.tex` (`\ref{sec:bg-secrets}`, `\ref{subsec:bg-secret-removal}`)
+- **Status**: done
+- **What was produced**: Replaced `\TODO`/`\lipsum` in §2.5 with background on credential exposure (CWE-798, Meli, GitGuardian, Sinha), detection/prevention (gitleaks/TruffleHog, platform scanning, filename heuristics), and the rotation-versus-rewrite remediation hierarchy. Expanded the Terminology `\subsec:bg-secret-removal` to define the term precisely and bridge to Ch4 (prevalence/recoverability) and Ch5 (content scan + active-credential validation).
+- **Verify**:
+  - [ ] Build and confirm all new `\Cref`/`\cite` keys resolve (`subsec:bg-secrets-remediation`, `subsec:hist-sec-secrets`, `chap:histories`, `chap:secrets`).
+  - [ ] Check whether GitHub push-rejection / secret-scanning claims need an explicit citation (currently stated without `\cite{}`).
+  - [ ] Confirm the section length and placement before Software Heritage reads well in the PDF.
+- **TODO markers introduced**: none.
+- **Follow-ups**: optional dedicated citation for GitHub push protection or `git filter-repo`/BFG if you want tool-level references in background.
 
 ### SYNC-CH2-paper-reviews — Port background re-tagging additions from REP review — 2026-06-08
 
@@ -323,6 +356,22 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Follow-ups**: optional `Git_metadata_indicators_of_supply_chain_attacks.md` cross-cites if you want stronger positioning vs metadata attacks; regenerate methodology figure asset for thesis branding.
 
 ## Chapter 6 — Secret Removal
+
+### T-CH5-PK-TIERA — Private-key Tier A validation results + counting-unit fix — 2026-06-27
+
+- **Target file**: `chapters/chapter05/chap05.tex`
+- **Status**: done
+- **What was produced**: Corrected `tab:sec-secret-types` unit (path+line locations, not blobs); added private-key counting hierarchy (22,275 / 19,157 locations → 11,613 unique blobs); new `\subsection{Tier A results for private keys}` with `tab:sec-pk-tier-a`, overlap interpretation, and valid≠active framing; reframed intro, validation opening, validity threats, conclusion, and perspectives to reflect Tier A done / Tier B–C pending.
+- **Source of numbers**: `contributions/secrets_removal/private_key_validation.ipynb` (outputs of `validate_private_keys.py`).
+- **Verify**:
+  - [ ] `\num{22275}` / `\num{19157}` never described as blob counts; prose states distinct `(sha1, path, line span)` locations.
+  - [ ] Offline validation denominator `\num{11613}` is the union of gitleaks and TruffleHog private-key blobs.
+  - [ ] Tier A table: gitleaks 10,038 valid (86.4%), 1,091 encrypted, 479 invalid, 5 no_blocks; TruffleHog 9,444 valid (96.3%), 134 encrypted, 232 invalid, 2 no_blocks.
+  - [ ] Overlap: both 9,812 → 96.3% valid; gitleaks_only 1,801 → 33.0% valid (594 valid blobs).
+  - [ ] Base64-decoded PEM note: 64 blobs.
+  - [ ] Build the document: new subsection cross-refs (`sec:sec-pk-tier-a`, `tab:sec-pk-tier-a`) resolve; table uses `\SI{}{\percent}`.
+- **TODO markers introduced**: none.
+- **Follow-ups**: extend Tier A to other credential families; run Tier B/C campaign for SSH keys; draw validation-flow figure placeholder.
 
 ### CH6-COMPOSITION — Integrate detection-composition results from leaks.ipynb — 2026-06-22
 

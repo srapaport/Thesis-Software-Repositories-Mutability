@@ -14,7 +14,7 @@ Major restructure executed in one holistic pass (not the one-task-per-run conven
 - **Chapters renumbered** (dirs + files renamed, `main.tex` imports updated): Tags `chapter04→chapter03`, Histories `chapter05→chapter04`, Secrets `chapter06→chapter05`, Conclusion `chapter07→chapter06`. `memoir` auto-renumbers displayed numbers; all `chap:*` labels are name-based and survive.
 - **Tags (now Ch3)** carries the thesis' thorough, self-contained methodology and exhaustive coverage of `git_tag_alterations.pdf` (filter cascade, Tables 1/2/3/4 inlined, RQ3 popularity numbers, tj-actions case, Nixpkgs cross-analysis with Nix hash-mismatch transcript, GitHub immutable releases, full threats/related work/future work).
 - **Histories (now Ch4)** methodology opens by citing `\Cref{sec:tags-methodology}` for the shared snapshot-pair stance and details only the differences (commit-reachability differencing, Merkle DAG, root-cause commits, 10-generation horizon). Exhaustive coverage of `altered_histories.pdf` (RQ1–4 numbers, branch unification, root-cause taxonomy table, top-20 filenames, secret + license case studies, GitHistorian, 5 discussion subsections, threats).
-- **Secrets (now Ch5)** is no longer placeholder. Fully drafted from `contributions/secrets_removal` and rewritten shorter on 2026-06-22 around the implemented detection/provenance pipeline, current early counts, validation protocol, threats, and a long perspectives section. **Real detection numbers** now follow `RESULTS.md`: 365,591,843 input rows → 2,846,017 filename-filtered pairs → 2,187,481 resolved pairs → 281,728 downloaded blobs → 25,859 blobs with findings = 9.18%. Active-credential validation remains pending (`\TODO{T-CH5-RESULTS}`); reproducibility metadata also remains pending (`\TODO{T-CH5-REPRO}`).
+- **Secrets (now Ch5)** is no longer placeholder. Fully drafted from `contributions/secrets_removal` and rewritten shorter on 2026-06-22 around the implemented detection/provenance pipeline, current early counts, validation protocol, threats, and a long perspectives section. **Real detection numbers** now follow `RESULTS.md`: 365,591,843 input rows → 2,846,017 filename-filtered pairs → 2,187,481 resolved pairs → 281,728 downloaded blobs → 25,859 blobs with findings = 9.18%. **Tier A offline validation for private keys** added 2026-06-27 from `private_key_validation.ipynb` / `validate_private_keys.py`: 11,613 unique blobs validated; 10,038 parse as valid offline (86.4% of gitleaks-flagged blobs). Tier B/C active-credential validation remains pending (`\TODO{T-CH5-RESULTS}` partial); reproducibility metadata also remains pending (`\TODO{T-CH5-REPRO}`).
 - **Bibliography**: merged 5 secrets refs from `protocol/bib.bib` into `this.bib` and resolved `yadmani2025` (El Yadmani et al., IEEE S&P 2025, DOI 10.1109/SP61157.2025.00009) from the web. Added `\usepackage{multirow}` to `main.tex` (needed by the Ch4 root-cause table). gitleaks/trufflehog/CWE-798 cited as footnote URLs; ScanCode flagged with `\NOTEside` in Ch4.
 - **Figures**: Tags reuses existing assets (`workflow_pipeline`, `tag_alteration`, `temporal_evolution`, `popularity*`). Histories and Secrets pipeline figures remain boxed placeholders (no fabricated assets).
 - **No commits** made; user reviews and commits.
@@ -23,7 +23,7 @@ The per-task tables below retain the *old* chapter numbering for history; status
 
 ## Locked decisions
 
-- **Scope**: draft Chapters 1–6 fully (was 1–7 before the methods chapter was dissolved). **Drop social engineering everywhere** (RQs in Ch1, conclusion sub-thread, future-work item, etc.). **Ch5 (Secret Removal)** is drafted from `contributions/secrets_removal` as an unfinished-study chapter; active-credential validation and final reproducibility metadata remain pending (`\TODO`).
+- **Scope**: draft Chapters 1–6 fully (was 1–7 before the methods chapter was dissolved). **Drop social engineering everywhere** (RQs in Ch1, conclusion sub-thread, future-work item, etc.). **Ch5 (Secret Removal)** is drafted from `contributions/secrets_removal` as an unfinished-study chapter; Tier A private-key offline filtering is reported (2026-06-27); Tier B/C active validation and final reproducibility metadata remain pending (`\TODO`).
 - **Granularity**: one task = one top-level section (e.g., "4.3 Chapter-Specific Methodology").
 - **Bibliography**: agents merge needed entries from `literature_reviews/*.bib` into `this.bib` on demand, normalized to the long-form DBLP-style keys already used in `chap02.tex`. `\bibliography{this,swh}` in `main.tex` stays unchanged. See `REVIEW_QUEUE.md` § "Bibliography normalization map" for the resolved key map produced by `P4`.
 - **Missing evidence**: agent inserts `\TODO{}` / `\NOTEside{}` inline, drafts what is supportable, logs the gap in `REVIEW_QUEUE.md`, marks task `done-with-gaps`.
@@ -139,7 +139,6 @@ The per-task tables below retain the *old* chapter numbering for history; status
 ## Chapter 1 — Introduction
 
 Default inputs for all Ch1 tasks:
-- `Thesis.md` § 1
 - `contributions/altered_histories.pdf` (intro and discussion)
 - `contributions/git_tag_alterations.pdf` (intro and discussion)
 - `literature_reviews/Git_mutability_and_supply_chain_integrity.md`
@@ -150,7 +149,7 @@ Target file: `chapters/chapter01/chap01.tex` (scaffold prepared by `P6`; agents 
 | ID | Section | Status | Extra dependencies | Notes |
 |---|---|---|---|---|
 | T-CH1-01 | 1.1 Context and Motivation | pending | — | open-source as critical infrastructure; trust anchors; integrity assumptions |
-| T-CH1-02 | 1.2 Problem Statement | pending | T-CH1-01 | use a lead example (e.g., a tag/history alteration storyline) per `Thesis.md` note |
+| T-CH1-02 | 1.2 Problem Statement | pending | T-CH1-01 |
 | T-CH1-03 | 1.3 Research Objectives | pending | T-CH1-02 | three sub-objectives only: 1.3.1 mutable releases, 1.3.2 altered histories, 1.3.3 secret removal. **Drop 1.3.4 (social engineering)**. |
 | T-CH1-04 | 1.4 Research Questions | pending | T-CH1-03 | RQs for tag, history, secret threads only. **Drop 1.4.4 (social engineering RQs)**. Use `\begin{researchquestion}...\end{researchquestion}` from `main.tex`. |
 | T-CH1-05 | 1.5 Thesis Contributions | pending | T-CH1-04 | empirical, methodological, practical. Cite `DBLP:conf/kbse/RapaportPTZ25` and `rapaport2026tagalterations`. |
@@ -168,7 +167,7 @@ Default inputs for all Ch2 tasks: existing chap02.tex content, `literature_revie
 | T-CH2-02 | 2.2 Mutability in Git | pending | review/polish; resolve `\NOTEside{Add citation for non-fast-forward rejection defaults...}` |
 | T-CH2-03 | 2.3 Releases, Provenance, and Reproducibility | pending | review/polish; resolve the three `\NOTEside`s (release-tag conventions, package-manager Git refs, Nix fixed-output documentation) |
 | T-CH2-04 | 2.4 Software Repositories in the Software Supply Chain | pending | review/polish; resolve `\NOTEside{Add citation(s) on repository-centric software supply chains...}` |
-| T-CH2-05 | 2.5 Secrets in Source Code Repositories | pending | **full draft** (currently `\TODO{perhaps later} \lipsum[1]`). Use lit reviews for foundational refs (e.g., `Mein19`-style secret leakage studies). Mark empirical gaps for Ch6 with `\TODO{}`. |
+| T-CH2-05 | 2.5 Secrets in Source Code Repositories | done | **full draft** (2026-06-25): replaced `\TODO`/`\lipsum` with three subsections (detection/prevention, remediation hierarchy) and expanded `\subsec:bg-secret-removal` in Terminology; bridges to Ch4/Ch5. No new `\TODO` markers. |
 | T-CH2-06 | 2.6 Software Heritage and Archival Observation | pending | review/polish; minor — already substantially drafted |
 | T-CH2-07 | 2.7 Terminology and Conceptual Scope | pending | review/polish; uncomment and finish the `Supply-Chain Threats` subsection at the end of the file. **Remove the cross-reference to `\Cref{sec:bg-secrets}`** if §2.5 is in the same chapter and resolves the reference (preserve label). |
 
@@ -242,8 +241,8 @@ Primary input: `contributions/altered_histories.pdf`. Target file: **`chapters/c
 | T-CH6-01 | 5.1 Introduction | done-with-gaps | connects directly to Ch4's recoverable-vs-usable question; marks interpretation with `\NOTEside{interpretation}` |
 | T-CH6-02 | 5.2 Study Design | done-with-gaps | compact six-stage pipeline from external `secrets.pkl` through filename filtering, SWH content resolution, S3 download, scanner run, and provenance join |
 | T-CH6-03 | 5.3 Early Detection Results | done-with-gaps | **real current-run numbers**: 9.18% hit rate over 281,728 downloaded blobs; gitleaks/trufflehog expanded row counts; attrition figure placeholder |
-| T-CH6-04 | 5.4 Validation Protocol | done-with-gaps | Tier A/B/C protocol, provider outreach, non-response handling, validation exclusions; no active-rate result claimed |
-| T-CH6-05 | 5.5 Threats to Validity | done-with-gaps | external input provenance, selection/coverage, scanner limits, and **no credential validation yet** (`\TODO{T-CH5-RESULTS}`) |
+| T-CH6-04 | 5.4 Validation Protocol | done-with-gaps | Tier A private-key offline results (`tab:sec-pk-tier-a`); Tier B/C protocol and outreach; no active-rate result claimed |
+| T-CH6-05 | 5.5 Threats to Validity | done-with-gaps | external input provenance, selection/coverage, scanner limits; Tier A done for private keys; Tier B/C active validation pending (`\TODO{T-CH5-RESULTS}` partial) |
 | T-CH6-06 | 5.6 Conclusion and Perspectives | done-with-gaps | long perspectives section for unfinished work; reproducibility metadata pending (`\TODO{T-CH5-REPRO}`) |
 | T-CH6-07 | 5.7 Discussion | done | merged into compact conclusion/perspectives |
 | T-CH6-08 | 5.8 Threats to Validity | done | merged into current §5.5 |
@@ -253,15 +252,23 @@ Primary input: `contributions/altered_histories.pdf`. Target file: **`chapters/c
 
 Target file: **`chapters/chapter06/chap06.tex`** (renamed from `chapter07/chap07.tex` on 2026-06-01). Each task lists its specific dependencies. **Omit social engineering everywhere.** Note: the previous `T-CH7-*` dependencies on `T-CH3-07` (Methods threats) are void — fold thesis-level limitations from the per-chapter threats sections of Ch3/Ch4/Ch5 instead.
 
-| ID | Section | Status | Depends on |
-|---|---|---|---|
-| T-CH7-01 | 7.1 Summary of the Thesis | pending | T-CH4-10, T-CH5-10, T-CH6-09 |
-| T-CH7-02 | 7.2 Answers to the Research Questions | pending | T-CH1-04, T-CH4-08, T-CH5-08, T-CH6-07 |
-| T-CH7-03 | 7.3 Main Contributions | pending | T-CH1-05, T-CH4-08, T-CH5-08 |
-| T-CH7-04 | 7.4 Implications for Software Supply-Chain Security | pending | T-CH4-08, T-CH5-08 |
-| T-CH7-05 | 7.5 Limitations of the Thesis | pending | T-CH3-07, T-CH4-09, T-CH5-09, T-CH6-08 |
-| T-CH7-06 | 7.6 Directions for Future Work | pending | T-CH4-08, T-CH5-08, T-CH6-07. **Drop the social-engineering future-work bullet.** |
-| T-CH7-07 | 7.7 Final Remarks | pending | T-CH7-01..06 |
+**Full draft 2026-06-27:** All sections drafted in one pass. Chapter restructured vs original scaffold:
+- `§6.2 Answers to the Research Questions` replaced by `§6.2 What the Three Studies Establish About Repository Integrity` (3 subsections: mutability-norm, archive-instrument, remediation-gap) — user requested removal of formal RQ-by-RQ answers in favour of a synthesis section.
+- `§6.6.3` retitled to `Developer Behavior and Remediation Practices` (was `Broader Socio-Technical Studies`).
+- Ch5 incompleteness (no active-rate result) explicitly acknowledged in §6.1.3 and §6.5, and placed in future work §6.6.3.
+- No `\TODO` markers introduced; no fabricated numbers (all macros from Ch3/Ch4 or explicit \num{} from Ch5).
+
+| ID | Section | Status | Depends on | Notes |
+|---|---|---|---|---|
+| T-CH7-01 | 6.1 Summary of the Thesis | done-with-gaps | T-CH4-10, T-CH5-10, T-CH6-09 | Ch5 section marked honest-partial; no active-rate result claimed |
+| T-CH7-02 | 6.2 What the Three Studies Establish (replaces RQ answers) | done | — | Restructured per user decision 2026-06-27 |
+| T-CH7-03 | 6.3 Main Contributions | done | T-CH1-05, T-CH4-08, T-CH5-08 | Mirrors §1.5 structure |
+| T-CH7-04 | 6.4 Implications for Software Supply-Chain Security | done | T-CH4-08, T-CH5-08 | 3 audience subsections |
+| T-CH7-05 | 6.5 Limitations of the Thesis | done-with-gaps | T-CH4-09, T-CH5-09, T-CH6-08 | Study 3 incompleteness flagged as main open limitation |
+| T-CH7-06 | 6.6 Directions for Future Work | done | T-CH4-08, T-CH5-08, T-CH6-07 | Third subsection retitled; social engineering dropped |
+| T-CH7-07 | 6.7 Final Remarks | done | T-CH7-01..06 | Closes the tj-actions narrative arc |
+- **started**: 2026-06-27
+- **finished**: 2026-06-27
 
 ---
 
