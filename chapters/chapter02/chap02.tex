@@ -382,8 +382,47 @@ Third, later repository changes invalidate that reliance by making previous sour
 \section{Secrets in Source Code Repositories}
 \label{sec:bg-secrets}
 
-\TODO{todo}
-\lipsum[1]
+Public repositories distribute source code to collaborators, package managers, continuous integration systems, and downstream users (\Cref{sec:bg-git-repositories}).
+That distribution model assumes the published tree is safe to inspect, clone, and reuse.
+When authentication material is committed by mistake, the repository becomes an accidental channel for credential exposure.
+In this thesis, a \emph{secret} denotes any credential or key material whose disclosure would grant access to a protected resource: API tokens, passwords, database connection strings, private keys, certificates, and similar values that should remain outside version control.
+
+The weakness is well known in software security practice.
+Hard-coded credentials are catalogued as CWE-798 and recur among the most consequential classes of software defect.
+Empirical work on public GitHub repositories shows that leakage is systematic rather than anecdotal: Meli et al.\ recovered more than \num{200}\,k API keys and tokens embedded directly in source code~\cite{DBLP:conf/ndss/MeliMR19}, and industry monitoring reports describe millions of exposed credentials in public repositories in a single year~\cite{segura2022secrets}.
+Sinha et al.\ argued early that version control systems should incorporate automated mechanisms to prevent such leaks and to assist developers after exposure~\cite{DBLP:conf/msr/SinhaSDPM15}.
+Because public repositories are copied, forked, indexed, and archived, a single push can propagate sensitive values far beyond the maintainer's immediate workspace.
+
+\subsection{Detection and Prevention}
+\label{subsec:bg-secrets-detection}
+
+Two complementary lines of defence address credential exposure in repositories.
+The first is \emph{detection}: scanning repository contents for patterns that resemble known secret formats.
+Open-source tools such as gitleaks and TruffleHog implement large rule sets over file contents; benchmark studies show that their reported findings overlap only partially, so no single detector captures the full set of machine-recognisable secrets~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
+The second is \emph{prevention at the forge}: hosting platforms can scan pushes, warn maintainers, notify credential providers, or block known-dangerous formats before they become part of the public history.
+GitHub, for example, rejects pushes that contain certain private-key formats and operates secret-scanning partnerships with major providers.
+
+These mechanisms reduce risk but do not eliminate it.
+Detector coverage depends on the rule set, the file types scanned, and whether credentials are split, encoded, or stored under unusual paths.
+Platform scanning applies only to the forge that receives the push and to the credential families for which an integration exists.
+Private keys for self-hosted services, database passwords, certificates, and values copied into archives or mirrors may fall outside the cleanest version of this model.
+Filename heuristics---matching paths such as \texttt{.env}, \texttt{id\_rsa}, or \texttt{credentials.json}---are therefore widely used in practice as a coarse first filter before content scanning, including in the empirical work of this thesis (\Cref{chap:histories,chap:secrets}).
+
+\subsection{Recommended Remediation}
+\label{subsec:bg-secrets-remediation}
+
+Surveys of secret-management practice converge on a clear hierarchy.
+Credentials should be kept out of source entirely, through environment variables, secret managers, and short-lived tokens that can be rotated without rewriting history~\cite{DBLP:conf/secdev/BasakNRW22,DBLP:journals/corr/abs-2211-06213}.
+When exposure occurs despite these precautions, the security remediation is to invalidate the leaked value: revoke the token, replace the key, reset the password, or otherwise remove the authority that the exposed string grants.
+Krause et al.\ study how developers prevent and respond to accidental commits; their findings reinforce that rotation, not deletion from the repository alone, closes the security gap~\cite{DBLP:journals/corr/abs-2211-06213}.
+
+History rewriting is nonetheless a common \emph{cleanup} action after a leak.
+Maintainers can amend or rebase recent commits, run history-filtering tools over past trees, and force-push the rewritten branch so that the current public view no longer contains the offending file (\Cref{subsec:bg-history-rewriting,subsec:bg-force-pushes-reference-updates}).
+This action can reduce the chance that a future clone or casual inspection rediscovers the value, and it may satisfy organisational policy about what may remain in advertised project history.
+It does not, however, act on the credential itself.
+Nor does it erase every copy of the exposed commits: forks, local clones, search indexes, and independent archives may retain the pre-rewrite state long after the upstream repository looks clean (\Cref{sec:bg-software-heritage}).
+The distinction between repository-level cleanup and credential-level remediation is central to the secret-removal thread of this thesis.
+Chapter~\ref{chap:histories} shows that secret-shaped files removed through history rewriting remain recoverable from Software Heritage at scale; Chapter~\ref{chap:secrets} asks whether the recovered values are still valid credentials.
 
 \section{Software Heritage and Archival Observation}
 \label{sec:bg-software-heritage}
@@ -452,9 +491,15 @@ Additional classification is required to describe what changed and what risks fo
 \subsection{Secret Removal}
 \label{subsec:bg-secret-removal}
 
-Secret removal denotes attempts to remove sensitive information from repository history after it has been committed.
-The altered-histories contribution studies this phenomenon as a case study by identifying removed files whose names commonly denote private information, such as private keys, private certificates, or passwords.
-\TODOside{to develop with chapter on secret removal}
+\emph{Secret removal} denotes attempts to remove sensitive information from repository history after it has been committed, typically by rewriting history and force-pushing so that credential-looking files no longer appear in the public commit graph (\Cref{subsec:bg-secrets-remediation,subsec:bg-altered-histories}).
+The term describes an observable repository operation, not the security outcome of that operation.
+A successful rewrite can make a secret invisible in the current upstream tree while the underlying credential remains valid, and an unsuccessful one---from a security standpoint---can leave both the repository evidence and the credential active.
+
+The altered-histories contribution treats secret removal as a case study within the broader taxonomy of history alterations.
+It identifies removed files whose names commonly denote private information, such as private keys, certificates, or password stores, and shows that such removals are frequent enough to be a first-order phenomenon rather than an edge case (\Cref{subsec:hist-sec-secrets}).
+That study establishes prevalence and recoverability at the filename level; it does not determine whether recovered contents still grant access.
+Chapter~\ref{chap:secrets} extends the thread by recovering archived contents for credential-looking removals, scanning them with secret detectors, and defining a non-intrusive protocol for testing whether detected values remain active.
+Together, these chapters separate three questions that are often conflated in practice: whether developers attempt to erase secrets from public history, whether those secrets remain recoverable from archives, and whether the recovered credentials still work.
 
 \section*{From background to the empirical chapters}
 \label{sec:bg-to-methods}
