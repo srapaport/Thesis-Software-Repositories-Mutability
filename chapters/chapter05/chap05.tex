@@ -1,7 +1,7 @@
 %
 % File: chap05.tex
 % Author: Solal Rapaport
-% Description: Secret removal in history-altered repositories. Grounded in
+% Description: Secret removal in repositories with altered histories. Grounded in
 % contributions/secrets_removal: implemented detection pipeline, current early
 % results, Tier A private-key validation, non-intrusive validation methodology,
 % and unfinished perspectives.
@@ -13,12 +13,12 @@
 \label{sec:sec-intro}
 
 Chapter~\ref{chap:histories} ended with a specific gap left by the study of altered Git histories.
-It showed that secret-shaped files can be removed through history rewriting and still remain recoverable from Software Heritage, but archival recovery alone cannot answer the security question that matters after a leak: whether the underlying credential is still valid and usable.
+It showed that files whose names suggested secrets can be removed through history rewriting and still remain recoverable from Software Heritage, but archival recovery alone cannot answer the security question that matters after a leak: whether the underlying credential is still valid and usable.
 This chapter starts from that distinction.
 It treats secret removal not as another instance of repository hygiene, but as a security response whose effectiveness depends on an object outside Git: the credential itself.
 
 The context is familiar to anyone who has accidentally pushed a password, API token or a private key to a public repository.
-Once the mistake is noticed, rewriting the repository history is an available and visible action: the developer can force-push, filter the offending file or lines out of past commits, and make the current repository state look clean again.
+Once the mistake is noticed, repository cleanup is an available and visible action: the developer can force-push, filter the offending file or lines out of past commits, or push a new commit that removes the value, and make the current repository state look clean again.
 That action can be useful as cleanup.
 It reduces the chance that a future clone, search, or casual inspection of the repository will rediscover the value.
 It may also be required by organisational policy or by the desire not to keep known-sensitive material in the advertised project history.
@@ -26,8 +26,8 @@ But it is not the security remediation.
 The only action that invalidates the leak is rotation: revoking the exposed token, replacing the key, resetting the password, or otherwise making the old value unusable.
 History rewriting acts on the repository record; rotation acts on the authority that the leaked value grants.
 
-The problem is that these two actions can be confused.
-Chapter~\ref{chap:histories} already showed that secret-shaped removals are not isolated curiosities: enough private-key, credential-file, and authentication-token removals were visible in altered histories to make secret suppression a first-order case study rather than an anecdote.
+The problem is that developers sometimes perform only the optional repository cleanup and omit the required rotation.
+Chapter~\ref{chap:histories} already showed that removals of files whose names suggested secrets are not isolated curiosities: enough private-key, credential-file, and authentication-token removals were visible in altered histories to make secret suppression a first-order case study rather than an anecdote.
 That evidence raises a behavioural and operational question.
 If developers invest effort in rewriting history after a leak, do some of them treat that rewrite as the solution rather than as cleanup after rotation?
 An archive cannot answer that question directly, but it can show whether the secrets that developers tried to remove remain recoverable.
@@ -45,7 +45,7 @@ This chapter addresses that gap empirically.
 It does not yet claim to measure active secrets at ecosystem scale; the active-validation campaign remains unfinished and is constrained by responsible-disclosure requirements.
 Instead, the chapter builds the measurement path needed to reach that result.
 It first recovers and scans archived contents associated with secret-looking history alterations, establishing how many downloaded blobs contain machine-detectable secret patterns.
-It then applies offline syntactic checks to the dominant private-key family and describes how further validity should be tested without invasive access: provider-assisted validation as the preferred path, and researcher-run read-only checks only with explicit platform permission.
+It then applies offline syntactic checks to the dominant private-key family and describes how further validity should be tested without invasive access: provider-assisted validation as the preferred path, and read-only checks run by the researcher only with explicit platform permission.
 The direction of the research is therefore practical as much as descriptive.
 If secrets removed from history are still active often enough to matter, the evidence can support better platform protocols: faster provider notification, clearer distinction between cleanup and rotation, and remediation workflows that close the credential rather than only hiding the repository evidence.
 
@@ -62,15 +62,15 @@ Sinha et al. identified credential leakage in source-code repositories as an eme
 Meli et al. analysed a large sample of public GitHub repositories and recovered over \num{200000} API keys and tokens embedded directly in source code, showing that leakage is systematic rather than incidental~\cite{DBLP:conf/ndss/MeliMR19}.
 The underlying weakness, hard-coded credentials, is catalogued as CWE-798 and recurs in the CWE Top~25 Most Dangerous Software Weaknesses, which places it among the most consequential classes of software defect.
 
-Against this backdrop, the security community has converged on a clear remediation hierarchy.
+Against this backdrop, the security community has converged on a clear distinction between security remediation and repository hygiene.
 Surveys of secret-management practice recommend keeping credentials out of source entirely, through local environment variables and short-lived, automatically rotated credentials, precisely so that an exposure can be contained by rotation rather than by deletion~\cite{DBLP:conf/secdev/BasakNRW22, DBLP:journals/corr/abs-2211-06213}.
 The recommended response to a leak is therefore to rotate the affected credential: revoke the token, replace the key, or reset the password so that the exposed value no longer grants access.
 
 A gap remains between this guidance and observed developer behaviour.
-When a secret is pushed by accident, rewriting history, force-pushing, rebasing, or filtering the offending content out of past commits, is an immediately available and visible action, and it can be mistaken for remediation.
+When a secret is pushed by accident, rewriting history, force-pushing, rebasing, filtering the offending content out of past commits, or pushing a new commit that removes the value, is an immediately available and visible action, and it can be mistaken for remediation.
 It is not: it acts on the repository record, not on the authority that the leaked value grants.
 Crucially, removing content from a repository does not remove it from the wider ecosystem, because the same commits persist in forks, cached mirrors, and version-control archives.
-Chapter~\ref{chap:histories} demonstrated exactly this persistence at scale, recovering secret-shaped files that had been deleted through history alterations but remained available in Software Heritage.
+Chapter~\ref{chap:histories} demonstrated exactly this persistence at scale, recovering files whose names suggested secrets that had been deleted through history alterations but remained available in Software Heritage.
 This chapter takes that recovery substrate as its starting point and asks the question those prior studies leave open: not how many secrets are exposed or removed, but how many of the secrets that developers tried to erase through history rewriting are still active.
 
 \section{Study Design}
@@ -117,7 +117,7 @@ The first pass casts a wide net over the altered-file corpus; the second pass ke
 Both passes decide on names alone; neither claims that a secret is present.
 
 \paragraph{First pass: broad filename extraction.}
-The first pass queries the altered-file corpus for paths whose basename matches a fixed list of credential-shaped names, or whose path ends with a sensitive extension.
+The first pass queries the altered-file corpus for paths whose basename matches a fixed list of names that suggested credentials, or whose path ends with a sensitive extension.
 The exact basenames include environment and configuration files (\texttt{.env}, \texttt{web.config}, \texttt{config.yaml}), SSH and private-key names (\texttt{id\_rsa}, \texttt{id\_dsa}, \texttt{private.key}, \texttt{server.key}), key containers (\texttt{private.pem}, \texttt{keystore.p12}, \texttt{deploy.ppk}), and named credential files (\texttt{credentials.json}, \texttt{docker-compose.yml}); the full list, with evidence levels, is given in \Cref{tab:sec-filename-broad}.
 This pass is intentionally high-recall: its purpose is to retain every plausibly secret-bearing path, not to decide that a secret is present.
 It yields \SecretFirstExtractionShort (\SecretFirstExtraction) file records.
@@ -152,7 +152,7 @@ Cloud / IaC & E4 & Exact: \texttt{docker-compose.yml}; suffix: \texttt{*.cscfg} 
 \paragraph{Narrowing to a workable set.}
 Recovering and scanning \SecretFirstExtractionShort files does not seem tractable.
 Each retained path must be resolved to archived content in Software Heritage, downloaded, deduplicated, and scanned with secret detectors; at that scale the pipeline would require hundreds of millions of archive lookups and blob downloads before any result could be reported.
-The first pass therefore serves as a recall-oriented extraction step, not as the population analysed in this chapter.
+The first pass therefore serves as an extraction step designed to maximise recall, not as the population analysed in this chapter.
 A second pass narrows the \SecretFirstExtractionShort records to \SecretSecondExtractionShort (\SecretSecondExtraction) candidates by applying the basename regular expressions in \Cref{tab:sec-filename-refined}.
 This removes the long tail of generic extensions admitted by the broad sweep---for instance, a generic \texttt{*.json} or \texttt{*.sh} file is dropped unless its basename also satisfies one of the refined patterns.
 The reduction factor is roughly \num{128}:1; the detection results reported below are computed exclusively over this refined set.
@@ -231,7 +231,7 @@ Draw a funnel with these stages and counts: first filename selection \num{365591
 
 \begin{table}[h]
 \centering
-\caption{Current pipeline counts for secret detection in history-altered files.}
+\caption{Current pipeline counts for secret detection in files from altered histories.}
 \label{tab:sec-current-run}
 \small
 \begin{tabular}{lr}
@@ -336,7 +336,7 @@ The most frequent gitleaks-flagged basenames are configuration and secret manife
 Findings therefore cluster where developers conventionally place credentials: declared secret or configuration files and standalone key material.
 
 These numbers answer only the detection part of the study.
-They show that the archived contents of history-altered, credential-looking paths include scanner-detectable secrets.
+They show that the archived contents of credential-looking paths from altered histories include scanner-detectable secrets.
 They do not establish that any detected credential is authorised for a particular service or still active on a network.
 For private keys, Tier~A offline checks (\Cref{sec:sec-pk-tier-a}) show how many flagged blobs contain cryptographically parseable key material; that syntactic filter is necessary but not sufficient for an active-rate claim.
 The distinction between parseable and active credentials is central to the rest of the chapter, because the active-rate result remains unfinished.
@@ -348,14 +348,14 @@ This study separates detection from validation.
 Detection reports that a blob contains a pattern recognised by gitleaks or TruffleHog.
 Validation asks whether the credential can still authenticate to a provider or service.
 Validation is organised into three tiers so that the study can measure activity without treating third-party credentials as tools for unauthorised access.
-Tier~A offline filtering has been executed for private keys (\Cref{sec:sec-pk-tier-a}); Tier~B provider-assisted checks and Tier~C researcher-run network checks have not yet been carried out, so no active-rate result is claimed.
+Tier~A offline filtering has been executed for private keys (\Cref{sec:sec-pk-tier-a}); Tier~B provider-assisted checks and Tier~C network checks run by the researcher have not yet been carried out, so no active-rate result is claimed.
 
 \begin{itemize}
 \item \textbf{Tier A: offline validation.} Local structural or cryptographic checks issue no network traffic.
 Examples include PEM extraction from literal text and from base64-encoded configuration values, followed by parsing with \texttt{ssh-keygen} and OpenSSL.
 Tier~A can reject placeholders, truncated material, and misnamed files, but it cannot prove activity because a revoked credential can remain syntactically valid.
 \item \textbf{Tier B: provider-assisted validation.} The researcher contacts the affected provider through an approved security channel and asks the provider to check the credentials on its side, revoke them where appropriate, and return only aggregate activity counts.
-\item \textbf{Tier C: researcher-run network validation.} The researcher performs a single read-only or metadata-only check only after explicit written provider authorisation for the precise command.
+\item \textbf{Tier C: network validation run by the researcher.} The researcher performs a single read-only or metadata-only check only after explicit written provider authorisation for the precise command.
 \end{itemize}
 
 \subsection{Tier A results for private keys}
@@ -367,7 +367,7 @@ The implementation extracts PEM blocks from literal file text and from base64-de
 No network calls are made.
 
 Each blob receives one of five statuses.
-A blob is \emph{valid} when at least one extracted PEM block parses successfully; \emph{encrypted} when key material is found but passphrase-protected (passphrases are not cracked); \emph{invalid} when PEM-shaped text is rejected by the parsers; and \emph{no\_blocks} when the scanner flagged the blob but the extractor found no PEM.
+A blob is \emph{valid} when at least one extracted PEM block parses successfully; \emph{encrypted} when key material is found but passphrase-protected (passphrases are not cracked); \emph{invalid} when text formatted like PEM is rejected by the parsers; and \emph{no\_blocks} when the scanner flagged the blob but the extractor found no PEM.
 Throughout this subsection, \emph{valid} means cryptographically parseable offline, not enrolled on a hosting platform or otherwise usable on a network.
 
 \Cref{tab:sec-pk-tier-a} summarises the results by detector flag.
@@ -391,7 +391,7 @@ TruffleHog & \num{9812} & \num{9444} (\SI{96.3}{\percent}) & \num{134} (\SI{1.4}
 Splitting the \num{11613} validated blobs by detector overlap clarifies where scanner noise concentrates.
 Among the \num{9812} blobs flagged by both tools, \num{9444} (\SI{96.3}{\percent}) parse as valid offline.
 Among the \num{1801} blobs flagged only by gitleaks, only \num{594} (\SI{33.0}{\percent}) parse as valid; gitleaks-only matches form the main false-positive pool at this stage.
-TruffleHog therefore acts as a useful pre-filter for unparseable key-shaped text, but relying on gitleaks alone would retain substantially more scanner noise in the Tier~A denominator.
+TruffleHog therefore acts as a useful pre-filter for unparseable text that resembled key material, but relying on gitleaks alone would retain substantially more scanner noise in the Tier~A denominator.
 
 Sixty-four blobs yielded valid keys only after base64 decoding from configuration lines (for example environment files or CI YAML), illustrating why literal PEM search alone would miss some genuine key material.
 Encrypted blobs (\num{1091} under gitleaks) are syntactically plausible but cannot be parsed without a passphrase; they are excluded from any future active-check numerator.
@@ -499,7 +499,7 @@ Families without Tier~B or Tier~C authorisation therefore remain in the unknown 
 \label{sec:sec-conclusion}
 
 This chapter reframed the secret-suppression case from Chapter~\ref{chap:histories} as a distinct, unfinished security study.
-The implemented contribution is a pipeline that starts from history-altered, credential-looking paths, recovers their archived content in Software Heritage, scans the downloaded blobs with two secret detectors, and links findings back to their repository locations.
+The implemented contribution is a pipeline that starts from credential-looking paths from altered histories, recovers their archived content in Software Heritage, scans the downloaded blobs with two secret detectors, and links findings back to their repository locations.
 On the current run, \num{25859} of \num{281728} downloaded blobs have at least one detector finding, a blob-level rate of \SI{9.18}{\percent}.
 Those findings are not spread evenly: they concentrate in private-key material and in a small set of high-yield file types (\texttt{id\_rsa}, \texttt{.key}, \texttt{.pem}, \texttt{.env}), while the broad configuration and source extensions contribute volume but few detections.
 That result establishes that the archived contents of altered histories contain scanner-detectable secrets.
@@ -515,7 +515,7 @@ It should be a family-by-family count of syntactically valid credentials, placeh
 That denominator design matters because it prevents raw scanner output from being mistaken for confirmed credentials.
 
 The second task is provider coordination for Tier~B and Tier~C activity checks.
-The preferred process is already defined above: contact providers through a security channel, avoid sending raw credentials in the initial email, request provider-side validation and revocation where possible, and use researcher-run network checks only with written authorisation.
+The preferred process is already defined above: contact providers through a security channel, avoid sending raw credentials in the initial email, request provider-side validation and revocation where possible, and use network checks run by the researcher only with written authorisation.
 The outreach logs must record dates, channels, follow-up status, closure status, and whether the provider authorised Tier B, authorised Tier C, declined, or did not respond.
 The future active-rate result should be reported only for authorised families, together with the number of syntactically valid credentials whose status remains unknown because no authorisation was obtained.
 

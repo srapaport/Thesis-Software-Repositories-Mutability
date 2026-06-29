@@ -16,14 +16,14 @@ By comparing consecutive archival snapshots of the same repository, it recovers 
 This snapshot-pair methodology is applied to hundreds of millions of origins across three empirical studies.
 
 The \textbf{first study} analyses tag alterations in 45.5 million repositories observed over nine years.
-It detects 10.2 million alterations in 189,000 repositories (0.41\% of all repositories with tags), produces a taxonomy of alteration forms distinguishing content-changing tag moves, metadata-only moves, and deletions, and demonstrates through a cross-analysis with the Nixpkgs package set that tag moves cause concrete build reproducibility failures in real downstream package ecosystems.
+It detects 10.2 million alterations in 189,000 repositories (0.41\% of all repositories with tags), produces a taxonomy of alteration forms distinguishing tag moves that changed content, metadata-only moves, and deletions, and demonstrates through a cross-analysis with the Nixpkgs package set that tag moves cause concrete build reproducibility failures in real downstream package ecosystems.
 
 The \textbf{second study} examines commit-graph history alterations in 111 million repositories, identifying 8.7 million root-cause rewrites across 1.22 million repositories (1.10\%).
-It characterises the distribution of alterations by branch type and repository popularity, introduces a taxonomy of alteration forms (directory-content changes, metadata-only changes, and branch relocations), and documents two security-relevant patterns at ecosystem scale: 13 million secret-shaped file removals across 75,000 repositories, and retroactive license changes in 32,000 repositories.
+It characterises the distribution of alterations by branch type and repository popularity, introduces a taxonomy of alteration forms (directory-content changes, metadata-only changes, and branch relocations), and documents two security-relevant patterns at ecosystem scale: 13 million removals of files whose names suggested secrets across 75,000 repositories, and retroactive license changes in 32,000 repositories.
 The study further produces \textit{GitHistorian}, a command-line tool that operationalises history alteration detection on the Software Heritage graph for practitioner use.
 
-The \textbf{third study} pursues the question left open by the second: of the removed credential-containing files that remain archived in Software Heritage, how many contain detectable, syntactically valid secrets?
-Working from the corpus of secret-shaped file removals, it applies a multi-stage pipeline that recovers archived blobs, scans them with two independent secret detectors, and links findings back to their repository provenance.
+The \textbf{third study} pursues the question left open by the second: of the removed files that had contained credentials and that remain archived in Software Heritage, how many contain detectable, syntactically valid secrets?
+Working from the corpus of removals of files whose names suggested secrets, it applies a multi-stage pipeline that recovers archived blobs, scans them with two independent secret detectors, and links findings back to their repository provenance.
 Among 281,728 downloaded blobs, 9.18\% yield at least one finding.
 Among private-key blobs specifically, 86.4\% of flagged blobs pass offline syntactic validation.
 Whether these credentials remain active is the central open question: the study contributes the detection infrastructure and a staged responsible-disclosure protocol designed to answer it.

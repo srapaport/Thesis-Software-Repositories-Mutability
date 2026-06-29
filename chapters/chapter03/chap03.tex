@@ -43,7 +43,7 @@ The \texttt{changed-files} incident is revisited as a concrete case study in \Cr
 \paragraph{What this chapter establishes.}
 Closing the evidential gap introduced above requires understanding tag alterations at four complementary levels.
 At the ecosystem level, the chapter first determines whether tag mutability is anecdotal or widespread and whether the practice persists over time (\Cref{sec:tags-prevalence}).
-At the technical level, it characterises the observable forms of alteration---deletions, moves, and metadata-only versus content-changing retargeting---without inferring maintainer intent (\Cref{sec:tags-taxonomy}).
+At the technical level, it characterises the observable forms of alteration---deletions, moves, and metadata-only versus retargeting that changed content---without inferring maintainer intent (\Cref{sec:tags-taxonomy}).
 At the distributional level, it relates both the total volume of alterations and the share of affected repositories to repository visibility, using GitHub star counts as a proxy (\Cref{sec:tags-popularity}).
 Finally, at the consequential level, it assesses the practical stakes for rebuildability and supply-chain trust: how often moves change the source tree behind a stable tag name, whether real package metadata already depends on altered references, and how a documented supply-chain attack instantiates the threat model (\Cref{sec:tags-implications}).
 The remainder of the chapter follows this order; \Cref{sec:tags-downstream-assumptions} and \Cref{sec:tags-related} supply the assumptions and prior-work context, and \Cref{sec:tags-methodology} describes the archival comparison pipeline.
@@ -155,7 +155,7 @@ In summary, prior work has shown that software supply chains are vulnerable to i
 What remains underexplored is the role of Git tags as ambiguous objects that are simultaneously treated as release identifiers and mutable repository references.
 
 This chapter fills that gap.
-It provides, to our knowledge, the first large-scale empirical study centered specifically on Git tag alterations, characterizes the kinds of changes they induce, and connects them directly to reproducibility and software supply-chain risk through downstream package analysis and attack-oriented discussion.
+It provides, to our knowledge, the first large-scale empirical study centered specifically on Git tag alterations, characterizes the kinds of changes they induce, and connects them directly to reproducibility and software supply-chain risk through downstream package analysis and discussion focused on attacks.
 In doing so, it argues that long-term reproducibility requires not only rebuildable environments and archived source availability, but also stable source identification.
 
 \section{Methodology}
@@ -706,6 +706,9 @@ These recommendations are not merely precautionary: ecosystem experience shows t
 In Go modules, a 2025 incident on the GitHub repository \texttt{google/go-containerregistry} illustrates a failure mode: after \texttt{v0.20.4} was deleted and recreated with additional commits, consumers encountered a checksum mismatch, forcing the project to publish \texttt{v0.20.5} and document \texttt{v0.20.4} as unusable as a Go module~\cite{go_containerregistry_retagging_issue}.
 
 Second, code-hosting platforms could improve transparency by exposing native audit trails for tag creation, movement, and deletion, making reference mutability easier to monitor and reason about.
+A practical complement to opt-in immutability would be an append-only log of tag events maintained by the forge: each creation would record the tag name and target commit hash, and each move or deletion would append the prior target hash together with the new state.
+Recording commit identifiers rather than retrieved tree content would preserve auditability without re-exposing material that a subsequent rewrite removed from the visible repository.
+Tamper evidence could be provided through Merkle-anchored transparency logs for instance.
 
 An example of platform-level response to the tag mutability problem is GitHub's introduction of immutable releases in August 2025~\cite{github_immutable_releases}.
 It is important to note that this feature applies specifically to GitHub Releases---releases created through the GitHub web interface or the \texttt{gh} CLI tool---rather than to git tags in general.
@@ -777,7 +780,7 @@ The argument is that such ambiguity is precisely what makes tag mutability conse
 \subsection{Conclusion Validity}
 \label{subsec:tags-val-conclusion}
 
-Finally, the study establishes that tag alterations occur at scale, that many moves change content, that the phenomenon intersects with real package metadata, and that the dataset captures an attack-shaped retargeting event consistent with the threat model described.
+Finally, the study establishes that tag alterations occur at scale, that many moves change content, that the phenomenon intersects with real package metadata, and that the dataset captures a retargeting event consistent with an attack and with the threat model described.
 What is \emph{not} claimed is that every tag alteration is harmful, that every change to source content reflects malicious intent, or that tags are unsuitable for all release-engineering purposes.
 Rather, the conclusion is narrower and evidence-based: tag names alone are insufficient as reproducible dependency anchors when downstream consumers require stable source identity over time.
 

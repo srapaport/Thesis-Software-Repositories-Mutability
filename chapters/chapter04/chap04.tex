@@ -32,7 +32,7 @@ That archival property makes it possible to ask, at ecosystem scale, how often p
 
 Tag mutability and history rewriting are not competing explanations for the same failure; they are composable sources of drift.
 A project can keep every release tag stable while still replacing the commits those tags eventually point through, or rewrite metadata underneath a stable tree snapshot.
-Conversely, a moved tag is already a signal that some ref-changing operation occurred; the metadata-only tag moves measured in Chapter~\ref{chap:tags} are consistent with history-changing workflows that preserve directory identity while altering revision identifiers~\cite{rapaport2026tagalterations}.
+Conversely, a moved tag is already a signal that some operation that changed refs occurred; the metadata-only tag moves measured in Chapter~\ref{chap:tags} are consistent with workflows that rewrite history and preserve directory identity while altering revision identifiers~\cite{rapaport2026tagalterations}.
 This chapter therefore completes the empirical picture begun in Chapter~\ref{chap:tags}: it quantifies mutability inside the ancestry that public heads advertise, independent of whether any particular tag ever moved.
 
 \subsection{Why History Rewriting Deserves Broader Study}
@@ -56,7 +56,7 @@ The chapter extends the underlying ASE~2025 study~\cite{DBLP:conf/kbse/RapaportP
 It then quantifies how often publicly archived Git histories change between successive observations and how those events distribute across repositories (\Cref{subsec:hist-freq}).
 At the branch level, it identifies which branches carry the largest share of alteration events and how the likelihood of rewriting relates to repository visibility on GitHub (\Cref{subsec:hist-dist-branches,subsec:hist-affected-projects}).
 At the commit level, it applies a taxonomy that separates metadata-only rewrites from directory and file changes, and reports how alteration types vary between the full corpus and highly starred projects (\Cref{sec:hist-taxonomy}).
-At the security and governance level, it examines recurrent file-level patterns and displays two case studies in depth: retroactive license changes and secret-shaped removals that remain recoverable from the archive (\Cref{sec:hist-security}).
+At the security and governance level, it examines recurrent file-level patterns and displays two case studies in depth: retroactive license changes and removals of files whose names suggested secrets that remain recoverable from the archive (\Cref{sec:hist-security}).
 Finally, it packages the detection pipeline into GitHistorian, an operational tool that can help maintainers and auditors spot alterations in repositories of interest (\Cref{sec:hist-githistorian}).
 The chapter closes with interpretation (\Cref{sec:hist-discussion}), threats to validity (\Cref{sec:hist-validity}), and a conclusion(\Cref{sec:hist-conclusion}).
 
@@ -392,7 +392,7 @@ Chapter~\ref{chap:secrets} takes up this thread directly, starting a study on re
 \subsection{Interpretation of Security Relevance}
 \label{subsec:hist-sec-interpretation}
 
-The prevalence of secret-shaped removals is consistent with post-leak history rewrites---the scenario the last case study targets---though filename heuristics alone cannot exclude removals driven by refactoring, false-positive path matches, or rewrites whose primary purpose was unrelated to credential exposure.
+The prevalence of removals of files whose names suggested secrets is consistent with post-leak history rewrites---the scenario the last case study targets---though filename heuristics alone cannot exclude removals driven by refactoring, false-positive path matches, or rewrites whose primary purpose was unrelated to credential exposure.
 That operation targets the canonical repository view, not the full blast radius of exposure---clones, forks, and archival snapshots may already retain the removed objects, as the case study above shows---and removal counts alone cannot establish whether credentials were rotated, how long they remained public, or whether downstream copies were accounted for.
 License changes raise complementary governance questions: recipients may rely on SPDX headers or \texttt{LICENSE} files for compliance, but those files can change retroactively in rewritten histories even when branch names stay constant.
 
@@ -498,6 +498,8 @@ The measurements reported here suggest that a non-trivial portion of that data m
 This blind spot is especially consequential for longitudinal studies and for research that relies on commit-based metrics and temporal analysis, where the order, authorship, and content of commits are all treated as ground truth.
 For the broader open-source ecosystem, the findings raise questions about collaborative trust and the long-term integrity of development platforms.
 Developing community standards, audit practices, and tooling to surface and communicate the presence of history alterations represents an important area for future investment.
+Platform operators could support this audit posture with append-only logs of ref updates, including force-pushes that overwrite branch tips: each entry would record the branch name, the author of the rewrite, the previous commit hash, and the new tip hash.
+Such logs would make post-hoc remediation attempts visible to auditors even when file content was deliberately removed from history, because the evidence does not need to blobs---only the commit graph movement.
 
 \subsection{Supply-Chain Attack Obfuscation}
 \label{subsec:hist-disc-supplychain}
@@ -536,7 +538,7 @@ Two targeted case studies showed that alterations are used to remove private inf
 Future work includes discerning legitimate from malicious alterations and designing automated detection of suspicious patterns, and studying the \emph{timing} of rewrites---distinguishing immediate corrections from long-term exposures, and, in the secret-suppression scenario, early-stage removals (when a project was young and security practices immature) from more worrisome late-stage removals.
 
 The most urgent open question left by the secret-suppression case study is one that this chapter cannot answer from archival evidence alone.
-The \SecretsRemovedAllShort secret-shaped removals detected across \SecretsOriginsAllShort repositories show that developers \emph{did} push private keys, credential files, and authentication tokens to public repositories, and then rewrote history in an attempt to erase them.
+The \SecretsRemovedAllShort removals of files whose names suggested secrets detected across \SecretsOriginsAllShort repositories show that developers \emph{did} push private keys, credential files, and authentication tokens to public repositories, and then rewrote history in an attempt to erase them.
 But erasing a secret from the repository does not retract it from independent archives, forks, caches, or mirrors---and, more critically, it does nothing to the credential itself unless the credential is separately rotated.
 The secrets identified in this chapter remain recoverable from Software Heritage regardless of the rewrite; the question is whether they also remain \emph{usable}.
 Chapter~\ref{chap:secrets} takes up that question directly: it recovers secrets embedded in alteration-affected commits, characterises their types and exposure windows, and establishes a responsible-disclosure protocol to test whether the underlying credentials are still active after the remediation attempt.

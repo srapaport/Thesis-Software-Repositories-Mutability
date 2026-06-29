@@ -52,9 +52,35 @@ If there is a conflict:
 
 - Avoid empty or weak intensifiers/adjectives (for example: "substantial", "merely", "significant" without quantification, "important" without criterion).
 - Replace vague evaluative words with precise statements, measurable details, or explicit criteria.
-- Do not overuse hyphenated noun/adjective compounds (for example: "format-aware", "practitioner-derived") when a clearer non-hyphenated phrasing is possible.
-- Prefer longer explicit formulations over compact hyphenated constructions when this improves readability.
-- Use hyphenation only when grammatically required or when removing it would create ambiguity.
+- Do not overuse hyphenated noun/adjective compounds when a relative clause reads more naturally.
+- Prefer explicit relative clauses over compact participial pre-noun modifiers.
+
+### Participial compounds to avoid in prose
+
+Do **not** write stacked hyphen modifiers such as `-containing`, `-shaped`, `-changing`, `-conducted`, `-run`, `-oriented`, or `-altered` before a noun. Rewrite with a clause instead:
+
+| Avoid | Prefer |
+|---|---|
+| credential-containing files | files that contained credentials |
+| secret-shaped file removals | removals of files whose names suggested secrets |
+| content-changing moves | moves that changed content |
+| researcher-run network checks | network checks run by the researcher |
+| history-altered files | files from altered histories |
+| recall-oriented extraction step | extraction step designed to maximise recall |
+
+Use **past** tense in clauses when referring to historical repository states ("contained", "suggested"); use **present** only when the property still holds at scan time.
+
+### Hyphenated terms to keep
+
+Keep hyphenation when it is a fixed taxonomy label, standard technical term, or removing the hyphen would create ambiguity:
+
+- Taxonomy labels: `metadata-only` (keep even when paired with clausal forms such as "moves that changed content")
+- Granularity terms: `blob-level`, `file-level`, `commit-level`, `repository-level`
+- Technology qualifiers: `Rust-based`, `AST-based`, `filter-based`, `content-addressable`
+- Established computing terms: `read-only`, `append-only`, `provider-assisted`, `cross-analysis`
+- LaTeX `\label{}` keys, table identifiers, and BibTeX citation keys (never rewrite)
+
+Use hyphenation only when grammatically required or when removing it would create ambiguity.
 
 ## LaTeX and chapter hygiene
 
