@@ -26,6 +26,7 @@ bottom=30mm
 \usepackage{array}
 \usepackage{caption}
 \usepackage{multicol}
+\usepackage{siunitx}
 \setlength{\columnseprule}{0pt}
 \setlength\columnsep{10pt}
 
@@ -44,18 +45,18 @@ bottom=30mm
 \newcommand{\keywordsFR}{contrôle de version, intégrité des dépôts, chaîne d'approvisionnement logicielle, Git, Software Heritage, ingénierie logicielle empirique}	%% Mots clés en français, séprarés par des , / Keywords in french, separated by ,
 \newcommand{\abstractFR}{%
 Les dépôts logiciels publics sont consommés comme des artefacts stables par les gestionnaires de paquets et les pipelines CI, pourtant Git sépare les objets immuables adressés par contenu des références mutables~: tags et branches peuvent être mis à jour silencieusement.
-Cette thèse mesure cet écart à l'échelle de l'écosystème via Software Heritage, en comparant des paires d'instantanés pour observer les états avant et après altération.
-Trois études empiriques progressent du plus visible au plus profond~: 10,2~millions d'altérations de tags dans 189~000~dépôts avec des conséquences de reproductibilité dans Nixpkgs~; 8,7~millions de réécritures de commits dans 1,22~million de dépôts, incluant 13~millions de suppressions de fichiers secrets et des changements rétroactifs de licences~;
-et un pipeline de détection établissant que 9,18\,\% des blobs archivés issus de ces suppressions contiennent des secrets détectables, dont 86,4\,\% de clés privées syntaxiquement valides hors ligne.
-Ces résultats démontrent que la mutabilité des dépôts est un défi d'intégrité actif à l'échelle de l'écosystème.}															%% Résumé en français / abstract in french
+Cette thèse mesure cet écart à l'échelle de l'écosystème via Software Heritage, en comparant des paires de snapshots pour observer les états avant et après altération.
+Trois études empiriques mesurent cet écart en partant de ce qui est le plus visible à ce qui a de profondes implications de sécurité~: \num{10,2}~millions d'altérations de tags dans \num{189000}~dépôts avec des conséquences de reproductibilité dans Nixpkgs~; \num{8,7}~millions de réécritures de commits dans \num{1,22}~million de dépôts, incluant \num{13}~millions de suppressions de fichiers contenant des secrets et des changements rétroactifs de licences~;
+et un processus de détection établissant que \num{9,18}\,\% des blobs archivés issus de ces suppressions contiennent des secrets détectés par des scanners, dont \num{86,4}\,\% de clés privées syntaxiquement valides.
+Ces résultats démontrent que la mutabilité des dépôts est un défi actuel et pertinent d'intégrité à l'échelle de l'écosystème.}															%% Résumé en français / abstract in french
 
 \newcommand{\PhDTitleEN}{titre (en anglais)}													%% Titre de la thèse en anglais / Thesis title in english
 \newcommand{\keywordsEN}{version control, repository integrity, software supply chain, Git, Software Heritage, empirical software engineering}	%% Mots clés en anglais, séprarés par des , / Keywords in english, separated by ,
 \newcommand{\abstractEN}{%
 Public software repositories are consumed as stable artifacts by package managers and CI pipelines, yet Git separates immutable content-addressed objects from mutable references: tags and branch names can be silently updated at any time.
 This thesis measures that gap empirically, at ecosystem scale, using Software Heritage snapshot pairs to observe before-and-after repository states.
-Three studies characterise the problem from the most visible surface to its deepest security implication: 10.2~million tag alterations across 189,000~repositories with concrete reproducibility consequences in Nixpkgs; 8.7~million commit-history rewrite events across 1.22~million repositories including 13~million secret-shaped file removals and retroactive license changes; and a detection pipeline establishing that 9.18\% of archived removed-credential blobs contain scanner-detectable secrets, with 86.4\% of private-key blobs passing offline syntactic validation.
-Together, these results demonstrate that repository mutability is an active, ecosystem-wide integrity challenge.}																%% Résumé en anglais / abstract in english
+Three studies characterise the problem from the most visible surface to its deepest security implication: \num{10.2}~million tag alterations across \num{189000}~repositories with concrete reproducibility consequences in Nixpkgs; \num{8.7}~million commit-history rewrite events across \num{1.22}~million repositories including \num{13}~million secret-shaped file removals and retroactive license changes; and a detection pipeline establishing that \num{9.18}\% of archived removed-credential blobs contain scanner-detectable secrets, with \num{86.4}\% of private-key blobs passing offline syntactic validation.
+Together, these results demonstrate that repository mutability is an active, relevant, ecosystem-wide integrity challenge.}																%% Résumé en anglais / abstract in english
 
 \label{layout}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

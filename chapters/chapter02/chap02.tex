@@ -274,7 +274,6 @@ In a reproducibility context, the key question is whether a recorded release ref
 
 Tags are widely used to mark releases because they provide stable-looking, human-readable names for repository states.
 Project documentation, dependency files, package recipes, and continuous integration workflows can refer to tags instead of raw commit hashes, which aligns with common versioning practices where names such as \texttt{v2.3.1} denote release versions rather than arbitrary commits.
-\NOTEside{citation}
 
 Recording only a tag name fixes a mutable ref, not an immutable source identity (\Cref{subsec:bg-apparent-immutability}).
 The tag-alterations contribution frames the resulting gap as a structural mismatch between practices that treat tag names as stable release identifiers and Git semantics that allow reassignment or removal, developed in \Cref{subsec:tags-stability-assumptions}.
@@ -290,7 +289,6 @@ Some package ecosystems support direct dependencies on Git repositories.
 Build scripts may fetch source archives generated from tag names.
 Continuous integration workflows may use third-party actions or tools by specifying a tag.
 In all these cases, the repository reference becomes part of a larger software supply chain.
-\NOTEside{Citation}
 
 If a dependency specification records a commit identifier, the source identity is stable as long as the object remains available.
 If it records a tag name, stability and integrity depend on whether the tag is preserved, deleted, or moved.
@@ -321,7 +319,6 @@ If a tag later resolves to different content, the build does not silently accept
 This behavior avoids silent substitution, but it also shows that tag mutability can become an availability and rebuildability problem.
 A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching an upstream tag that no longer matches the recorded hash.
 The tag-alterations contribution demonstrates this relationship empirically through a cross-analysis with Nixpkgs (\Cref{subsec:tags-reproducibility}).
-\NOTEside{citation for nix hash tarball}
 
 \subsection{Implications for Reproducible Builds}
 \label{subsec:bg-provenance-reproducible-builds}

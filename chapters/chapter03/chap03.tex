@@ -484,11 +484,6 @@ Still, they provide a conservative lower bound: at least \DirAddedRowsPercent of
 
 Tag deletions primarily affect availability; metadata-only moves challenge bit-level identity, but may preserve source content; finally, content-changing moves directly threaten the integrity of tag-based dependency resolution.
 
-\subsection{Build and Packaging Files Affected by Tag Alterations}
-\label{subsec:tags-build-packaging}
-
-\TODO{find filename breakdown of most impacted files in tag alterations}
-
 \subsection{Implications for Released Artifacts}
 \label{subsec:tags-released-artifacts}
 
@@ -592,17 +587,19 @@ Most importantly, \NixPkgsHashMismatch packages failed to build when disabling t
 The detailed enumeration of packages with a build error outcome is provided in Table~\ref{tab:tags-nix-failures}.
 This evidence shows that tag alterations are not only theoretically capable of breaking the reproducibility of software builds; they have done so in real packages in a major Linux distribution.
 For the \num{25} other packages, there is no hash mismatch, meaning that the Nix package definitions were created (or updated, although that is less likely) after the alteration.
-The command-level evidence in Figure~\ref{fig:tags-nix-hash-mismatch} illustrates a rebuild failure caused by source retargeting.
-
-Taken together, the tag-retargeting case study, the Nix cross-analysis, and the software supply-chain attack confirm that tag alterations pose a practical threat to both software build reproducibility and supply-chain integrity.
+Figure~\ref{fig:tags-nix-hash-mismatch} shows how this cache-disabled check surfaces at command level for one of the affected packages, \texttt{libv3270}.
+The invocation uses \texttt{nix build} against the same Nixpkgs revision as the cross-analysis (\texttt{github:NixOS/nixpkgs/08ffd21[...]}), but targets the \texttt{.src} attribute rather than the full package so that only the upstream tarball fetch is exercised.
+That fetch is a fixed-output derivation: Nix records an expected content hash in the package definition and aborts if the downloaded artifact does not match.
+The flags implement the conditions under which hash mismatches become visible.
+\texttt{--rebuild} bypasses substitution from the NixOS binary cache and forces a fresh download, matching the cache-disabled rebuilds reported above for the \NixPkgsHashMismatch packages; \texttt{--no-link} suppresses creation of a \texttt{./result} symlink because only fetch integrity, not a built artifact, is under test; \texttt{--impure} permits the local evaluation context required by some fetchers in this Nixpkgs snapshot; and \texttt{-L} streams builder logs to the terminal, which is why the attempted \texttt{refs/tags/5.5.0.tar.gz} URL and the \emph{specified} versus \emph{got} hash lines appear in the transcript.
+In this example, retargeting of tag \texttt{5.5.0} changed the tarball content while the hash stored in Nixpkgs still corresponds to the pre-alteration artifact.
 
 \begin{figure}[h]
 \centering
 \begin{verbatim}
 $ nix build github:NixOS/nixpkgs/08ffd21[...]#libv3270.src \
     --rebuild --no-link --impure -L
-source> structuredAttrs is enabled
-source>
+[...]
 source> trying https://[...]/refs/tags/5.5.0.tar.gz
 [...]
 FAIL github:NixOS/nixpkgs/08ffd21[...]#libv3270.src
@@ -615,6 +612,8 @@ Nix rebuild attempt for \texttt{libv3270.src} showing a fixed-output hash mismat
 }
 \label{fig:tags-nix-hash-mismatch}
 \end{figure}
+
+Taken together, the tag-retargeting case study, the Nix cross-analysis, and the software supply-chain attack confirm that tag alterations pose a practical threat to both software build reproducibility and supply-chain integrity.
 
 \section{Discussion}
 \label{sec:tags-discussion}
