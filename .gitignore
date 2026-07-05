@@ -2,7 +2,6 @@
 *.fdb*
 *.fls
 *.log
-*.pdf
 *.out
 *.bbl
 *.blg
@@ -22,5 +21,12 @@ literature_reviews/*
 contributions/secrets_removal
 contributions/altered-histories
 contributions/tag-alterations-paper
+contributions/*
 experiments/*
 Thesis.md
+main.pdf
+Training handout - Write your PhD thesis - 01-2026.pdf
+models/CONSIGNES _A _RESPECTER _ThŠses_IP Paris.pdf
+models/GUIDELINES_FOR_IP PARIS_THESES _LAYOUT.pdf
+models/LaTeX/4eme.pdf
+models/LaTeX/1ere.pdf
