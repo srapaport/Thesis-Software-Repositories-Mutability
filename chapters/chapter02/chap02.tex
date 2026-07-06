@@ -29,7 +29,7 @@ Once dependencies are declared, teams need to know that a build still works when
 On GitHub, CI is commonly run through \emph{GitHub Actions}: reusable workflow steps, packaged as \emph{actions}, that one repository can invoke in its own pipeline by name or version tag.
 Many projects also keep a \emph{lockfile}---a machine-generated record of the exact sources retrieved during a successful build---or a \emph{software bill of materials} (SBOM), an inventory of every component that went into that build, so that the same inputs can be recovered later for auditing or reproduction.
 Provenance frameworks such as Supply-chain Levels for Software Artifacts (SLSA) attach further metadata documenting where those inputs came from~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
-All of these mechanisms share one structural premise: that resolving a dependency specification today yields the same artifact as resolving it yesterday.
+All of these mechanisms share one premise: that resolving a dependency specification today yields the same artifact as resolving it yesterday.
 
 The upstream projects where package managers look for source code are stored in \emph{software repositories}: places where code is kept, versioned, and shared.
 Git is a distributed version control system in which each clone contains a local copy of the repository history.
@@ -77,19 +77,10 @@ Rather than breaking a server's encryption, an attacker might compromise a maint
 Ultimately, this attack surface spans the entire end-to-end software supply chain.
 Securing it requires protecting not just the final SBOM or the source code, but every intermediate system and every human participant involved in the software's lifecycle.
 
-The \emph{repository's attack surface} is too vast to be treated in its entirety, only a small portion of it will be relevant in this thesis.
-% Published references (branches and tags) can be retargeted or deleted while their names persist.
-% Commit history reachable from a reference can be rewritten so that previously published commits are no longer reachable.
-% Published content (the file trees behind those commits) can be changed, removed, or substituted.
-% Repository metadata---authorship, timestamps, messages, license files---can be altered to change the evidence an auditor relies on.
-% Each of these is a mutability of a name or state that a consumer expected to be stable; the mechanisms that realise them are described in \Cref{sec:bg-git-model,sec:bg-mutability-git}.
-
-% This thesis treats repository mutability as a supply-chain integrity problem when three conditions coincide.
-% First, a public reference or history state is consumed by downstream users.
-% Second, those users rely on the stability or auditability of that state.
-% Third, later repository changes invalidate that reliance by making previous source states inaccessible, ambiguous, or indistinguishable from altered ones without external evidence.
-% \label{subsec:bg-trust-dependencies}%
-% Not every history rewrite or tag alteration is malicious---many are local cleanup, pull-request maintenance, bot-driven updates, or release corrections---but when downstream actors treat Git refs as stable artifact identities, benign maintenance, reproducibility failures, and attack opportunities overlap.
+The \emph{repository's attack surface} is too vast to be treated in its entirety, only a small portion of it will be relevant in this thesis: the mutability of the names and states a repository publishes.
+\label{subsec:bg-trust-dependencies}%
+This thesis treats such mutability as a supply-chain integrity problem when three conditions coincide: a public reference or history state is consumed by downstream users; those users rely on its stability or auditability; and a later repository change invalidates that reliance by making previous source states inaccessible, ambiguous, or indistinguishable from altered ones without external evidence.
+Studying this portion is a deliberate choice rather than a claim of completeness---compromised maintainer accounts, malicious contributions, and build-system attacks are equally real, but they require different observational instruments than the archival data this thesis builds on.
 
 \section{Git and the Git Object Model}
 \label{sec:bg-git-model}
@@ -104,7 +95,7 @@ In this section I introduce the object model and references that the rest of the
 Git stores repository data in a content-addressable object store.
 Each object is named by an \emph{identifier}: a cryptographic digest (hash) computed from its content and metadata, historically using SHA-1 and, in newer configurations, SHA-256~\cite{ProGit2014}.
 The identifier is therefore a fingerprint of the object: retrieving an object under a given hash and recomputing the digest must yield the same value, or the content has been altered.
-Finding a different object that hashes to an already published identifier---a \emph{second-preimage attack}---requires brute-forcing a space of roughly $2^{160}$ possibilities for SHA-1 and $2^{256}$ for SHA-256, which is computationally infeasible with current hardware; collision attacks against SHA-1 exist for adversarially crafted inputs, but substituting arbitrary Git objects while preserving a target hash remains impractical in ordinary threat models.
+Finding a different object that hashes to an already published identifier requires brute-forcing a space of roughly $2^{160}$ possibilities for SHA-1 and $2^{256}$ for SHA-256, which is computationally infeasible with current hardware; collision attacks against SHA-1 exist for adversarially crafted inputs, but substituting arbitrary Git objects while preserving a target hash remains impractical in ordinary threat models.
 The main object types relevant to this thesis are blobs, trees, commits, and annotated tags.
 Blobs store file contents.
 Trees describe directory structures by linking names to blobs and other trees.
@@ -113,21 +104,14 @@ Commits point to a source tree and to zero or more parent commits, and also cont
 Because a commit's identifier is computed  recursively over its content, metadata, and the identifiers of its parents, it refers not only to the source tree but also to its ancestry.
 If any part of a commit changes, including a timestamp or message, the commit receives a new identifier.
 If a later commit has the modified commit as an ancestor, that later commit also receives a new identifier because its parent link changed.
-This recursive property forms a \emph{Merkle directed acyclic graph} (DAG): a graph of objects with no cycles in which each node's identifier commits to its own content and to the identifiers of its parents.
-The identity of a visible root commit can therefore be used to verify the identities of all commits reachable from it: any tampering anywhere in the ancestry would propagate to a different root hash (Figure~\ref{fig:bg-object-model}).
+This recursive property forms a \emph{Merkle directed acyclic graph} (DAG): a graph of objects with no cycles in which each node's identifier refers to its own content and to the identifiers of its parents.
+The identity of a visible commit can therefore be used to verify the identities of all commits reachable from it: any tampering anywhere in the ancestry would propagate to a different hash (Figure~\ref{fig:bg-object-model}).
 
-\begin{figure}[h]
+\begin{figure}[htbp]
 \centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (Git object model).}
-Draw the four object types (blob, tree, commit, annotated tag) and their pointer relationships: blobs hold file contents; trees map names to blobs and subtrees; commits point to a root tree and to parent commit(s); annotated tags point to a commit (or tag object) via a tag object layer.
-Highlight that each object is addressed by a content hash and that parent links form a Merkle DAG.
-\end{minipage}%
-}
+  \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{fig02/Git_arch.drawio.pdf}
 \mycaption[Git object model and Merkle commit DAG]{%
-Placeholder for a schematic of Git blobs, trees, commits, and annotated tags, showing content-addressed identifiers and parent links forming a Merkle DAG.%
+Git object model and Merkle commit DAG: content-addressed blobs, trees, commits, and annotated tags linked by parent pointers into a Merkle DAG, with branches and release tags shown as refs at the repository boundary.%
 }
 \label{fig:bg-object-model}
 \end{figure}
@@ -135,7 +119,6 @@ Placeholder for a schematic of Git blobs, trees, commits, and annotated tags, sh
 This model provides strong integrity properties at the object level: identifiers are \emph{immutable} in the sense that an object's content and metadata cannot change without changing its hash.
 Once a specific object identifier is known, one can verify that the object retrieved under that identifier has not changed by recomputing the digest.
 However, the guarantee applies to objects, not to the human-readable names that users normally manipulate.
-The distinction between object identity and reference identity is central to the mutability phenomena studied in this thesis.
 
 \subsection{Branches, Tags, and References}
 \label{subsec:bg-branches-tags-references}
@@ -144,42 +127,22 @@ Git users rarely interact directly with raw object identifiers (hashes).
 They usually interact with references, or refs, which are names that point to objects.
 Branches are refs under the \texttt{refs/heads/} namespace.
 Tags are refs under the \texttt{refs/tags/} namespace.
-Remote-tracking branches, pull-request refs, and other forge-specific names follow similar principles.
 
 Branches are expected to move during development.
 A branch such as \texttt{main} or \texttt{master} points to the latest commit considered part of that line of development, and each new accepted commit advances the branch.
 This mutability is ordinary and visible: the purpose of a branch is to represent an evolving development line.
 
 Tags have a different social role: they often mark particular repository states, especially software releases.
-Release workflows frequently treat tag names as stable identifiers, although Git allows any tag ref to be deleted or retargeted; the consequences for downstream consumption are developed in \Cref{subsec:bg-stable-references-dependency-resolution}.
+Release workflows frequently treat tag names as stable identifiers, although Git allows any tag ref to be deleted or retargeted.
 
 Git supports two main kinds of tags.
 A lightweight tag is a reference that points directly to another object, usually a commit.
-An annotated tag is a distinct Git object containing metadata such as tagger identity, timestamp, and message; the tag ref points to that tag object, which in turn points to the release target.
+An annotated tag is a reference associated to a distinct Git object containing metadata such as tagger identity, timestamp, and message; the tag ref points to that associated object, which in turn points to the release target.
 Annotated tags therefore add a metadata layer, but they do not remove the mutability of the tag name.
 The tag ref can still be updated to point to a different object, and the same visible tag name can later designate a different repository state.
-Figure~\ref{fig:bg-refs-tags} contrasts branch refs, lightweight tags, and annotated tags.
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (refs, branches, and tag types).}
-Show the \texttt{refs/heads/} and \texttt{refs/tags/} namespaces side by side.
-For branches, depict a moving pointer (\texttt{main}) advancing along a commit line.
-For tags, contrast a lightweight tag (ref $\rightarrow$ commit) with an annotated tag (ref $\rightarrow$ tag object $\rightarrow$ commit), and indicate that either ref can be deleted or retargeted while the name string stays the same.
-\end{minipage}%
-}
-\mycaption[Branch refs versus lightweight and annotated tags]{%
-Placeholder for a diagram of Git reference namespaces and the two tag kinds, emphasising that tag names are mutable pointers rather than immutable identities.%
-}
-\label{fig:bg-refs-tags}
-\end{figure}
 
 This mutability is not incidental; it follows from Git's distributed design.
-Centralized version control systems such as CVS and Subversion assign revision identifiers from a single authoritative server, so a given revision number denotes one canonical changeset across all clients.
-In a distributed model, references are instead created independently in separate clones and must be reconciled when repositories synchronize: if two clones bind the same tag name to different commits, the protocol cannot preserve both bindings without violating name uniqueness.
+In a distributed model, references are created independently in separate clones and must be reconciled when repositories synchronize: if two clones bind the same tag name to different commits, the protocol cannot preserve both bindings without violating name uniqueness.
 Git therefore treats tags as mutable refs, prioritizing distributed flexibility over protocol-level immutability of release labels.
 Platform-level mechanisms can partially compensate (\Cref{subsec:tags-disc-practical}), but they operate outside the core Git protocol and do not extend to plain Git operations or to other forges.
 
@@ -198,26 +161,26 @@ History rewriting breaks this simple model.
 If a public branch is updated to point to a commit that is not a descendant of the previous branch tip, the remote ref has changed in a non-fast-forward way.
 Downstream users who previously observed the old branch state may now hold commits that are no longer reachable from the public branch.
 Users who clone after the rewrite may never see those commits at all.
-Figure~\ref{fig:bg-sync-rewrite} contrasts the append-only and rewritten cases.
+% Figure~\ref{fig:bg-sync-rewrite} contrasts the append-only and rewritten cases.
 This is the practical setting in which repository mutability becomes observable and consequential.
 
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (fast-forward versus history rewrite).}
-Two-panel figure for the same public branch ref.
-Left panel: a fast-forward push where the branch tip moves to a descendant commit and all prior history remains reachable.
-Right panel: a force push where the branch tip jumps to a commit that is not a descendant; previously public commits become unreachable from the branch while possibly still existing in object storage.
-Annotate downstream effects for an early clone versus a post-rewrite clone.
-\end{minipage}%
-}
-\mycaption[Fast-forward update versus non-fast-forward rewrite]{%
-Placeholder for a before/after diagram of branch synchronization, contrasting append-only advancement with a history rewrite that orphans previously public commits.%
-}
-\label{fig:bg-sync-rewrite}
-\end{figure}
+% \begin{figure}[t]
+% \centering
+% \fbox{%
+% \begin{minipage}{0.92\linewidth}
+% \small
+% \textbf{Figure placeholder (fast-forward versus history rewrite).}
+% Two-panel figure for the same public branch ref.
+% Left panel: a fast-forward push where the branch tip moves to a descendant commit and all prior history remains reachable.
+% Right panel: a force push where the branch tip jumps to a commit that is not a descendant; previously public commits become unreachable from the branch while possibly still existing in object storage.
+% Annotate downstream effects for an early clone versus a post-rewrite clone.
+% \end{minipage}%
+% }
+% \mycaption[Fast-forward update versus non-fast-forward rewrite]{%
+% Placeholder for a before/after diagram of branch synchronization, contrasting append-only advancement with a history rewrite that orphans previously public commits.%
+% }
+% \label{fig:bg-sync-rewrite}
+% \end{figure}
 
 The result is a system in which the names downstream actors consume---branch and tag refs---are exactly the part of the repository that the version control system permits to change.
 The next section examines the mechanisms that change them.
@@ -226,7 +189,6 @@ The next section examines the mechanisms that change them.
 \label{sec:bg-mutability-git}
 
 The object--reference distinction above supports local experimentation, branch movement, and release correction, but creates ambiguity when mutable names are treated as stable identifiers.
-The contributions on altered histories and tag alterations study two observable forms of that ambiguity: changes to the commit graph reachable from public branches, and changes to tag refs used as release anchors.
 
 \subsection{History Rewriting Mechanisms}
 \label{subsec:bg-history-rewriting}
@@ -257,24 +219,7 @@ At the object level, rewriting does not mutate an existing commit object in plac
 Instead, Git creates new commit objects.
 The old commits remain in object storage as long as they are retained locally or by another archive, but they may become unreachable from the public refs of the repository.
 Because commit identifiers cover parent links, a direct change to one commit can propagate to descendants: later commits that point to the modified commit must also be replaced by new commits.
-The thesis describes this phenomenon as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot (Figure~\ref{fig:bg-snowball-effect}).
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (snowball effect of history rewriting).}
-Show a linear commit chain $C_0 \rightarrow C_1 \rightarrow C_2 \rightarrow C_3$.
-Amend or rebase $C_1$ to produce $C_1'$, then show that $C_2$ and $C_3$ must be replaced by new commits $C_2'$ and $C_3'$ because parent links changed.
-Use colour or strike-through to mark old commit IDs that remain in storage but disappear from the public branch view after a force push.
-\end{minipage}%
-}
-\mycaption[Snowball effect after rewriting an ancestor commit]{%
-Placeholder for a commit-chain diagram showing how changing one ancestor propagates new identifiers to all descendants.%
-}
-\label{fig:bg-snowball-effect}
-\end{figure}
+The thesis describes this phenomenon as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot.
 
 History rewriting is therefore not inherently suspicious.
 It is a normal part of some development workflows, particularly for pull-request branches and automated maintenance branches.
@@ -292,61 +237,11 @@ Tag deletion, recreation, and force-update are often legitimate, for example whe
 Git's own documentation nonetheless discourages reusing a published tag name: the \texttt{git-tag} manual recommends issuing a new version label (for example, ``X.1'') rather than force-updating ``X'', because two clones may then both claim ``version X'' while resolving to different commits, and Linus Torvalds argued as early as 2007 that silently overwriting an already fetched tag is a security problem that maintainers must announce explicitly rather than perform quietly~\cite{git_tag_retagging_docs,torvalds_retagging_2007}.
 The security and reproducibility issue is therefore not that such operations are always malicious, but that the practice runs against documented guidance and that downstream tools may not record enough information to detect its consequences.
 
-For this thesis, a tag alteration is an observable change in the state of a tag across repository snapshots.
-The tag-alterations contribution distinguishes two main cases.
-A tag move occurs when a tag is observed before and after an alteration but resolves to a different target, including deletion followed by later recreation with a different target.
-A tag deletion occurs when a previously observed tag disappears from a later snapshot.
-Moves and deletions differ in observability: a deletion breaks resolution, whereas a move preserves the tag name while changing the retrieved object (Figure~\ref{fig:bg-tag-alteration-types}; \Cref{subsec:bg-stable-references-dependency-resolution}).
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (tag move versus tag deletion).}
-Three small timelines of the same tag name (for example, \texttt{v1.0.0}) across two repository snapshots $S_i$ and $S_{i+1}$: (1)~move---tag present in both snapshots but resolving to different commits; (2)~deletion---tag present in $S_i$ and absent in $S_{i+1}$; (3)~recreation---deletion followed by reappearance, optionally with the same or a different target.
-Adapt or simplify the tag-move schematic from Chapter~\ref{chap:tags} for background use.
-\end{minipage}%
-}
-\mycaption[Tag move, deletion, and recreation]{%
-Placeholder for a conceptual comparison of the tag-alteration cases defined in this thesis.%
-}
-\label{fig:bg-tag-alteration-types}
-\end{figure}
-
-\subsection{Apparent Immutability and Practical Mutability}
-\label{subsec:bg-apparent-immutability}
-
-Object identifiers are stable under Git's content-addressed model; ref names are not (\Cref{subsec:bg-commits-trees-blobs,subsec:bg-branches-tags-references}).
-The resulting risk is therefore semantic as much as technical.
-Developers and tools assign meanings to references: a branch is usually understood as moving, while a release tag is often understood as stable, yet Git enforces neither convention.
-When social expectations about references diverge from the guarantees provided by the version control system, downstream users can make reproducibility and integrity assumptions that the system does not satisfy.
-Figure~\ref{fig:bg-object-ref-layers} summarises the two-layer model.
-How dependency specifications and build tooling translate that gap into concrete failures is examined in \Cref{sec:bg-safety-security}.
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (immutable objects versus mutable refs).}
-Two-layer diagram.
-Bottom layer: content-addressed object store (blobs, trees, commits) with stable cryptographic identifiers.
-Top layer: human-readable refs (\texttt{main}, \texttt{v1.0.0}) as mutable pointers into the object store.
-Show that verifying an object ID guarantees content integrity, while resolving a ref name only yields whatever object the ref currently designates.
-\end{minipage}%
-}
-\mycaption[Immutable object identities versus mutable references]{%
-Placeholder for a layered view of Git's content-addressed store and the mutable naming layer that users and tools normally consume.%
-}
-\label{fig:bg-object-ref-layers}
-\end{figure}
-
-\section{Safety, Security, and Reproducibility of Repositories and the Supply Chain}
+\section[Safety, Security, and Reproducibility of Repositories and the SSC]{Safety, Security, and Reproducibility of Repositories and the Supply Chain}
 \label{sec:bg-safety-security}
 
 The mutability mechanisms of \Cref{sec:bg-mutability-git} can compromise distinct properties depending on who triggers them and why.
-This section names those properties, states what it means to improve them for a repository and for the supply chain, and then revisits release engineering and credential exposure as concrete instances.
+This section names those properties, states what it means to improve them for a repository and for the supply chain.
 
 \subsection{Safety, Security, and Reproducibility}
 \label{subsec:bg-triad}
@@ -360,20 +255,21 @@ A repository or supply chain is \emph{safer} when previously published states re
 It covers \emph{integrity}---a published reference must keep designating the source state a consumer verified---and \emph{confidentiality}---material that must stay private, such as credentials, must not leak through the published tree.
 A repository or supply chain is \emph{more secure} when an adversary cannot retarget a trusted reference, rewrite a consumed history, or extract secret material without detection.
 
-\emph{Reproducibility} is the safety-side requirement that a recorded build input continues to identify the same source artifact over time; it underpins auditing and reproducible builds~\cite{DBLP:journals/software/LambZ22}, and it fails whenever a mutable name is recorded in place of a content commitment.
+\emph{Reproducibility} is the safety-side requirement that a recorded build input continues to identify the same source artifact over time; it underpins auditing and reproducible builds~\cite{DBLP:journals/software/LambZ22}.
+Recording a mutable name in place of a content commitment does not establish that guarantee: reproducibility may still hold in practice, but only as long as the reference is not altered.
 
-The same operation can sit on either side of the safety/security line depending on intent, which is unobservable from archival facts alone: a tag move may be a benign release correction (a safety event) or a deliberate supply-chain attack (a security event).
+The same operation can sit on either side of the safety/security line depending on intent, which is unobservable from archival facts alone: a reference update may be a benign release correction (a safety event) or a deliberate supply-chain attack (a security event).
 The thesis therefore measures observable effects rather than intent, and treats mutability as a supply-chain integrity problem under the three conditions stated in \Cref{subsec:bg-trust-dependencies}.
 
-\subsection{Tags as Release Identifiers}
-\label{subsec:bg-tags-release-identifiers}
+% \subsection{Tags as Release Identifiers}
+% \label{subsec:bg-tags-release-identifiers}
 
-Tags are widely used to mark releases because they provide stable-looking, human-readable names for repository states.
-Project documentation, dependency files, package recipes, and continuous integration workflows can refer to tags instead of raw commit hashes, which aligns with common versioning practices where names such as \texttt{v2.3.1} denote release versions rather than arbitrary commits.
+% Tags are widely used to mark releases because they provide stable-looking, human-readable names for repository states.
+% Project documentation, dependency files, package recipes, and continuous integration workflows can refer to tags instead of raw commit hashes, which aligns with common versioning practices where names such as \texttt{v2.3.1} denote release versions rather than arbitrary commits.
 
-Recording only a tag name fixes a mutable ref, not an immutable source identity (\Cref{subsec:bg-apparent-immutability}).
-The tag-alterations contribution frames the resulting gap as a structural mismatch between practices that treat tag names as stable release identifiers and Git semantics that allow reassignment or removal, developed in \Cref{subsec:tags-stability-assumptions}.
-This mismatch matters especially for computational research workflows and package ecosystems, where later rebuilds depend on recovering the same source state.
+% Recording only a tag name fixes a mutable ref, not an immutable source identity (\Cref{subsec:bg-apparent-immutability}).
+% The tag-alterations contribution frames the resulting gap as a structural mismatch between practices that treat tag names as stable release identifiers and Git semantics that allow reassignment or removal, developed in \Cref{chap:tags}.
+% This mismatch matters especially for computational research workflows and package ecosystems, where later rebuilds depend on recovering the same source state.
 
 \subsection{Stable References and Downstream Dependency Resolution}
 \label{subsec:bg-stable-references-dependency-resolution}
@@ -387,34 +283,17 @@ Continuous integration workflows may use third-party actions or tools by specify
 In all these cases, the repository reference becomes part of a larger software supply chain.
 
 If a dependency specification records a commit identifier, the source identity is stable as long as the object remains available.
-If it records a tag name, stability and integrity depend on whether the tag is preserved, deleted, or moved.
+In that case, integrity is guarented but availability might still be an issue.
+If it records a tag name, stability and integrity depend on whether the tag is preserved, deleted, or updated.
 A deleted tag can cause a fetch failure.
-A moved tag can cause the fetch to succeed while producing a different source state.
+A updated tag can cause the fetch to succeed while producing a different source state.
 The second case is more subtle because the dependency name still resolves.
-Figure~\ref{fig:bg-dependency-resolution} summarises these downstream outcomes.
-
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (downstream dependency resolution outcomes).}
-Flowchart from a dependency specification to fetch result.
-Three branches: (1)~pinned commit hash---stable resolution as long as the object remains available; (2)~deleted tag---fetch or resolution failure; (3)~moved tag---fetch succeeds but may retrieve different source content, with an optional sub-branch for hash-checked ecosystems (for example, Nix fixed-output mismatch) versus unchecked consumers that accept the new target silently.
-\end{minipage}%
-}
-\mycaption[Downstream outcomes when resolving Git references]{%
-Placeholder for a flowchart comparing resolution behaviour when dependencies record commit hashes versus mutable tag names.%
-}
-\label{fig:bg-dependency-resolution}
-\end{figure}
 
 This distinction is visible in package managers that record integrity metadata.
 Nix, for example, stores expected hashes for fixed-output sources.
 If a tag later resolves to different content, the build does not silently accept the new source; it fails with a hash mismatch.
 This behavior avoids silent substitution, but it also shows that tag mutability can become an availability and rebuildability problem.
-A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching an upstream tag that no longer matches the recorded hash.
-The tag-alterations contribution demonstrates this relationship empirically through a cross-analysis with Nixpkgs (\Cref{subsec:tags-reproducibility}).
+A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching a tag that no longer matches the recorded hash.
 
 \subsection{Implications for Reproducible Builds}
 \label{subsec:bg-provenance-reproducible-builds}
@@ -432,7 +311,7 @@ When authentication material is committed by mistake, the repository becomes an 
 In this thesis, a \emph{secret} denotes any credential or key material whose disclosure would grant access to a protected resource: API tokens, passwords, database connection strings, private keys, certificates, and similar values that should remain outside version control.
 
 The weakness is well known in software security practice.
-Hard-coded credentials are catalogued as CWE-798 and recur among the most consequential classes of software defect.
+Hard-coded credentials are catalogued as CWE-798~\footnote{https://cwe.mitre.org/data/definitions/798.html} and recur among the most consequential classes of software defect.
 Empirical work on public GitHub repositories shows that leakage is systematic rather than anecdotal: Meli et al.\ recovered more than \num{200}\,k API keys and tokens embedded directly in source code~\cite{DBLP:conf/ndss/MeliMR19}, and industry monitoring reports describe millions of exposed credentials in public repositories in a single year~\cite{segura2022secrets}.
 Sinha et al.\ argued early that version control systems should incorporate automated mechanisms to prevent such leaks and to assist developers after exposure~\cite{DBLP:conf/msr/SinhaSDPM15}.
 Because public repositories are copied, forked, indexed, and archived, a single push can propagate sensitive values far beyond the maintainer's immediate workspace.
@@ -442,7 +321,7 @@ Because public repositories are copied, forked, indexed, and archived, a single 
 
 Two complementary lines of defence address credential exposure in repositories.
 The first is \emph{detection}: scanning repository contents for patterns that resemble known secret formats.
-Open-source tools such as gitleaks and TruffleHog implement large rule sets over file contents; benchmark studies show that their reported findings overlap only partially, so no single detector captures the full set of machine-recognisable secrets~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
+Open-source tools such as gitleaks and TruffleHog implement large rule sets over file contents; benchmark studies show that their reported findings overlap only partially, meaning that, so far, no single detector captures the full set of machine-recognisable secrets~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
 The second is \emph{prevention at the forge}: hosting platforms can scan pushes, warn maintainers, notify credential providers, or block known-dangerous formats before they become part of the public history.
 GitHub, for example, rejects pushes that contain certain private-key formats and operates secret-scanning partnerships with major providers.
 
@@ -460,13 +339,12 @@ Credentials should be kept out of source entirely, through environment variables
 When exposure occurs despite these precautions, the security remediation is to invalidate the leaked value: revoke the token, replace the key, reset the password, or otherwise remove the authority that the exposed string grants.
 Krause et al.\ study how developers prevent and respond to accidental commits; their findings reinforce that rotation, not deletion from the repository alone, closes the security gap~\cite{DBLP:journals/corr/abs-2211-06213}.
 
-History rewriting is nonetheless a common \emph{cleanup} action after a leak.
+History rewriting is nonetheless a common cleanup action after a leak.
 Maintainers can amend or rebase recent commits, run history-filtering tools over past trees, and force-push the rewritten branch so that the current public view no longer contains the offending file (\Cref{subsec:bg-history-rewriting,subsec:bg-force-pushes-reference-updates}).
 This action can reduce the chance that a future clone or casual inspection rediscovers the value, and it may satisfy organisational policy about what may remain in advertised project history.
 It does not, however, act on the credential itself.
 Nor does it erase every copy of the exposed commits: forks, local clones, search indexes, and independent archives may retain the pre-rewrite state long after the upstream repository looks clean (\Cref{sec:bg-software-heritage}).
 The distinction between repository-level cleanup and credential-level remediation is central to the secret-removal thread of this thesis.
-Chapter~\ref{chap:histories} shows that files whose names suggested secrets and that were removed through history rewriting remain recoverable from Software Heritage at scale; Chapter~\ref{chap:secrets} asks whether the recovered values are still valid credentials.
 
 \section{Software Heritage: an Archival Model for Source Code}
 \label{sec:bg-software-heritage}
@@ -475,10 +353,20 @@ The empirical contributions rely on an archival view of public repositories beca
 Without an independent archive, the evidence needed to compare before and after states may have disappeared.
 
 Software Heritage is a universal archive of publicly available source code~\cite{swhcacm2018,swh-msr-2020-challenge}.
-It periodically visits software origins, such as repository URLs, and stores observed repository states as snapshots.
+It periodically visits software \emph{origins}---typically repository URLs, analogous to the repositories discussed above---and stores each observed state as a \emph{snapshot}.
 For Git repositories, a snapshot records visible references and the archived objects designated by those references.
-Software Heritage stores these artifacts in a global Merkle DAG and assigns persistent identifiers (SWHIDs) to archived objects, including revisions (similar to commits in Git's architecture), directories, releases, and snapshots~\cite{cise-2020-doi}.
-Unlike a forge, which exposes only the current state of a repository, the archive retains every state it has observed, and SWHIDs are content-derived, so the same identifier always refers to the same artifact regardless of when or where it is retrieved~\cite{iso-swhid}.
+Software Heritage stores these artifacts in a global Merkle DAG and assigns persistent identifiers (SWHIDs) to each archived object~\cite{cise-2020-doi}.
+The archive uses its own type names, but the mapping from Git is direct for the object types this thesis relies on: a \emph{revision} corresponds to a commit, a \emph{directory} to a tree, and a \emph{content} object to a blob; SWHIDs also identify \emph{releases} (annotated tags) and snapshots themselves.
+Unlike a forge, which exposes only the current state of a repository, the archive retains every state it has observed, and SWHIDs are content-derived, so the same identifier always refers to the same artifact regardless of when or where it is retrieved~\cite{iso-swhid} (Figure~\ref{fig:bg-swh-architecture}).
+
+\begin{figure}[htbp]
+  \centering
+    \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{fig02/SWH_arch.drawio.pdf}
+  \mycaption[Software Heritage archival model]{%
+  Software Heritage archival model: an origin is visited repeatedly, yielding snapshots that record visible references---branches, lightweight tags, and annotated tags (archived as releases)---and the content-addressed Merkle DAG of revisions, directories, and content objects they designate.%
+  }
+  \label{fig:bg-swh-architecture}
+  \end{figure}
 
 \section{What Software Heritage Brings, and What New Threats It Reveals}
 \label{sec:bg-swh-implications}
@@ -490,27 +378,27 @@ The archival model turns repository mutability from an ephemeral event into a me
 
 Because Software Heritage retains successive states of the same origin, comparing two consecutive snapshots reveals which references existed in both, which changed target, and which appeared or disappeared.
 In the altered-histories contribution, consecutive snapshots of the same origin are compared to detect commits that were reachable in an earlier snapshot but missing from a later one.
-In the tag-alterations contribution, consecutive snapshots are compared to detect tag moves and deletions.
-In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository (Figure~\ref{fig:bg-swh-snapshots}).
+In the tag-alterations contribution, the same comparison is applied to release tags (\Cref{subsec:bg-tag-alterations}).
+In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository.
 This before-and-after observability is what makes the measurements in this thesis possible, and it directly serves supply-chain safety and security: it lets a consumer or auditor establish what a reference designated when it was trusted, even after the forge has overwritten it.
 
-\begin{figure}[t]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (Software Heritage snapshot comparison).}
-Show one software origin visited at times $t_i$ and $t_{i+1}$, producing snapshots $S_i$ and $S_{i+1}$.
-For each snapshot, list visible refs and the commits reachable from them.
-Highlight a commit present in $S_i$ but missing from $S_{i+1}$ (history alteration) and a tag resolving to different targets across snapshots (tag alteration).
-Optionally annotate SWHIDs as persistent archival identifiers.
-\end{minipage}%
-}
-\mycaption[Comparing consecutive Software Heritage snapshots]{%
-Placeholder for a schematic of archival snapshot differencing, the observability backbone of the empirical contributions.%
-}
-\label{fig:bg-swh-snapshots}
-\end{figure}
+% \begin{figure}[t]
+% \centering
+% \fbox{%
+% \begin{minipage}{0.92\linewidth}
+% \small
+% \textbf{Figure placeholder (Software Heritage snapshot comparison).}
+% Show one software origin visited at times $t_i$ and $t_{i+1}$, producing snapshots $S_i$ and $S_{i+1}$.
+% For each snapshot, list visible refs and the commits reachable from them.
+% Highlight a commit present in $S_i$ but missing from $S_{i+1}$ (history alteration) and a tag resolving to different targets across snapshots (tag alteration).
+% Optionally annotate SWHIDs as persistent archival identifiers.
+% \end{minipage}%
+% }
+% \mycaption[Comparing consecutive Software Heritage snapshots]{%
+% Placeholder for a schematic of archival snapshot differencing, the observability backbone of the empirical contributions.%
+% }
+% \label{fig:bg-swh-snapshots}
+% \end{figure}
 
 This observability also explains why some mutability is hard to detect from the forge alone.
 Rewritten histories may go unnoticed by users who perform fresh clones, because they see only the current public state.
@@ -521,71 +409,79 @@ The archival view also imposes limits.
 It can only observe alterations that occur between visits and remain visible long enough to be captured.
 If a reference is changed and restored between two archival visits, the alteration may be missed.
 If several changes happen between two visits, they may be observed as one aggregate transition.
+Software Heritage also does not visit every origin at the same rate: a scheduling heuristic prioritises more active origins for more frequent snapshots, so popular and heavily maintained repositories tend to be observed more often than dormant ones.
+That uneven coverage can bias prevalence estimates, because alterations in rarely visited origins are easier to miss, but the bias is not uniformly harmful for a supply-chain reading of the results: widely used repositories are both sampled more densely and disproportionately likely to matter as attack targets or as source states that downstream consumers actually rebuild.
 Counts derived from such snapshots should therefore be interpreted as lower bounds on observable alterations, not as complete records of every repository event.
 
-\subsection{New Threats the Archive Reveals, and How to Address Them}
-\label{subsec:bg-swh-threats}
+\subsection{Tag Alterations}
+\label{subsec:bg-tag-alterations}
 
-The same persistence that makes mutability observable also creates a threat the forge view obscures.
-When a maintainer rewrites history to remove an accidentally committed secret, the upstream tree looks clean, but the archive may still hold the pre-rewrite commit and its contents.
-Removal from the forge is therefore not revocation of the credential, and an independent archive can make a leaked value recoverable long after the maintainer believes it gone.
-Chapters~\ref{chap:histories} and~\ref{chap:secrets} measure exactly this: that credential-looking files removed through history rewriting remain recoverable from Software Heritage, and that a fraction of the recovered blobs contain scanner-detectable credential material.
+For this thesis, a \emph{tag alteration} is an observable change in what a tag reference designates between two snapshots of the same origin.
+The tag-alterations contribution distinguishes two main cases.
+A \emph{tag move} occurs when a tag is present in both snapshots but resolves to a different target, including deletion followed by later recreation with a different target.
+A \emph{tag deletion} occurs when a tag present in an earlier snapshot is absent from a later one.
+Moves and deletions differ in observability: a deletion breaks resolution, whereas a move preserves the tag name while changing the retrieved object (\Cref{subsec:bg-stable-references-dependency-resolution}).
 
-These threats are addressable, but not by repository cleanup.
-For integrity and reproducibility, downstream consumers should pin to a commit hash or to an independently archived persistent identifier rather than to a mutable tag name (\Cref{subsec:bg-provenance-reproducible-builds}), and they can use archival comparison to detect when a trusted reference has been retargeted---operationalised for history alterations by the \emph{GitHistorian} tool (\Cref{chap:histories}).
-For confidentiality, the only effective response is credential-level remediation: rotate or revoke the exposed value (\Cref{subsec:bg-secrets-remediation}), because no amount of history rewriting reaches the credential or the archived copies.
-Acting on archived secrets at scale additionally requires a disclosure process that does not itself misuse the recovered material, which \Cref{chap:secrets} develops as a staged validation protocol.
+% \subsection{New Threats the Archive Reveals, and How to Address Them}
+% \label{subsec:bg-swh-threats}
 
-\section{Terminology}
-\label{sec:bg-terminology-scope}
+% The same persistence that makes mutability observable also creates a threat the forge view obscures.
+% When a maintainer rewrites history to remove an accidentally committed secret, the upstream tree looks clean, but the archive may still hold the pre-rewrite commit and its contents.
+% Removal from the forge is therefore not revocation of the credential, and an independent archive can make a leaked value recoverable long after the maintainer believes it gone.
+% Chapters~\ref{chap:histories} and~\ref{chap:secrets} measure exactly this: that credential-looking files removed through history rewriting remain recoverable from Software Heritage, and that a fraction of the recovered blobs contain scanner-detectable credential material.
 
-This section fixes the cross-cutting terms used throughout the thesis.
-Per-chapter operational definitions (for example, the classification categories used to characterise alterations) are stated in the chapters that use them.
-The definitions below are intentionally tied to observable repository states, because the empirical contributions rely on archived snapshots rather than on privileged forge logs or maintainer intent.
+% These threats are addressable, but not by repository cleanup.
+% For integrity and reproducibility, downstream consumers should pin to a commit hash or to an independently archived persistent identifier rather than to a mutable tag name (\Cref{subsec:bg-provenance-reproducible-builds}), and they can use archival comparison to detect when a trusted reference has been retargeted---operationalised for history alterations by the \emph{GitHistorian} tool (\Cref{chap:histories}).
+% For confidentiality, the only effective response is credential-level remediation: rotate or revoke the exposed value (\Cref{subsec:bg-secrets-remediation}), because no amount of history rewriting reaches the credential or the archived copies.
+% Acting on archived secrets at scale additionally requires a disclosure process that does not itself misuse the recovered material, which \Cref{chap:secrets} develops as a staged validation protocol.
 
-\subsection{Software Supply-Chain Attack and Attack Surface}
-\label{subsec:bg-term-attack}
+% \section{Terminology}
+% \label{sec:bg-terminology-scope}
 
-A \emph{software supply-chain attack} compromises downstream users by manipulating an upstream component they depend on, so that consumers obtain attacker-controlled artifacts through their normal build or update process (\Cref{sec:bg-supply-chain-attacks})~\cite{ladisa2023supplychain}.
-The \emph{repository attack surface} is the set of repository-visible elements an actor with push access can change while a downstream consumer keeps trusting an unchanged name: published references, reachable commit history, published content, and repository metadata.
+% This section fixes the cross-cutting terms used throughout the thesis.
+% Per-chapter operational definitions (for example, the classification categories used to characterise alterations) are stated in the chapters that use them.
+% The definitions below are intentionally tied to observable repository states, because the empirical contributions rely on archived snapshots rather than on privileged forge logs or maintainer intent.
 
-\subsection{Mutable Releases}
-\label{subsec:bg-mutable-releases}
+% \subsection{Software Supply-Chain Attack and Attack Surface}
+% \label{subsec:bg-term-attack}
 
-A \emph{mutable release} is a release-like repository reference whose visible name remains usable as a release identifier while the object it designates can change or disappear; in this thesis, the primary example is a Git tag (\Cref{subsec:bg-branches-tags-references,subsec:bg-tags-release-identifiers}).
-The term does not imply malicious intent---correction, cleanup, migration, and platform convention all produce mutable releases---but it becomes security- or reproducibility-relevant when downstream users expect the identifier to designate a stable source state.
+% A \emph{software supply-chain attack} compromises downstream users by manipulating an upstream component they depend on, so that consumers obtain attacker-controlled artifacts through their normal build or update process (\Cref{sec:bg-supply-chain-attacks})~\cite{ladisa2023supplychain}.
+% The \emph{repository attack surface} is the set of repository-visible elements an actor with push access can change while a downstream consumer keeps trusting an unchanged name: published references, reachable commit history, published content, and repository metadata.
 
-\subsection{Altered Histories}
-\label{subsec:bg-altered-histories}
+% \subsection{Mutable Releases}
+% \label{subsec:bg-mutable-releases}
 
-An altered history is an observable change in the commit graph reachable from a repository reference between two snapshots.
-Following the altered-histories contribution, a repository undergoes a history alteration when at least one commit reachable from an earlier snapshot is missing from a later snapshot of the same repository.
-An altered commit is a commit that was present in the earlier snapshot and absent from the later one.
-Because of the snowball effect (\Cref{fig:bg-snowball-effect}), a single history alteration can yield many altered commits; for each alteration, the empirical chapters identify one or more \emph{root-cause commits}: the oldest commits, in topological order, among all altered commits---those directly altered rather than changed as a consequence of an earlier modification.
+% A \emph{mutable release} is a release-like repository reference whose visible name remains usable as a release identifier while the object it designates can change or disappear; in this thesis, the primary example is a Git tag (\Cref{subsec:bg-branches-tags-references,subsec:bg-tags-release-identifiers}).
+% The term does not imply malicious intent---correction, cleanup, migration, and platform convention all produce mutable releases---but it becomes security- or reproducibility-relevant when downstream users expect the identifier to designate a stable source state.
 
-This definition captures observable effects, not developer intent.
-It does not by itself determine whether the alteration was caused by rebasing, amendment, branch deletion, repository cleanup, or malicious tampering.
-Additional classification is required to describe what changed and what risks follow from it.
+% \subsection{Altered Histories}
+% \label{subsec:bg-altered-histories}
 
-\subsection{Secret Removal}
-\label{subsec:bg-secret-removal}
+% An altered history is an observable change in the commit graph reachable from a repository reference between two snapshots.
+% Following the altered-histories contribution, a repository undergoes a history alteration when at least one commit reachable from an earlier snapshot is missing from a later snapshot of the same repository.
+% An altered commit is a commit that was present in the earlier snapshot and absent from the later one.
+% Because of the snowball effect (\Cref{fig:bg-snowball-effect}), a single history alteration can yield many altered commits; for each alteration, the empirical chapters identify one or more \emph{root-cause commits}: the oldest commits, in topological order, among all altered commits---those directly altered rather than changed as a consequence of an earlier modification.
 
-\emph{Secret removal} denotes attempts to remove sensitive information from repository history after it has been committed, typically by rewriting history and force-pushing so that credential-looking files no longer appear in the public commit graph (\Cref{subsec:bg-secrets-remediation,subsec:bg-altered-histories}).
-The term describes an observable repository operation, not the security outcome of that operation.
-A successful rewrite can make a secret invisible in the current upstream tree while the underlying credential remains valid, and an unsuccessful one---from a security standpoint---can leave both the repository evidence and the credential active.
+% This definition captures observable effects, not developer intent.
+% It does not by itself determine whether the alteration was caused by rebasing, amendment, branch deletion, repository cleanup, or malicious tampering.
+% Additional classification is required to describe what changed and what risks follow from it.
 
-The altered-histories contribution treats secret removal as a case study within the broader taxonomy of history alterations.
-It identifies removed files whose names commonly denote private information, such as private keys, certificates, or password stores, and shows that such removals are frequent enough to be a first-order phenomenon rather than an edge case (\Cref{subsec:hist-sec-secrets}).
-That study establishes prevalence and recoverability at the filename level; it does not determine whether recovered contents still grant access.
-Chapter~\ref{chap:secrets} extends the thread by recovering archived contents for credential-looking removals, scanning them with secret detectors, and defining a non-intrusive protocol for testing whether detected values remain active.
-Together, these chapters separate three questions that are often conflated in practice: whether developers attempt to erase secrets from public history, whether those secrets remain recoverable from archives, and whether the recovered credentials still work.
+% \subsection{Secret Removal}
+% \label{subsec:bg-secret-removal}
 
-\subsection{Snapshot Pair and SWHID}
-\label{subsec:bg-term-snapshot-swhid}
+% \emph{Secret removal} denotes attempts to remove sensitive information from repository history after it has been committed, typically by rewriting history and force-pushing so that credential-looking files no longer appear in the public commit graph (\Cref{subsec:bg-secrets-remediation,subsec:bg-altered-histories}).
+% The term describes an observable repository operation, not the security outcome of that operation.
+% A successful rewrite can make a secret invisible in the current upstream tree while the underlying credential remains valid, and an unsuccessful one---from a security standpoint---can leave both the repository evidence and the credential active.
 
-A \emph{snapshot} is the state of a software origin recorded by Software Heritage at one archival visit, listing the visible references and the archived objects they designate (\Cref{sec:bg-software-heritage}).
-A \emph{snapshot pair} is two consecutive snapshots of the same origin; comparing the references and reachable objects of a snapshot pair is the shared detection primitive of all three studies.
-A \emph{SWHID} is the persistent, content-derived identifier Software Heritage assigns to an archived object; because it is computed from content, the same SWHID always refers to the same artifact, which makes before-and-after comparison reliable across time~\cite{cise-2020-doi,iso-swhid}.
+% The altered-histories contribution treats secret removal as a case study within its taxonomy, at the filename level (\Cref{subsec:hist-sec-secrets}); \Cref{chap:secrets} then examines the recovered contents themselves.
+% Together, these chapters separate three questions that are often conflated in practice: whether developers attempt to erase secrets from public history, whether those secrets remain recoverable from archives, and whether the recovered credentials still work.
+
+% \subsection{Snapshot Pair and SWHID}
+% \label{subsec:bg-term-snapshot-swhid}
+
+% A \emph{snapshot} is the state of a software origin recorded by Software Heritage at one archival visit, listing the visible references and the archived objects they designate (\Cref{sec:bg-software-heritage}).
+% A \emph{snapshot pair} is two consecutive snapshots of the same origin; comparing the references and reachable objects of a snapshot pair is the shared detection primitive of all three studies.
+% A \emph{SWHID} is the persistent, content-derived identifier Software Heritage assigns to an archived object; because it is computed from content, the same SWHID always refers to the same artifact, which makes before-and-after comparison reliable across time~\cite{cise-2020-doi,iso-swhid}.
 
 \section*{From background to the empirical chapters}
 \label{sec:bg-to-methods}
