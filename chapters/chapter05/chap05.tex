@@ -13,32 +13,13 @@
 \label{sec:sec-intro}
 
 Chapter~\ref{chap:histories} ended with a specific gap left by the study of altered Git histories.
-It showed that files whose names suggested secrets can be removed through history rewriting and still remain recoverable from Software Heritage, but archival recovery alone cannot answer the security question that matters after a leak: whether the underlying credential is still valid and usable.
-This chapter starts from that distinction.
-It treats secret removal not as another instance of repository hygiene, but as a security response whose effectiveness depends on an object outside Git: the credential itself.
-
-The context is familiar to anyone who has accidentally pushed a password, API token or a private key to a public repository.
-Once the mistake is noticed, repository cleanup is an available and visible action: the developer can force-push, filter the offending file or lines out of past commits, or push a new commit that removes the value, and make the current repository state look clean again.
-That action can be useful as cleanup.
-It reduces the chance that a future clone, search, or casual inspection of the repository will rediscover the value.
-It may also be required by organisational policy or by the desire not to keep known-sensitive material in the advertised project history.
-But it is not the security remediation.
-The only action that invalidates the leak is rotation: revoking the exposed token, replacing the key, resetting the password, or otherwise making the old value unusable.
-History rewriting acts on the repository record; rotation acts on the authority that the leaked value grants.
+It showed that files whose names suggested secrets can be removed through history rewriting and still remain recoverable from Software Heritage at scale (\Cref{subsec:hist-sec-secrets}), but archival recovery alone cannot answer the security question that matters after a leak: whether the underlying credential is still valid and usable.
+This chapter starts from the distinction established in \Cref{subsec:bg-secrets-remediation}: history rewriting acts on the repository record, while rotation---revoking the token, replacing the key, resetting the password---acts on the authority the leaked value grants, and only rotation invalidates the leak.
 
 The problem is that developers sometimes perform only the optional repository cleanup and omit the required rotation.
-Chapter~\ref{chap:histories} already showed that removals of files whose names suggested secrets are not isolated curiosities: enough private-key, credential-file, and authentication-token removals were visible in altered histories to make secret suppression a first-order case study rather than an anecdote.
-That evidence raises a behavioural and operational question.
-If developers invest effort in rewriting history after a leak, do some of them treat that rewrite as the solution rather than as cleanup after rotation?
-An archive cannot answer that question directly, but it can show whether the secrets that developers tried to remove remain recoverable.
-If they do, and if even a fraction of them are still valid, the consequence is not merely an untidy Git history.
-Valid secrets can open access to source repositories, deployment systems, cloud accounts, payment providers, messaging platforms, databases, or continuous-integration environments, depending on the credential family.
-
-Some platforms reduce this risk by scanning pushed content for known secret formats and by warning users, notifying providers, or invalidating specific token families.
-Those mechanisms are valuable because they act on the credential or alert the actor who can revoke it.
-They are also necessarily partial.
-They depend on the platform that receives the push, the detector coverage, the provider integration, and the type of credential involved.
-Private keys, database credentials, self-hosted services, certificates, copied blobs, archives, forks, and third-party mirrors can fall outside the cleanest version of this model.
+An archive cannot observe that omission directly, but it can show whether the secrets that developers tried to remove remain recoverable.
+If they do, and if even a fraction of them are still valid, the consequence is not merely an untidy Git history: valid secrets can open access to source repositories, deployment systems, cloud accounts, payment providers, messaging platforms, databases, or continuous-integration environments, depending on the credential family.
+Platform-side scanning reduces this risk but is necessarily partial (\Cref{subsec:bg-secrets-detection}): it depends on the platform that receives the push, the detector coverage, the provider integration, and the credential type.
 The result is a gap between repository-level deletion and credential-level remediation: the former can be observed in Git history, while the latter must be verified against the authority that accepts the credential.
 
 This chapter addresses that gap empirically.
@@ -46,7 +27,6 @@ It does not yet claim to measure active secrets at ecosystem scale; the active-v
 Instead, the chapter builds the measurement path needed to reach that result.
 It first recovers and scans archived contents associated with secret-looking history alterations, establishing how many downloaded blobs contain machine-detectable secret patterns.
 It then applies offline syntactic checks to the dominant private-key family and describes how further validity should be tested without invasive access: provider-assisted validation as the preferred path, and read-only checks run by the researcher only with explicit platform permission.
-The direction of the research is therefore practical as much as descriptive.
 If secrets removed from history are still active often enough to matter, the evidence can support better platform protocols: faster provider notification, clearer distinction between cleanup and rotation, and remediation workflows that close the credential rather than only hiding the repository evidence.
 
 \paragraph{What this chapter establishes.}
@@ -62,15 +42,8 @@ Sinha et al. identified credential leakage in source-code repositories as an eme
 Meli et al. analysed a large sample of public GitHub repositories and recovered over \num{200000} API keys and tokens embedded directly in source code, showing that leakage is systematic rather than incidental~\cite{DBLP:conf/ndss/MeliMR19}.
 The underlying weakness, hard-coded credentials, is catalogued as CWE-798 and recurs in the CWE Top~25 Most Dangerous Software Weaknesses, which places it among the most consequential classes of software defect.
 
-Against this backdrop, the security community has converged on a clear distinction between security remediation and repository hygiene.
-Surveys of secret-management practice recommend keeping credentials out of source entirely, through local environment variables and short-lived, automatically rotated credentials, precisely so that an exposure can be contained by rotation rather than by deletion~\cite{DBLP:conf/secdev/BasakNRW22, DBLP:journals/corr/abs-2211-06213}.
-The recommended response to a leak is therefore to rotate the affected credential: revoke the token, replace the key, or reset the password so that the exposed value no longer grants access.
-
-A gap remains between this guidance and observed developer behaviour.
-When a secret is pushed by accident, rewriting history, force-pushing, rebasing, filtering the offending content out of past commits, or pushing a new commit that removes the value, is an immediately available and visible action, and it can be mistaken for remediation.
-It is not: it acts on the repository record, not on the authority that the leaked value grants.
-Crucially, removing content from a repository does not remove it from the wider ecosystem, because the same commits persist in forks, cached mirrors, and version-control archives.
-Chapter~\ref{chap:histories} demonstrated exactly this persistence at scale, recovering files whose names suggested secrets that had been deleted through history alterations but remained available in Software Heritage.
+Against this backdrop, the security community has converged on the remediation hierarchy summarised in \Cref{subsec:bg-secrets-remediation}: keep credentials out of source entirely, through environment variables and short-lived, automatically rotated credentials, and respond to a leak by rotating the affected credential~\cite{DBLP:conf/secdev/BasakNRW22, DBLP:journals/corr/abs-2211-06213}.
+A gap remains between this guidance and observed developer behaviour: rewriting history is an immediately available and visible action that can be mistaken for remediation, yet the same commits persist in forks, cached mirrors, and version-control archives---a persistence Chapter~\ref{chap:histories} demonstrated at scale.
 This chapter takes that recovery substrate as its starting point and asks the question those prior studies leave open: not how many secrets are exposed or removed, but how many of the secrets that developers tried to erase through history rewriting are still active.
 
 \section{Study Design}
@@ -514,10 +487,8 @@ The output of that step should not be an active-rate result.
 It should be a family-by-family count of syntactically valid credentials, placeholders rejected, malformed findings, and families excluded from validation.
 That denominator design matters because it prevents raw scanner output from being mistaken for confirmed credentials.
 
-The second task is provider coordination for Tier~B and Tier~C activity checks.
-The preferred process is already defined above: contact providers through a security channel, avoid sending raw credentials in the initial email, request provider-side validation and revocation where possible, and use network checks run by the researcher only with written authorisation.
-The outreach logs must record dates, channels, follow-up status, closure status, and whether the provider authorised Tier B, authorised Tier C, declined, or did not respond.
-The future active-rate result should be reported only for authorised families, together with the number of syntactically valid credentials whose status remains unknown because no authorisation was obtained.
+The second task is provider coordination for the Tier~B and Tier~C activity checks, following the process defined in \Cref{sec:sec-validation}.
+The outreach logs must record dates, channels, follow-up status, closure status, and whether the provider authorised Tier B, authorised Tier C, declined, or did not respond; the future active-rate result should be reported only for authorised families, together with the number of syntactically valid credentials whose status remains unknown because no authorisation was obtained.
 
 The final task is to answer the temporal and comparative questions that remain open.
 The temporal question requires pairing the first exposure of a detected secret with the remediation attempt that removed it from the public history.

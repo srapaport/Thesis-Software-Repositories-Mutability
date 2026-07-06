@@ -68,41 +68,20 @@ Measuring that evidence requires a data source that differs fundamentally from t
 \label{sec:intro-problem}
 
 \label{subsec:intro-mutability-challenge}%
-Git stores repository data in a content-addressable object store~\cite{ProGit2014}.
-Blobs hold file contents, trees represent directory structures, and commits record a root tree together with authorship information, a timestamp, a message, and pointers to parent commits.
-Every object is identified by the cryptographic digest of its contents and metadata.
-The identifier of a commit encodes the entire history reachable from it: any change to any ancestor propagates new identifiers to all descendants through what this thesis calls the \emph{snowball effect}.
-This content-addressing property is what makes Git objects immutable in the sense that matters for integrity: content cannot be altered without changing its identity.
-An observer who stores a commit hash and later retrieves the same hash from any clone of the repository is guaranteed to obtain the same content.
+Git stores repository data in a content-addressable object store: every object --- file contents, directory trees, commits --- is identified by the cryptographic digest of its contents and metadata~\cite{ProGit2014}.
+Because a commit's identifier covers its parents, it encodes the entire history reachable from it, and any change to an ancestor propagates new identifiers to all descendants through what this thesis calls the \emph{snowball effect}.
+Content cannot be altered without changing its identity: an observer who stores a commit hash and later retrieves the same hash from any clone is guaranteed to obtain the same content.
 
-References --- branches, tags, and the symbolic pointers that developers and downstream systems use to navigate repository state --- do not share this property.
-A reference is a named pointer to an object identifier.
-The name is stable; the object it designates is not.
-A branch name always resolves to the most recently pushed tip commit.
-A tag name resolves to whatever commit or tag object was last associated with it.
-Lightweight tags can be force-updated or deleted without ceremony; annotated tags, though semantically intended as release markers, enjoy no protocol-level protection against rewriting~\cite{ProGit2014,git_tag_retagging_docs}.
-The result is a system in which content-addressed objects are immutable but the human-readable names used to access those objects can change at any time.
+References --- branches, tags, and the symbolic pointers that developers and downstream systems actually use to navigate repository state --- do not share this property.
+A reference is a named pointer to an object identifier: the name is stable, but the object it designates is not, and neither lightweight nor annotated tags enjoy any protocol-level protection against retargeting or deletion~\cite{ProGit2014,git_tag_retagging_docs}.
 The \emph{Pro Git} book itself describes tags as ``very much like a branch that doesn't change''~\cite{ProGit2014} --- a characterisation that is pedagogically intuitive but technically inaccurate, and that precisely captures the stability assumption that downstream consumers inherit.
-
-This gap between the immutability of objects and the mutability of references is studied by this thesis in three practically distinct dimensions.
+\Cref{chap:background} develops this object--reference distinction in full.
 
 \label{subsec:intro-benign-vs-security}%
-The first dimension concerns release labels.
-Version tags are the primary mechanism by which maintainers communicate stable release points to package managers, build systems, and human users.
-A tag such as \texttt{v2.3.1} is widely understood to designate a specific, frozen source state.
-Yet the same tag can be silently retargeted to a different commit, to a different source tree, or deleted entirely, while the familiar version string remains visible in package registries, documentation, and workflow configurations.
-A consumer who resolves the tag name before and after an alteration may obtain different source code without any signal that the change occurred.
-
-The second dimension concerns commit history.
-Developers routinely use rewriting operations --- \texttt{git rebase}, \texttt{git commit --amend}, interactive squashing, and filter-based history cleaning --- to reorganise development history before or after publication~\cite{ProGit2014}.
-When applied to a branch that has already been pushed and consumed by others, a rewrite replaces some set of commits with new ones: the original commits are no longer reachable from the branch head, and the altered state appears as if the rewritten history had always been the one that existed.
-An observer who had recorded the previous state may have no way to determine, from the forge alone, what changed, when, or why.
-Commit histories are widely treated as append-only audit trails, but they are not: they are whatever the current object graph says after the latest rewrite~\cite{torresarias2016gitmetadata}.
-
-The third dimension arises when history rewriting is used as a remediation strategy for accidentally committed sensitive files.
-A developer who discovers that a private key, an API token, or a database credential was committed to a repository may attempt to erase it by rewriting and force-pushing the affected history.
-This practice creates a false sense of security: the file is no longer reachable from the current branch head, but any independent system that observed the repository before the rewrite may still hold the original commit and its contents.
-The credential's exposure window begins at the first public access to the repository, not at the developer's awareness of the leak, and it is not closed by a history rewrite alone.
+This gap between the immutability of objects and the mutability of references manifests in three practically distinct dimensions, each studied by one chapter of this thesis.
+Release tags can be silently retargeted or deleted while the familiar version string remains visible in registries, documentation, and workflow configurations.
+Commit histories can be rewritten after publication, so that the original commits are no longer reachable from the branch head and the altered state appears as if it had always been the one that existed.
+And history rewriting is itself used as a remediation strategy for accidentally committed credentials --- a practice that creates a false sense of security, because any independent system that observed the repository before the rewrite may still hold the original commit and its contents.
 
 \label{subsec:intro-reproducibility-auditing}%
 These three dimensions share a structural property: they are not exclusively security problems.
@@ -204,13 +183,8 @@ What follows is a prospective statement of what this thesis contributes; the emp
 \subsection{Empirical Contributions}
 \label{subsec:intro-contrib-empirical}
 
-Empirically, the thesis contributes three first-of-kind measurements at the ecosystem scale, each probing a deeper layer of repository mutability.
-
-One of them is the first large-scale quantitative and qualitative study of Git tag alterations, establishing whether tag stability is honoured in practice, producing a taxonomy of alteration forms, and relating alteration behaviour to repository visibility and downstream exposure.
-
-The following one is the first large-scale study of commit-graph history alterations in public repositories, with prevalence analysis stratified by branch and popularity, a taxonomy of alteration forms, and a characterisation of credential file removals and retroactive license changes at a scale not previously examined.
-
-The last one is the first blob-level detection study of credentials archived in \SWH following history alterations that removed files whose names suggested secrets, together with an offline validation infrastructure and the quantitative framing for a future active-credential campaign.
+Empirically, the thesis contributes three first-of-kind measurements at ecosystem scale, each probing a deeper layer of repository mutability: the first large-scale study of Git tag alterations, the first large-scale study of commit-graph history alterations, and the first blob-level detection study of credentials archived in \SWH after removal from public history.
+Each study pairs prevalence figures with a taxonomy of the observed alteration forms, as previewed in \Cref{sec:intro-rqs}.
 
 \subsection{Methodological Contributions}
 \label{subsec:intro-contrib-methodological}

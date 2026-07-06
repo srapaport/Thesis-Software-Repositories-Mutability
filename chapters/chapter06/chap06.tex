@@ -46,13 +46,11 @@ The completed contribution is the detection infrastructure, the Tier~A denominat
 \label{subsec:concl-mutability-norm}
 
 The picture that emerges from the two completed empirical studies is not one of rare, pathological alterations confined to a handful of poorly maintained repositories.
-Tag alteration is observed in \AlteredRepositoriesPercent of all tagged repositories examined.
-History alteration at the commit-graph level affects \PercentOriginsAltered of the \OriginsTwoVisitsOrMoreShort origins with at least two archival visits, corresponding to \GitOriginsRootCauseCommitsShort affected repositories in absolute terms.
-Neither phenomenon is concentrated in the long tail of obscure or abandoned projects; if anything, the data point in the opposite direction: more visible and more actively maintained repositories are more likely to have experienced at least one alteration in both studies.
+Neither tag alteration nor history alteration is concentrated in the long tail of obscure or abandoned projects; if anything, the data point in the opposite direction: more visible and more actively maintained repositories are more likely to have experienced at least one alteration in both studies.
 
 This finding challenges the intuition that history rewriting is primarily a practice of projects where development discipline is low.
 The most plausible explanation is that active development demands active maintenance, and maintenance includes both legitimate history cleanup and the automated contributions of dependency-update bots---both of which generate measurable alteration events in the archive.
-The normalisation of rewriting on pull-request branches may also create cultural tolerance that extends to default branches, which is the mechanism behind the non-negligible \SI{11.39}{\percent} share of history alteration events on \texttt{main}.
+The normalisation of rewriting on pull-request branches may also create cultural tolerance that extends to default branches, which is the mechanism behind the non-negligible share of history alteration events on \texttt{main}.
 
 The practical consequence is direct: any downstream system that treats the current state of a public repository as the definitive and permanent record of what was committed is operating on an assumption that the empirical data do not support.
 This does not mean that open-source repositories are unreliable as software inputs.
@@ -61,49 +59,28 @@ It means that the specific stability property that downstream consumers often im
 \subsection{Independent Archival as a Prerequisite for Integrity Measurement}
 \label{subsec:concl-archive-instrument}
 
-Both empirical studies depend structurally on a property that the forge itself does not supply: the preservation of historical repository states after the repository owner has overwritten them.
-Software Heritage retains the pre-alteration snapshot of a tag or branch alongside the post-alteration one, without the repository owner's participation or permission~\cite{swhcacm2018}.
-Without an independent archive, the comparison that identifies an alteration would be impossible: the forge presents only the current state, and any prior state is irrecoverably gone from the forge's perspective.
-The snapshot-pair methodology that underlies both the tag study and the history study is therefore not merely a technical choice; it is the only way to observe these phenomena at a large scale.
-
-Because neither study could run without archival observation, the implication extends beyond the specific cases reported here.
-Integrity evidence about public repositories lives in independent archives, not in the forge.
-The visibility of integrity failures is therefore contingent on archival coverage, archival frequency, and the research infrastructure available to query archived data.
-Both the tag study and the history study should be read as lower bounds on the true prevalence of their respective phenomena, because alterations that occur between two consecutive visits, or that affect origins visited only once, leave no observable trace.
-
-The archive's role in the software supply-chain integrity picture is therefore essential: it is the only mechanism that currently makes retrospective integrity auditing possible at the scale at which modern software supply chains operate.
-Software Heritage currently provides the only infrastructure capable of supplying that audit trail at ecosystem scale, and its preservation function should be understood as an active component of software infrastructure rather than as a passive repository of historical curiosities.
+Both empirical studies depend structurally on a property that the forge itself does not supply: the preservation of historical repository states after the repository owner has overwritten them~\cite{swhcacm2018}.
+Without an independent archive, the comparison that identifies an alteration would be impossible---the forge presents only the current state---so the snapshot-pair methodology is not merely a technical choice; it is the only way to observe these phenomena at a large scale.
+The implication extends beyond the specific cases reported here: integrity evidence about public repositories lives in independent archives, not in the forge, and the visibility of integrity failures is therefore contingent on archival coverage, archival frequency, and the research infrastructure available to query archived data.
+Software Heritage currently provides the only infrastructure capable of supplying that audit trail at the scale at which modern software supply chains operate, and its preservation function should be understood as an active component of software infrastructure rather than as a passive repository of historical curiosities.
 
 \subsection{The Remediation Gap: Repository Action vs.\ Credential Action}
 \label{subsec:concl-remediation-gap}
 
 The secret-suppression case study in Chapter~\ref{chap:histories} and the detection pipeline in Chapter~\ref{chap:secrets} together articulate a specific instance of a broader pattern: repository-level interventions do not substitute for authority-level interventions when the consequence of an exposure lies outside the repository.
+A force-pushed rewrite succeeds on the forge---the credential is no longer visible in the current branch state---but it does not close the credential's validity at the provider, it does not retract the original content from the archive, forks, or mirrors, and the exposure window began at the original push, not at discovery.
+Chapter~\ref{chap:secrets} establishes the detection end of this gap empirically; the severity end---whether the underlying credentials remain active on any network---remains open, pending the Tier~B and Tier~C validation campaign.
 
-When a developer force-pushes a rewritten history to remove a commit that contained credentials, the operation succeeds on the forge---the credential is no longer visible in the current branch state.
-But this action does not close the credential's validity at the provider.
-It does not retract the original content from the archive, from forks, or from any mirror that observed the repository before the rewrite.
-And the exposure window began at the moment of the original push, not at the moment of discovery: any of those copies may have been indexed, crawled, or cloned before the remediation attempt.
-Chapter~\ref{chap:secrets} establishes the detection end of this gap empirically---the archived content of files from altered histories whose names suggested credentials contains scanner-detectable secrets, and the most common type, private keys, survives Tier~A offline parsing at an \SI{86.4}{\percent} rate.
-What the study does not yet establish is the severity end: whether the underlying credentials remain active on any network.
-That question remains open, pending the completion of the Tier~B and Tier~C validation campaign.
-
-The same structural gap appears in milder forms across all three studies.
-Tag alterations that affect downstream package builds are invisible to consuming tools that lack access to comparative archival data.
-License alterations that retroactively change the terms under which older versions were released are invisible to compliance tools that scan only the current repository state~\cite{torresarias2016gitmetadata}.
-The common thread is that repository-level evidence, observed only through the current forge state, is insufficient for integrity arguments that concern the history of what was made public and when.
+The same structural gap appears in milder forms across the other studies: tag alterations that affect downstream package builds, and license alterations that retroactively change the terms under which older versions were released, are both invisible to tools that observe only the current repository state~\cite{torresarias2016gitmetadata}.
+The common thread is that forge-visible evidence is insufficient for integrity arguments that concern the history of what was made public and when.
 Closing that gap requires either enforcing stability at the forge level---through immutable releases, signed refs, immutable audit logs, or equivalent mechanisms---or maintaining independent archives that can supply the comparative view the forge no longer holds.
 
 \subsection{Contributions to the Field}
 \label{subsec:concl-contrib-synthesis}
 
-Taken together, the three studies deliver what \Cref{sec:intro-contributions} promised prospectively.
-
-Empirically, they provide the first ecosystem-scale measurements of tag alteration, commit-graph history alteration, and archived credential detection from history alterations that removed files whose names suggested secrets---each at a depth and scale not previously achieved, with taxonomies and downstream consequence evidence developed in \Cref{sec:concl-summary}.
-
-Methodologically, they demonstrate the snapshot-pair framework as a general instrument for repository mutability research, deliver \emph{GitHistorian} as a practitioner-facing query tool, and introduce the staged credential validation protocol as a reusable template for responsible research on sensitive archival content.
-
-The open empirical gap is narrow but significant: Study~3 establishes that removed credentials are detectable and syntactically valid in archived content, but not whether they remain active---a question the Tier~B and Tier~C campaign is designed to answer.
-What Study~3 already confirms, together with Studies~1 and~2, is that repository-level remediation alone cannot close exposures whose consequences extend beyond the forge; \Cref{sec:concl-implications} develops that diagnosis for platforms, maintainers, and downstream consumers.
+Taken together, the three studies deliver what \Cref{sec:intro-contributions} promised prospectively: the first ecosystem-scale measurements of tag alteration, commit-graph history alteration, and archived credential detection; the snapshot-pair framework as a general instrument for repository mutability research; \emph{GitHistorian} as a practitioner-facing query tool; and the staged credential validation protocol as a reusable template for responsible research on sensitive archival content.
+The open empirical gap is narrow but significant: Study~3 establishes that removed credentials are detectable and syntactically valid in archived content, but not whether they remain active---the question the Tier~B and Tier~C campaign is designed to answer.
+\Cref{sec:concl-implications} develops the resulting diagnosis for platforms, maintainers, and downstream consumers.
 
 \section{Implications for Software Supply-Chain Security}
 \label{sec:concl-implications}
@@ -201,8 +178,7 @@ The most direct direction is an online monitoring service that applies the snaps
 Such a service could notify package registry maintainers, dependency management tools, or individual developers when a repository they depend on has undergone a tag alteration or history rewrite, enabling timely remediation rather than retrospective discovery.
 
 A complementary direction is to consume forge-native event streams directly.
-Where platforms expose real-time push, force-push, and ref-update events through APIs or webhooks, subscribing to those streams would reduce the latency between an alteration and its detection below the archival visit interval, which can span days or weeks for less frequently crawled origins.
-Those same event streams could feed the append-only, hash-only ref logs discussed above, giving repository owners and downstream consumers near-real-time visibility into tag retargeting and history rewrites.
+Where platforms expose real-time push, force-push, and ref-update events through APIs or webhooks, subscribing to those streams would reduce the latency between an alteration and its detection below the archival visit interval, which can span days or weeks for less frequently crawled origins, and could feed the append-only ref logs recommended in \Cref{subsec:concl-impl-platforms}.
 
 A third direction concerns breadth.
 Both completed studies target Git repositories.
@@ -245,8 +221,7 @@ Whether quick remediation correlates with no rotation---the scenario in which a 
 \section{Final Remarks}
 \label{sec:concl-final}
 
-This thesis began with a specific incident: attackers retargeted \num{346} version tags in a widely-used GitHub Actions repository, causing thousands of downstream CI pipelines to execute malicious code while believing they had pinned to trusted, stable versions.
-The incident was striking not because it was novel but because it was visible and well-documented.
+This thesis began with the \texttt{tj-actions/changed-files} incident---hundreds of version tags retargeted overnight, thousands of pipelines executing attacker code while believing they had pinned trusted versions---striking not because it was novel, but because it was visible and well-documented.
 The three studies reported in this thesis ask how far the underlying vulnerability extends in the ecosystem when no adversary is present---when maintainers move tags to correct mistakes, rewrite histories to apply patches, and remove committed credentials as part of ordinary incident response.
 
 The answer, measured across tens of millions of repositories over a decade of archival observation, is that the gap between Git's object-level integrity guarantees and the stability assumptions of the systems that consume public repositories is endemic rather than exceptional.
