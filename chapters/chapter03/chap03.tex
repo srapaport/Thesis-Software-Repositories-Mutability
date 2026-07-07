@@ -629,13 +629,6 @@ We use it to illustrate a broader semantic tension around tags---between maintai
 The ecosystem is internally heterogeneous, and official guidance itself reflects that heterogeneity.
 Our argument is that such ambiguity is precisely what makes tag mutability consequential for reproducibility and supply-chain integrity.
 
-\subsection{Conclusion Validity}
-\label{subsec:tags-val-conclusion}
-
-Finally, our study establishes that tag alterations occur at scale, that many moves change content, that the phenomenon intersects with real package metadata, and that our dataset captures a retargeting event consistent with an attack and with the threat model we describe.
-What we do \emph{not} claim is that every tag alteration is harmful, that every change to source content reflects malicious intent, or that tags are unsuitable for all release-engineering purposes.
-Rather, our conclusion is narrower and evidence-based: tag names alone are insufficient as reproducible dependency anchors when downstream consumers require stable source identity over time.
-
 \section{Conclusion}
 \label{sec:tags-conclusion}
 
@@ -643,7 +636,7 @@ Git tags are commonly viewed as convenient release identifiers and dependency an
 This chapter conducted the first large-scale empirical study of tag alterations across public code, covering \TotalOriginsAnalyzedShort Git repositories observed between \CutoffDate and \DatasetDate.
 Across the repositories we analyzed, tag names are regularly moved or deleted, many moves change the underlying source content rather than metadata alone, and the phenomenon is not confined to obscure repositories: low-popularity projects dominate in absolute volume, while highly visible repositories exhibit the highest alteration prevalence and per-repository intensity.
 The Nixpkgs cross-analysis and the attack case study show that these alterations have already produced concrete reproducibility failures and supply-chain compromises; the practical consequences for developers, platforms, and tools were drawn in \Cref{subsec:tags-disc-practical}.
-We do not claim that every tag alteration is harmful, nor that tags are unsuitable for release engineering in general; rather, mutable tag names and reproducible dependency resolution are in tension, and when downstream consumers require stable, time-invariant references, tags alone are insufficient.
+We do not claim that every tag alteration is harmful, that every content-changing move reflects malicious intent, or that tags are unsuitable for release engineering in general; rather, mutable tag names and reproducible dependency resolution are in tension, and when downstream consumers require stable, time-invariant references, tags alone are insufficient.
 
 This work also opens directions for future research: the motivations behind tag alterations remain to be studied more directly, for instance through maintainer surveys, and future work could investigate how different package ecosystems and build tools resolve and cache tags in practice, and how often this leads to silent drift.
 
