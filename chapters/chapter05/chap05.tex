@@ -321,7 +321,8 @@ This study separates detection from validation.
 Detection reports that a blob contains a pattern recognised by gitleaks or TruffleHog.
 Validation asks whether the credential can still authenticate to a provider or service.
 Validation is organised into three tiers so that the study can measure activity without treating third-party credentials as tools for unauthorised access.
-Tier~A offline filtering has been executed for private keys (\Cref{sec:sec-pk-tier-a}); Tier~B provider-assisted checks and Tier~C network checks run by the researcher have not yet been carried out, so no active-rate result is claimed.
+Tier~A offline filtering has been executed for private keys (\Cref{sec:sec-pk-tier-a}).
+As of July 2026, the Tier~B outreach message for the SSH-private-key family has been sent to GitHub's security team; Tier~B provider-assisted checks and Tier~C network checks run by the researcher have not yet been carried out, so no active-rate result is claimed while that response remains pending.
 
 \begin{itemize}
 \item \textbf{Tier A: offline validation.} Local structural or cryptographic checks issue no network traffic.
@@ -368,7 +369,8 @@ TruffleHog therefore acts as a useful pre-filter for unparseable text that resem
 
 Sixty-four blobs yielded valid keys only after base64 decoding from configuration lines (for example environment files or CI YAML), illustrating why literal PEM search alone would miss some genuine key material.
 Encrypted blobs (\num{1091} under gitleaks) are syntactically plausible but cannot be parsed without a passphrase; they are excluded from any future active-check numerator.
-The \num{10038} gitleaks-flagged blobs classified as valid offline form the syntactic denominator for a future Tier~B or Tier~C SSH-key activity study, subject to provider authorisation and responsible-disclosure constraints; that step has not yet been executed.
+The \num{10038} gitleaks-flagged blobs classified as valid offline form the syntactic denominator for a future Tier~B or Tier~C SSH-key activity study, subject to provider authorisation and responsible-disclosure constraints.
+The corresponding outreach message has been sent to GitHub's security team, requesting either an aggregate provider-side check (Tier~B) or explicit written authorisation for a single read-only banner probe per key (Tier~C); no active-rate result is reported here because GitHub's response is still pending at the time of writing.
 
 The study assigns one predefined check per credential family.
 Each check is read-only or metadata-only, and the ``active'' outcome is fixed in advance.
@@ -456,7 +458,7 @@ The type and extension composition reported in \Cref{tab:sec-ext-hitrate,tab:sec
 No active credential validation has been executed.
 Tier~A offline filtering has been run for private keys: \num{10038} of \num{11613} flagged blobs parse as valid key material offline (\Cref{tab:sec-pk-tier-a}), but that syntactic result does not establish whether any key remains enrolled or usable.
 The current detection and Tier~A results are therefore limited to archived content and offline parsing.
-This chapter explains how to measure active credentials responsibly, but the repository does not yet contain outreach logs, provider responses, authorised Tier~C runs, or aggregate active-rate outputs.
+This chapter explains how to measure active credentials responsibly, and, for the SSH-private-key family, an outreach message has been sent to GitHub (\Cref{sec:sec-validation}); the repository does not yet contain a provider response, an authorised Tier~C run, or an aggregate active-rate output for this or any other family, since GitHub's answer remains pending at the time of writing.
 Any statement about still-active secrets must therefore remain prospective until the Tier~B and Tier~C campaign exists.
 
 When that campaign is carried out, any confirmed active count should be read as a lower bound rather than as a representative prevalence estimate.
@@ -488,7 +490,9 @@ It should be a family-by-family count of syntactically valid credentials, placeh
 That denominator design matters because it prevents raw scanner output from being mistaken for confirmed credentials.
 
 The second task is provider coordination for the Tier~B and Tier~C activity checks, following the process defined in \Cref{sec:sec-validation}.
+This has started for the SSH-private-key family: GitHub has been contacted, and the corresponding active-rate result is pending their response.
 The outreach logs must record dates, channels, follow-up status, closure status, and whether the provider authorised Tier B, authorised Tier C, declined, or did not respond; the future active-rate result should be reported only for authorised families, together with the number of syntactically valid credentials whose status remains unknown because no authorisation was obtained.
+The same coordination step remains to be started for the other credential families identified in \Cref{tab:sec-secret-types} (service tokens and, where a reachable provider exists, other key-material families).
 
 The final task is to answer the temporal and comparative questions that remain open.
 The temporal question requires pairing the first exposure of a detected secret with the remediation attempt that removed it from the public history.

@@ -6,6 +6,10 @@ This file is gitignored. Agents update it after every run. Users may edit it fre
 
 ---
 
+## Outreach update — 2026-07-07 (GitHub SSH-key outreach sent)
+
+The Tier~B/C outreach message for the SSH-private-key/GitHub family (`chapters/chapter05/outreach/github_ssh_private_keys.md`) has been sent to GitHub's security team. `chap05.tex` updated in five places (validation-tiers intro, end of Tier~A subsection, initial-message paragraph, Conclusion Validity, Perspectives, chapter Conclusion) to state that this outreach has been sent and that the SSH-key active-rate result is pending GitHub's response (30-day window, day-14 follow-up), rather than "not yet started." Other credential families (service tokens, etc.) still have no outreach sent. No new numbers fabricated; still no active-rate result claimed anywhere in the chapter.
+
 ## Structural update — 2026-06-01 (methods chapter dissolved + renumber)
 
 Major restructure executed in one holistic pass (not the one-task-per-run convention), per explicit user request to redistribute the Methods chapter and achieve full paper coverage.
