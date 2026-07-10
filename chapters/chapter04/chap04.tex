@@ -15,25 +15,34 @@
 Chapter~\ref{chap:tags} established that tags---the named references developers use to designate software releases---are mutable in practice.
 Yet a tag can remain perfectly stable while the commits it ultimately reaches through its ancestry have been silently replaced: mutable release labels are only one surface of repository mutability, and this chapter moves the investigation inward, to the commit history that public branches advertise at each archival observation.
 
-For the most part, Git repositories are append-only: developers add \emph{new} commits and exchange them by pushing to and pulling from public repositories~\cite{ProGit2014}.
-But it is technically possible to \emph{alter the previously recorded history} of a repository~\cite[Chapter 7.6, Rewriting History]{ProGit2014}, typically by ``amending'' a recent commit to change its content or metadata, or by ``rebasing'' a portion of history to merge commits, split them, or linearize development branches.
+For the most part, Git repositories are expected to be append-only: developers add \emph{new} commits and exchange them by pushing to and pulling from public repositories~\cite{ProGit2014}.
+It is nonetheless technically possible to \emph{alter the previously recorded history} of a repository~\cite[Chapter 7.6, Rewriting History]{ProGit2014}, typically by ``amending'' a recent commit to change its content or metadata, or by ``rebasing'' a portion of history to merge, split, or linearize commits.
+Downstream recipients have no way to tell, from the repository alone, that this happened.
+That silence is what turns history alteration into a supply-chain concern rather than a curiosity.
 History rewrites are useful to polish local or work-in-progress branches before sharing them, and are even the default behaviour in some workflows~\cite{DBLP:journals/infsof/RiosEE22}: pull-request branches, for example, are often rewritten to keep only a single commit that can be merged when the pull request is ready.
-They become problematic when performed on public branches used by downstream recipients, for two reasons.
-First, they break the pull/push workflow~\cite{DBLP:conf/issre/JiCYM20}, which relies on the stability of commit identifiers as checkpoints for history exchanges.
-Second, by breaking commit identities, alterations create opportunities for supply-chain attacks: together with a legitimate history rewrite, attackers can sneak in malicious changes that are difficult to audit because of the confusion caused by commit-identity modifications~\cite{ladisa2023supplychain,torresarias2016gitmetadata}.
+The same capability becomes a liability when exercised on public branches that downstream recipients already track.
+Here the stakes differ from a moved tag: a retargeted tag misdirects \emph{which} commit is fetched, whereas a rewritten history changes \emph{what} that commit---and every commit after it---actually contains.
+Two converging reasons make this matter.
+First, it breaks the pull/push workflow~\cite{DBLP:conf/issre/JiCYM20}, which relies on the stability of commit identifiers as checkpoints for history exchanges.
+Second, and more consequentially, by breaking commit identities it opens the door to supply-chain attacks: together with a legitimate-looking history rewrite, an attacker can sneak in malicious changes that are difficult to audit because of the confusion caused by commit-identity modifications~\cite{ladisa2023supplychain,torresarias2016gitmetadata}.
 
-Little was known, before this study, about the amount, characteristics, and impact of history alterations in public code.
-This is partly because the phenomenon is inherently difficult to study empirically at scale: after a rewrite, the history \emph{prior} to the alteration no longer exists and cannot be compared with what remains.
+Studying history alterations empirically is difficult for a structural reason: a rewrite, by construction, destroys the evidence needed to detect it---once the prior history is gone from the repository, there is nothing left there to compare the new state against.
+Consequently, little was known, before this study, about the amount, characteristics, and impact of history alterations in public code.
 As in the previous chapter, Software Heritage solves this methodological problem: successive crawls retain prior object identities even when forges overwrite refs~\cite{swhcacm2018,cise-2020-doi}.
 That archival property makes it possible to ask, at ecosystem scale, how often public histories change in ways that remove or replace commits, how those events distribute across branches and projects, and whether the file-level footprints resemble benign hygiene (for example, cleaning credentials) or governance-sensitive patterns (for example, retroactive license edits).
 
 \paragraph{What this chapter establishes.}
-This chapter extends the study we published at ASE~2025~\cite{DBLP:conf/kbse/RapaportPTZ25} along five complementary lines.
+Tag-level evidence cannot settle this question.
+A project can show perfectly stable release tags while the commit content and metadata those tags reach through are extensively rewritten.
+The risk this chapter targets is therefore not reducible to tag mutability alone.
+This chapter extends the study we published at ASE~2025~\cite{DBLP:conf/kbse/RapaportPTZ25} along five complementary lines that quantify that risk directly.
 It quantifies how often publicly archived Git histories change between successive observations and how those events distribute across repositories (\Cref{subsec:hist-freq}); identifies which branches carry the largest share of alteration events and how the likelihood of rewriting relates to repository visibility on GitHub (\Cref{subsec:hist-dist-branches,subsec:hist-affected-projects}); applies a taxonomy that separates metadata-only rewrites from directory and file changes (\Cref{sec:hist-taxonomy}); examines two recurrent file-level patterns in depth---retroactive license changes and removals of files whose names suggested secrets (\Cref{sec:hist-security}); and packages the detection pipeline into GitHistorian, an operational tool that can help maintainers and auditors spot alterations in repositories of interest (\Cref{sec:hist-githistorian}).
 \Cref{sec:hist-related} and \Cref{sec:hist-methodology} first establish prior-work context and the archival comparison pipeline; the chapter closes with discussion (\Cref{sec:hist-discussion}), threats to validity (\Cref{sec:hist-validity}), and a conclusion (\Cref{sec:hist-conclusion}).
 
 \section{Related Work}
 \label{sec:hist-related}
+
+This section reviews why and how developers rewrite history (\Cref{subsec:hist-rw-rewriting}), the empirical and archival-comparison work that makes studying rewrites at scale possible (\Cref{subsec:hist-rw-forensics}), and closes by positioning this chapter's contribution against that backdrop (\Cref{subsec:hist-rw-positioning}).
 
 \subsection{History Alterations: Motivations and Handling}
 \label{subsec:hist-rw-rewriting}
