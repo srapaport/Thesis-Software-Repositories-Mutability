@@ -7,10 +7,9 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-\initial{I}n March 2025, attackers modified the tag configuration of \texttt{tj-actions/changed-files}, a widely reused GitHub Actions helper, so that \num{346} existing version labels --- from \texttt{v39} through \texttt{v47} --- all pointed to a single malicious commit~\cite{paloalto_unit42_2025}.
-Any pipeline that invoked the action by a pinned version string, which is the standard practice, executed the code controlled by the attacker on its next run.
-The injected payload dumped CI runner memory into workflow logs, exposing environment variables, API tokens, and credentials of every affected project.
-Teams that had done nothing wrong --- that had specified a version, tracked upstream releases, and followed widely endorsed workflow conventions --- nonetheless ran attacker code and had to audit logs for leaked secrets, rotate credentials, and repin their workflow definitions to verified commit hashes.
+\initial{I}n March 2025, attackers modified the tag configuration of \texttt{tj-actions/changed-files}, a widely reused GitHub Actions helper, so that \num{346} existing version --- from \texttt{v39} through \texttt{v47} --- all pointed to a single malicious commit~\cite{paloalto_unit42_2025}.
+Any project that were using one of those version ran attacker-controlled code.
+The malicious code could expose credentials of every affected project.
 
 What is striking about the incident is that it required no software vulnerability.
 The attack's leverage came entirely from a gap between what Git's reference model permits and what downstream consumers assume.
@@ -37,7 +36,7 @@ This dependency structure creates a demand for stability.
 Package managers such as npm, PyPI, crates.io, and Maven Central resolve version specifications against repository state on behalf of millions of developers every day.
 Continuous integration pipelines re-execute builds against declared dependency sets, expecting identical inputs to produce repeatable outputs.
 Lockfiles and software bills of materials record the specific sources retrieved during a build so that the same build can be reproduced or audited later.
-Supply-chain security frameworks such as SLSA build provenance metadata around the assumption that named source inputs refer to well-defined, stable content~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
+Supply-chain security frameworks such as SLSA (Supply-chain Levels for Software Artifacts) build provenance metadata around the assumption that named source inputs refer to well-defined, stable content~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
 All of these mechanisms share a common structural premise: that resolving a dependency specification today will yield the same artifact as resolving it yesterday.
 
 \label{subsec:intro-trust-anchors}%
@@ -47,7 +46,7 @@ But in practice, most dependency specifications and workflow configurations do n
 They pin version labels: a package version string such as \texttt{v2.3.1} or a branch name such as \texttt{main}.
 These labels are human-readable names, not cryptographic commitments.
 Their stability is a social convention, not a technical guarantee enforced by the version control system.
-The ecosystem treats them as durable identifiers because the overwhelming majority of maintainers honour the convention the overwhelming majority of the time --- not because Git prevents a name from being moved.
+The ecosystem treats them as durable identifiers because most maintainers honour the convention most of the time --- not because Git prevents a name from being moved.
 
 This social contract turns public repositories into trust anchors for the software supply chain.
 When a developer writes \texttt{tj-actions/changed-files@v45} in a CI workflow, they trust that the upstream repository will not silently retarget that label.
@@ -60,8 +59,11 @@ They are maintained by norms, by the perceived cost of violating them, and by th
 This thesis is motivated by the question of whether that expectation is well-calibrated.
 The \texttt{tj-actions} incident demonstrates that an adversary can exploit the gap between assumption and reality to achieve supply-chain compromise at scale.
 But the attack is only the most visible manifestation of a broader phenomenon.
-Repository state changes in practice far beyond headline incidents: release tags are moved to correct erroneous releases or to automate version management; commit histories are rewritten to remove debug artifacts, to clean up merge noise, or to erase accidentally committed credentials; and the files erased during those rewrites sometimes contain sensitive material that remains recoverable from independent archives long after the maintainer believed it had been removed.
-The security implications of these ordinary practices are poorly understood, not because they are rare, but because the evidence they leave behind disappears from the forge as soon as the repository is updated.
+Repository state changes in practice far beyond headline incidents.
+Release tags are moved to correct erroneous releases or to automate version management.
+Commit histories are rewritten to remove debug artifacts, clean up merge noise, or erase accidentally committed credentials.
+And the files erased during those rewrites sometimes contain sensitive material that remains recoverable from independent archives long after the maintainer believed it had been removed.
+The security implications of these ordinary practices are poorly understood, not because they are rare, but because the evidence they leave behind disappears from the hosting platform --- the \emph{forge}, e.g.\ GitHub or GitLab --- as soon as the repository is updated.
 Measuring that evidence requires a data source that differs fundamentally from the forge itself.
 
 \section{The Gap Between Git's Design and Its Consumption}
@@ -69,27 +71,28 @@ Measuring that evidence requires a data source that differs fundamentally from t
 
 \label{subsec:intro-mutability-challenge}%
 Git stores repository data in a content-addressable object store: every object --- file contents, directory trees, commits --- is identified by the cryptographic digest of its contents and metadata~\cite{ProGit2014}.
-Because a commit's identifier covers its parents, it encodes the entire history reachable from it, and any change to an ancestor propagates new identifiers to all descendants through what this thesis calls the \emph{snowball effect}.
+Because a commit's identifier is computed over its parent commit(s) --- the commit(s) immediately before it in the project's history --- it encodes the entire history reachable from it, and any change to an earlier commit propagates new identifiers to every later commit built on top of it, through what this thesis calls the \emph{snowball effect}.
 Content cannot be altered without changing its identity: an observer who stores a commit hash and later retrieves the same hash from any clone is guaranteed to obtain the same content.
 
 References --- branches, tags, and the symbolic pointers that developers and downstream systems actually use to navigate repository state --- do not share this property.
-A reference is a named pointer to an object identifier: the name is stable, but the object it designates is not, and neither lightweight nor annotated tags enjoy any protocol-level protection against retargeting or deletion~\cite{ProGit2014,git_tag_retagging_docs}.
+A reference is a named pointer to an object identifier: the name is stable, but the object it designates is not.
+Tags --- the labels developers use to mark releases --- enjoy no protocol-level protection against retargeting or deletion~\cite{ProGit2014,git_tag_retagging_docs}.
 The \emph{Pro Git} book itself describes tags as ``very much like a branch that doesn't change''~\cite{ProGit2014} --- a characterisation that is pedagogically intuitive but technically inaccurate, and that precisely captures the stability assumption that downstream consumers inherit.
 \Cref{chap:background} develops this object--reference distinction in full.
 
 \label{subsec:intro-benign-vs-security}%
 This gap between the immutability of objects and the mutability of references manifests in three practically distinct dimensions, each studied by one chapter of this thesis.
 Release tags can be silently retargeted or deleted while the familiar version string remains visible in registries, documentation, and workflow configurations.
-Commit histories can be rewritten after publication, so that the original commits are no longer reachable from the branch head and the altered state appears as if it had always been the one that existed.
+Commit histories can be rewritten after publication, so that the original commits are no longer reachable from the branch head --- the commit a branch name currently points to --- and the altered state appears as if it had always been the one that existed.
 And history rewriting is itself used as a remediation strategy for accidentally committed credentials --- a practice that creates a false sense of security, because any independent system that observed the repository before the rewrite may still hold the original commit and its contents.
 
 \label{subsec:intro-reproducibility-auditing}%
 These three dimensions share a structural property: they are not exclusively security problems.
 Tag alterations are often benign corrections.
 History rewrites are often routine maintenance.
-Credential file removals are often genuine remediation attempts, carried out in good faith with the belief that rewriting history is sufficient for cleanup and with credential rotation.
+Credential file removals are often genuine remediation attempts, carried out in good faith by maintainers who believe that rewriting history is enough on its own, whether or not they also rotate the credential.
 From an external, observational stance, it is not possible to determine intent from the alteration itself.
-What all alterations share, regardless of intent, is that they break the stability assumption on which downstream consumers depend, and that the evidence of the break disappears from the forge as soon as the repository is updated.
+What all alterations share, regardless of intent, is that they break the stability assumption on which downstream consumers depend, and that the evidence of the break is gone from the forge the moment the repository changes again.
 Measuring the prevalence, structure, and security implications of these alterations requires a different kind of empirical infrastructure.
 
 \section{Software Heritage as an Empirical Lever}
@@ -144,7 +147,7 @@ Full prevalence figures, the taxonomy of alteration forms, and downstream conseq
 If release labels can drift silently, what about the commit histories those labels anchor?
 The second study extends the mutability analysis from the reference boundary --- tags and branch heads --- inward to the commit graph itself.
 Distributed version control systems are, for the most part, append-only in ordinary collaborative use: developers add commits and share them through push and pull operations.
-Yet the same system also permits altering previously recorded history through operations such as rebase, amend, interactive squash, and force-push.
+Yet the same system also permits substituting new commits for old ones and overwriting the shared history with the result, through operations such as rebase, amend, interactive squash, and force-push.
 When applied to shared branches, these operations create a different class of integrity questions: commit identities, parent links, authorship fields, and timestamps are routinely treated as an audit trail, yet they are not append-only facts about a repository; they are whatever the current object graph says after the most recent rewrite~\cite{torresarias2016gitmetadata}.
 The central questions are: How often are public Git histories observably altered? Which branches and repositories are most affected? What kinds of alterations occur? And are there recurrent patterns with security consequences?
 
