@@ -7,216 +7,158 @@
 \chapter{Introduction}
 \label{chap:intro}
 
-\initial{I}n March 2025, attackers modified the tag configuration of \texttt{tj-actions/changed-files}, a widely reused GitHub Actions helper, so that \num{346} existing version --- from \texttt{v39} through \texttt{v47} --- all pointed to a single malicious commit~\cite{paloalto_unit42_2025}.
-Any project that were using one of those version ran attacker-controlled code.
-The malicious code could expose credentials of every affected project.
+\initial{I}n March 2025, attackers altered \texttt{tj-actions/changed-files}, a widely reused GitHub Actions helper, so that \num{346} existing versions --- from \texttt{v39} through \texttt{v47} --- all pointed to one malicious commit~\cite{paloalto_unit42_2025}.
+Projects that resolved any of those familiar version names then executed attacker-controlled code capable of exposing developers' credentials.
 
-What is striking about the incident is that it required no software vulnerability.
-The attack's leverage came entirely from a gap between what Git's reference model permits and what downstream consumers assume.
-Git tag names can be updated at any time by anyone with push access to a repository.
-The attacker used that capability to retarget familiar version labels to a commit of their choice.
-Downstream consumers, for their part, had treated those labels as stable, or at least trustworthy, identifiers --- not as mutable pointers whose targets could be silently replaced overnight.
-If tag names are a social contract about stability, Git does not enforce that contract.
+The incident required no vulnerability in the downstream projects.
+Its leverage came from a mismatch between what Git permits and what software consumers expect: anyone with sufficient repository access can retarget a tag, whereas workflows commonly treat a version name as a stable identifier.
+The attack was conspicuous once discovered, but the underlying operation was an ordinary reference update.
+Within the vast volume of legitimate repository changes, comparable events need not announce themselves as attacks.
+Finding them is therefore an automated detection problem akin to searching for a needle in a haystack: absence of a detected incident does not establish that repository state remained unchanged or trustworthy.
 
-This thesis asks how far that assumption is violated in practice, across the free and open-source software ecosystem, and what the consequences are.
-Three empirical studies follow the assumption's failure progressively inward: from version tags --- the release labels that developers, package managers, and build systems use to pin upstream dependencies --- to the underlying commit histories that those labels anchor, and finally to the files that contained credentials and that some maintainers remove from history when they discover they were accidentally committed.
-Together, the three studies trace a single thread from its most visible surface to its deepest security implication.
+This chapter frames that problem at three nested levels.
+A visible release name may resolve to different code over time; a published commit history may be replaced; and a file removed during such a replacement may remain available in an archive, possibly with sensitive contents.
+The challenge is, besides showing that Git permits these operations, to identify which changes to search for, detect them efficiently across an ecosystem-scale archive, and classify the resulting candidates without treating every maintenance operation as a security incident.
 
 \section{Software Repositories as Load-Bearing Infrastructure}
 \label{sec:intro-context}
 
-Open-source software now forms the connective tissue of modern computing.
-Web services, embedded systems, scientific computing environments, and public digital infrastructure all depend, to varying degrees, on software libraries, tools, and operating environments whose source code is publicly maintained in repositories.
-The scope of this dependency is structural, not merely quantitative.
-A typical software product today is assembled from hundreds or thousands of upstream packages, each of which may itself depend on further upstream components.
-The production of a deployable artifact --- a compiled binary, a container image, a published package --- is therefore a collaborative act that involves contributors and maintainers who have never met, coordinated through the shared convention of version-controlled repositories.
+Open-source repositories are load-bearing infrastructure for web services, embedded systems, scientific computing, and public digital services.
+A deployable artifact is commonly assembled from hundreds or thousands of upstream packages, themselves connected by further dependencies.
+Its production therefore depends on repository states maintained by people and organisations that downstream developers may never interact with directly.
 
 \label{subsec:intro-oss-critical}%
-This dependency structure creates a demand for stability.
-Package managers such as npm, PyPI, crates.io, and Maven Central resolve version specifications against repository state on behalf of millions of developers every day.
-Continuous integration pipelines re-execute builds against declared dependency sets, expecting identical inputs to produce repeatable outputs.
-Lockfiles and software bills of materials record the specific sources retrieved during a build so that the same build can be reproduced or audited later.
-Supply-chain security frameworks such as SLSA (Supply-chain Levels for Software Artifacts) build provenance metadata around the assumption that named source inputs refer to well-defined, stable content~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
-All of these mechanisms share a common structural premise: that resolving a dependency specification today will yield the same artifact as resolving it yesterday.
+This dependency structure makes repository integrity a condition of digital trust.
+Package managers resolve version specifications, continuous integration systems fetch and execute dependencies, and lockfiles or software bills of materials record inputs for later reproduction and audit.
+Frameworks such as SLSA (Supply-chain Levels for Software Artifacts) likewise associate provenance with named source inputs~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
+These mechanisms must support both security against malicious substitution and operational safety: a declared input should continue to designate the intended software and guarantee dependable production, reproduction, and audit.
 
 \label{subsec:intro-trust-anchors}%
-The stability assumption is reasonable at the level of content-addressed identifiers.
-If a build system records a cryptographic hash of each upstream source, verifying reproducibility reduces to checking that the same hash is still reachable.
-But in practice, most dependency specifications and workflow configurations do not pin content hashes.
-They pin version labels: a package version string such as \texttt{v2.3.1} or a branch name such as \texttt{main}.
-These labels are human-readable names, not cryptographic commitments.
-Their stability is a social convention, not a technical guarantee enforced by the version control system.
-The ecosystem treats them as durable identifiers because most maintainers honour the convention most of the time --- not because Git prevents a name from being moved.
+Cryptographic identifiers can provide a technical form of this guarantee.
+A hash is computed from an artifact's bytes: if those bytes change, the hash changes with overwhelming probability.
+A consumer that records and verifies the expected hash can therefore detect substitution.
+Most human-facing dependency declarations, however, use names such as \texttt{v2.3.1} or \texttt{main} rather than content hashes.
+Those names are convenient, but Git does not bind them permanently to one object.
 
-This social contract turns public repositories into trust anchors for the software supply chain.
-When a developer writes \texttt{tj-actions/changed-files@v45} in a CI workflow, they trust that the upstream repository will not silently retarget that label.
-When a reproducible-build system records that an artifact was built from a specific tagged commit, it trusts that the tag will not be moved.
-When a security team audits the dependency tree of a deployed application, it trusts that version numbers recorded at build time correspond to the source code that was actually compiled~\cite{Vu21}.
-None of these trust assumptions is enforced at the protocol level.
-They are maintained by norms, by the perceived cost of violating them, and by the expectation that repository state is stable enough in practice to be treated as if it were stable by design.
+Public repositories consequently act as trust anchors without always providing immutability.
+A workflow containing \texttt{tj-actions/changed-files@v45} delegates the meaning of \texttt{v45} to the upstream repository.
+A later audit similarly assumes that the recorded version still identifies the source that was compiled~\cite{Vu21}.
+If the name moves, the same declaration can yield different software without any local change.
 
 \label{subsec:intro-security-assumptions}%
-This thesis is motivated by the question of whether that expectation is well-calibrated.
-The \texttt{tj-actions} incident demonstrates that an adversary can exploit the gap between assumption and reality to achieve supply-chain compromise at scale.
-But the attack is only the most visible manifestation of a broader phenomenon.
-Repository state changes in practice far beyond headline incidents.
-Release tags are moved to correct erroneous releases or to automate version management.
-Commit histories are rewritten to remove debug artifacts, clean up merge noise, or erase accidentally committed credentials.
-And the files erased during those rewrites sometimes contain sensitive material that remains recoverable from independent archives long after the maintainer believed it had been removed.
-The security implications of these ordinary practices are poorly understood, not because they are rare, but because the evidence they leave behind disappears from the hosting platform --- the \emph{forge}, e.g.\ GitHub or GitLab --- as soon as the repository is updated.
-Measuring that evidence requires a data source that differs fundamentally from the forge itself.
+The motivating question is thus whether changes that undermine this trust can be detected after the fact and at ecosystem scale.
+A code forge such as GitHub or GitLab usually presents the current repository state, not the state that a mutable name designated yesterday.
+Once a reference or history is replaced, the most direct evidence disappears from that interface.
+An empirical investigation needs repeated observations from an independent source, together with methods capable of reducing an enormous stream of ordinary changes to interpretable candidates.
 
 \section{The Gap Between Git's Design and Its Consumption}
 \label{sec:intro-problem}
 
 \label{subsec:intro-mutability-challenge}%
-Git stores repository data in a content-addressable object store: every object --- file contents, directory trees, commits --- is identified by the cryptographic digest of its contents and metadata~\cite{ProGit2014}.
-Because a commit's identifier is computed over its parent commit(s) --- the commit(s) immediately before it in the project's history --- it encodes the entire history reachable from it, and any change to an earlier commit propagates new identifiers to every later commit built on top of it, through what this thesis calls the \emph{snowball effect}.
-Content cannot be altered without changing its identity: an observer who stores a commit hash and later retrieves the same hash from any clone is guaranteed to obtain the same content.
+Git stores file contents, directory trees, and commits as content-addressed objects~\cite{ProGit2014}.
+The identifier of a commit covers its content, metadata, and parent identifiers.
+Hence, changing an earlier commit creates a new identifier for that commit and for every descendant that refers to it; this propagation is called the \emph{snowball effect}.
+Therefore, an existing object cannot silently change its content and keep the same identifier.
 
-References --- branches, tags, and the symbolic pointers that developers and downstream systems actually use to navigate repository state --- do not share this property.
-A reference is a named pointer to an object identifier: the name is stable, but the object it designates is not.
-Tags --- the labels developers use to mark releases --- enjoy no protocol-level protection against retargeting or deletion~\cite{ProGit2014,git_tag_retagging_docs}.
-The \emph{Pro Git} book itself describes tags as ``very much like a branch that doesn't change''~\cite{ProGit2014} --- a characterisation that is pedagogically intuitive but technically inaccurate, and that precisely captures the stability assumption that downstream consumers inherit.
+Unlike content-addressed objects, references --branches or tags-- do not have that property.
+A reference is a name that points to an object identifier, and Git permits that pointer to be updated or deleted~\cite{ProGit2014,git_tag_retagging_docs}.
+The \emph{Pro Git} description of a tag as ``very much like a branch that doesn't change'' is consequently an expectation about use, not a protocol guarantee~\cite{ProGit2014}.
 \Cref{chap:background} develops this object--reference distinction in full.
 
 \label{subsec:intro-benign-vs-security}%
-This gap between the immutability of objects and the mutability of references manifests in three practically distinct dimensions, each studied by one chapter of this thesis.
-Release tags can be silently retargeted or deleted while the familiar version string remains visible in registries, documentation, and workflow configurations.
-Commit histories can be rewritten after publication, so that the original commits are no longer reachable from the branch head --- the commit a branch name currently points to --- and the altered state appears as if it had always been the one that existed.
-And history rewriting is itself used as a remediation strategy for accidentally committed credentials --- a practice that creates a false sense of security, because any independent system that observed the repository before the rewrite may still hold the original commit and its contents.
+This design exposes three different observable signals.
+First, the target of a release tag can change while its version name remains in registries, documentation, and workflow files.
+Second, a force-push can make previously published commits unreachable from a branch and replace them with a different graph.
+Third, files removed by such rewriting may survive in clones and archives, so repository removal alone cannot establish that sensitive contents have been revoked.
 
 \label{subsec:intro-reproducibility-auditing}%
-These three dimensions share a structural property: they are not exclusively security problems.
-Tag alterations are often benign corrections.
-History rewrites are often routine maintenance.
-Credential file removals are often genuine remediation attempts, carried out in good faith by maintainers who believe that rewriting history is enough on its own, whether or not they also rotate the credential.
-From an external, observational stance, it is not possible to determine intent from the alteration itself.
-What all alterations share, regardless of intent, is that they break the stability assumption on which downstream consumers depend, and that the evidence of the break is gone from the forge the moment the repository changes again.
-Measuring the prevalence, structure, and security implications of these alterations requires a different kind of empirical infrastructure.
+None of these signals should be instantly labeled as incidents.
+Repository states reveal what changed, but generally not why it changed.
+Maintainers often move tags to repair releases, rewrite histories during routine development, and remove credentials as a genuine remediation step.
+Automatic analysis must therefore separate detection from interpretation: first recover observable changes, then classify their form and narrow the cases that warrant security analysis.
 
 \section{Software Heritage as an Empirical Lever}
 \label{sec:intro-objectives}
 
 \label{subsec:intro-obj-tags}%
-\SWH is the largest public archive of source code~\cite{swhcacm2018}.
-It continuously crawls public code forges --- including GitHub, GitLab, Bitbucket, Codeberg, SourceHut, and hundreds of smaller instances --- and stores complete snapshots of each repository's state at the time of each visit.
-Unlike a forge, which provides access to only the current state of a repository, \SWH retains all states it has ever observed.
-It assigns persistent, content-derived identifiers (SWHIDs) to every archived object, from individual file contents to full repository snapshots, in conformance with an international standard~\cite{iso-swhid}.
-These identifiers are computed from content and are therefore stable across all copies and all time: the same SWHID will always refer to the same artifact, regardless of when or from where it is retrieved.
+\SWH, the largest public archive of source code, supplies the missing historical observations~\cite{swhcacm2018}.
+It visits public code forges and records snapshots of repository state.
+It also assigns persistent, content-derived identifiers (SWHIDs) to archived objects, from file contents to complete snapshots~\cite{iso-swhid}.
+Because a SWHID is derived from the object itself, two observations with the same identifier denote the same archived artifact, whereas different identifiers make a change explicit.
 
 \label{subsec:intro-obj-histories}%
-The archive's structure creates a natural instrument for studying repository mutability.
-Each time \SWH visits the same repository more than once, it produces two independent observations of the same origin at different points in time.
-Comparing consecutive snapshots --- a \emph{snapshot pair} --- reveals which references existed in both observations, which changed their target, and which appeared or disappeared.
-Crucially, even if the forge has already overwritten the original state of a tag or branch, the earlier snapshot retains the pre-alteration reference target.
-The SWHID of the original commit is preserved in the archive, alongside the SWHID of its replacement, making it possible to compare the two states at any later date and to verify that they differ.
-This before-and-after observability at scale is what makes the measurements reported in this thesis possible.
+Two visits to the same origin provide a before-and-after pair.
+Comparing consecutive snapshots reveals reference names that appeared or disappeared and names whose targets differ.
+The earlier snapshot can retain objects no longer advertised by the forge, allowing later analysis of both sides of an alteration.
+This turns otherwise transient repository changes into durable evidence.
 
 \label{subsec:intro-obj-secrets}%
-Prior empirical work on repository mutability was largely confined to single-forge studies, short observation windows, or samples too small to estimate ecosystem-level rates with confidence.
-The studies in this thesis operate at a different scale: the tag-alteration study analyses \OriginsWithTagsShort repositories with at least one tag, observed across a nine-year window spanning all major forges; the history-alteration study analyses \OriginsTwoVisitsOrMoreShort repositories with at least two archival visits.
-These scale differences are not incidental.
-Mutability that affects a small fraction of repositories in relative terms may still touch millions of real projects in absolute terms, and the shape of the distribution --- whether alteration is concentrated in a few outliers or spread across the population --- can only be characterised reliably at this order of magnitude.
-The snapshot-pair methodology, implemented on top of \SWH and described in full in \Cref{sec:tags-methodology}, is the shared empirical backbone of all three studies.
+The archive solves the observability problem but creates a computational one.
+The tag analysis alone considers \OriginsWithTagsShort repositories over nine years, while the history analysis considers \OriginsTwoVisitsOrMoreShort origins in an archive graph containing \SWHRevisionsShort revisions.
+At this scale, exhaustive manual inspection is impossible, while indiscriminate graph traversal, content retrieval, and secrets scanning are unnecessarily expensive.
+The empirical problem is to, first, sequence automatic operations so that cheap structural comparisons generate candidates, then use taxonomies to distinguish what changed, and, finally, run progressively more expensive analyses that operate only on relevant subsets.
 
 \section{Three Studies of Repository Integrity}
 \label{sec:intro-rqs}
 
-The three studies that constitute this thesis are motivated by, and structured around, the three dimensions of mutability introduced in \Cref{sec:intro-problem}.
-Each study asks a distinct empirical question, employs the snapshot-pair methodology described in \Cref{sec:intro-objectives}, and produces findings that bear on a different facet of the repository integrity problem.
-The studies are presented in escalating specificity: the first operates at the level of release labels, the second at the level of commit-graph structure, and the third at the level of file content within altered histories.
+The three studies progressively refine that search.
+They move from reference-level differences, through commit-graph differences, to the contents of selected removed files.
+Each study examines a deeper layer of repository state.
 
 \subsection{When Tag Names Outlive Their Targets}
 \label{subsec:intro-rq-tags}
 
-The first study is motivated directly by the \texttt{tj-actions} incident and asks whether tag alteration is an isolated phenomenon or a regular feature of the public software ecosystem.
-Before this work, there was little public evidence about how often the convention of tag stability is broken in ordinary maintenance as opposed to headline attacks, and no comprehensive study had characterised tag alterations at ecosystem scale.
-The central questions are: How prevalent is tag alteration, and does the practice persist over time? When tags do change, what forms do those changes take? And how do alteration patterns relate to a repository's downstream visibility?
-
-To answer these questions, the study compares consecutive \SWH snapshot pairs for all origins that had been visited at least twice and carried at least one Git tag as of \DatasetDate, yielding a corpus of \OriginsWithTagsShort repositories observed over \TemporalSpan~\cite{rapaport2026tagalterations}.
-Each tag reference is tracked across successive snapshots: a tag that points to a different commit in two consecutive observations is classified as a \emph{move}; a tag that was present in one snapshot but absent from the next is classified as a \emph{deletion}.
-Moves are further distinguished according to what changed --- whether the source tree changed (a content-changing move), whether only commit metadata such as author, timestamp, or message changed while the source tree stayed the same (a metadata-only move), or whether the annotation layer of an annotated tag changed.
-The prevalence and structure of alterations are then related to repository visibility, using GitHub star counts as a proxy for downstream exposure.
-The study finds that tag alteration is an active, recurring practice across the corpus rather than a rare outlier confined to a few repositories, and that moves that change the source tree behind a stable version string are the primary security concern.
-Full prevalence figures, the taxonomy of alteration forms, and downstream consequence evidence from the Nixpkgs cross-analysis and the \texttt{tj-actions} case study appear in \Cref{chap:tags}.
+The first study asks how often a stable tag name is observed with different targets, which forms those changes take, and how they relate to downstream visibility~\cite{rapaport2026tagalterations}.
+The challenge is to follow each tag name across irregular archival visits and classify what changed: deletion, recreation, a metadata-only update, or a retarget that points the same name at different source code.
+The archive shows what changed, not why, yet that classification still matters: retargeting a tag can be routine release maintenance or the mechanism behind a supply-chain attack, and Git alone does not reveal which.
+\Cref{chap:tags} develops the definitions, taxonomy, and evidence needed to make that distinction.
 
 \subsection{Commit Graphs Are Not Append-Only}
 \label{subsec:intro-rq-histories}
 
-If release labels can drift silently, what about the commit histories those labels anchor?
-The second study extends the mutability analysis from the reference boundary --- tags and branch heads --- inward to the commit graph itself.
-Distributed version control systems are, for the most part, append-only in ordinary collaborative use: developers add commits and share them through push and pull operations.
-Yet the same system also permits substituting new commits for old ones and overwriting the shared history with the result, through operations such as rebase, amend, interactive squash, and force-push.
-When applied to shared branches, these operations create a different class of integrity questions: commit identities, parent links, authorship fields, and timestamps are routinely treated as an audit trail, yet they are not append-only facts about a repository; they are whatever the current object graph says after the most recent rewrite~\cite{torresarias2016gitmetadata}.
-The central questions are: How often are public Git histories observably altered? Which branches and repositories are most affected? What kinds of alterations occur? And are there recurrent patterns with security consequences?
-
-The study analyses \OriginsTwoVisitsOrMoreShort public Git repositories archived in \SWH as of \FullDataset~\cite{DBLP:conf/kbse/RapaportPTZ25}.
-For each origin, consecutive snapshot pairs are compared to detect \emph{history alterations}: situations in which at least one commit reachable from a branch head in an earlier snapshot is absent from the same branch in a later snapshot.
-The directly altered commits --- as opposed to their descendants, which acquire new identifiers through the snowball effect --- are identified as \emph{root-cause commits}.
-A mixed-method taxonomy is applied to classify each root-cause commit as a \emph{DIR} alteration (at least one versioned file changed), a \emph{META} alteration (only metadata such as author name, timestamp, or commit message changed), or a \emph{Different Branch Name} alteration (the same content appears under a different branch).
-The study further examines recurring security-relevant patterns among DIR alterations: files whose names match naming conventions for credentials and private keys, and files whose names suggest license text.
-The study finds that history alteration at the commit-graph level is quantitatively non-negligible, distributed across branch types including the default branch, and more likely in more visible repositories.
-It also produces \emph{GitHistorian}, a command-line tool that operationalises alteration detection on the \SWH graph for practitioner use.
-Full prevalence figures, the alteration taxonomy, and the security-relevant case studies appear in \Cref{chap:histories}.
+The second study asks when a branch that appears to advance has instead replaced part of its published history, which repositories and branches are affected, and what kinds of changes caused the replacement~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+This is harder than comparing two branch tips.
+One direct edit can change the identifiers of a long chain of descendants through the snowball effect, and equivalent branch roles occur under many names.
+Automatic detection must traverse compressed commit graphs, isolate root causes from propagated changes, and normalise structural variation before any alteration can be interpreted~\cite{torresarias2016gitmetadata}.
+\Cref{chap:histories} addresses that graph-scale detection and classification problem.
 
 \subsection{Removal Is Not Revocation}
 \label{subsec:intro-rq-secrets}
 
-The second study establishes that removals of files whose names suggested secrets are detectable at scale in public repository archives, and that the altered files remain recoverable from \SWH regardless of what the maintainer has done to the current branch.
-What it cannot establish is whether the credentials in those files remain \emph{usable}.
-A history rewrite is an intervention on the repository record; credential rotation is an independent intervention on the authority the leaked value grants.
-These are separate actions, and whether developers who perform the former also perform the latter --- and in what order --- is not answered by observing repository state alone.
-This gap motivates the third and final study.
+The final study asks which files removed through history rewriting are likely to contain credentials and what can responsibly be established about those credentials.
+The archive holds too many altered files to retrieve and scan indiscriminately, and no ground truth identifies a credential-bearing file in advance.
+Even a broad filename selection produces \SecretFirstExtractionShort records; a more selective pass must reduce them to \SecretSecondExtractionShort candidates before archived contents can be retrieved.
+Aggressive filename filtering keeps the study tractable, but it may miss real cases.
+Scanners can raise false alarms.
+Identical archived files should be scanned once and then traced back to every repository where they appeared.
+Finding a secret in the archive does not prove it still grants access.
+Chapter~\ref{chap:secrets} develops a staged method to decide which removed files to examine, how to scan them, and what claims automatic analysis can responsibly make.
 
-The study works from the corpus of removals of files whose names suggested secrets, identified in the second study, and applies a multi-stage pipeline to determine what fraction of the altered files contain detectable credential material.
-Candidate files are selected through refined filename heuristics that combine evidence levels, from naming conventions with near-certain semantic content (\texttt{id\_rsa}, \texttt{.pem}) down to broad extension classes (\texttt{.env}, \texttt{.py}).
-Their archived content is retrieved from \SWH's content store by content identifier, deduplicated, and scanned with two independent secret detectors, \emph{gitleaks} and \emph{TruffleHog}.
-Findings are then linked back to the specific repository revisions and paths where the files that contained credentials appeared, providing provenance context for each detected secret.
-A staged validation protocol frames the question of whether detected credentials remain active: Tier~A applies offline syntactic checks that require no network access and serve to reduce scanner false positives; Tier~B contacts providers through approved security disclosure channels and asks them to verify and revoke credentials on their side; Tier~C allows a read-only network check conducted by the researcher only after explicit written provider authorisation.
-The detection pipeline confirms that a non-negligible fraction of archived candidate blobs contain scanner-detectable credential material, and Tier~A offline validation narrows the private-key population before any network probe.
-Whether those credentials remain active is the central open question, to be addressed through the Tier~B and Tier~C campaign; the completed artifacts are the detection pipeline, the Tier~A results, and the responsible disclosure framework (\Cref{chap:secrets}).
-
-\section{Thesis Contributions}
+\section{Cross-Cutting Detection Challenges}
 \label{sec:intro-contributions}
 
-The three studies yield empirical findings, methodological artifacts, and practical lessons for software supply-chain security.
-What follows is a prospective statement of what this thesis contributes; the empirical chapters substantiate each claim in full.
-
-\subsection{Empirical Contributions}
+\subsection{Candidate Generation at Archive Scale}
 \label{subsec:intro-contrib-empirical}
 
-Empirically, the thesis contributes three first-of-kind measurements at ecosystem scale, each probing a deeper layer of repository mutability: the first large-scale study of Git tag alterations, the first large-scale study of commit-graph history alterations, and the first blob-level detection study of credentials archived in \SWH after removal from public history.
-Each study pairs prevalence figures with a taxonomy of the observed alteration forms, as previewed in \Cref{sec:intro-rqs}.
+Automatic detection begins with a deliberately broad structural question: did the target of a name change, or did a commit previously reachable from a branch become unreachable?
+These tests can be applied to archived identifiers and graph topology without downloading every source file.
+Only candidates that survive this first stage justify deeper object comparison, file retrieval, or content scanning.
+The order is essential: at archive scale, making an expensive operation slightly more accurate is insufficient if it must still run over every object.
 
-\subsection{Methodological Contributions}
+\subsection{Taxonomy and Staged Filtering}
 \label{subsec:intro-contrib-methodological}
 
-Methodologically, the thesis contributes three reusable artifacts.
-
-The first is a snapshot-pair comparison framework for studying repository mutability using the \SWH archive, specified in full in \Cref{sec:tags-methodology} and extended by reference in subsequent chapters.
-
-The second is \emph{GitHistorian}, a Rust-based command-line tool that operationalises history alteration detection on the \SWH graph for practitioner and CI integration use.
-
-The third is a staged credential validation protocol (Tier~A, Tier~B, Tier~C) that separates offline syntactic filtering from provider-assisted validation and from network checks conducted by the researcher under explicit authorisation.
-
-\subsection{Practical Scope}
-\label{subsec:intro-contrib-practical}
-
-The combined findings bear on a single structural tension: downstream systems often treat mutable reference names as if they were content commitments, and forge-visible repository state as if it were a complete audit trail.
-\Cref{chap:conclusion} develops the practical implications for hosting platforms, maintainers, and downstream consumers; the empirical chapters supply the evidence on which those recommendations rest.
+Candidate generation answers whether an observable difference exists but does not explain the difference, so we introduce taxonomies and filters as additional tools.
+Study-specific taxonomies determine whether source content, commit metadata, reference structure, or filenames changed.
+For the next stage, repositories need repeated observations, tag analysis needs tag-bearing origins, history analysis need root-cause commits, and secrets analysis needs only relevant filenames.
+This is where filters come in, allowing us to conduct our studies on relevant data only.
+This staged design makes the computation manageable while keeping explicit which events each filter can exclude.
 
 \section{Thesis Structure}
 \label{sec:intro-structure}
 
-The remainder of this thesis is organised as follows.
-
-\Cref{chap:background} provides the technical background required for the empirical studies.
-It covers Git's object model and reference semantics, the mechanisms and contexts in which Git history is rewritten, release engineering conventions and their relationship to build reproducibility, the role of software repositories in the modern supply chain, the problem of credential leakage in version control, and the archival infrastructure of \SWH.
-The chapter concludes with a glossary of key terms used throughout the thesis.
-
-\Cref{chap:tags} presents the first empirical study: the tag-alteration analysis.
-The full methodological specification appears in \Cref{sec:tags-methodology}; the subsequent empirical chapters extend the snapshot-pair framework by reference and detail only the aspects that differ.
-\Cref{chap:histories} presents the second empirical study: the analysis of commit-graph history alterations, including the taxonomy, the security-relevant case studies, and the \emph{GitHistorian} tool.
-\Cref{chap:secrets} presents the third study: the archived secrets detection and staged validation pipeline.
-\Cref{chap:conclusion} synthesises the findings across all three studies, develops their cross-cutting implications, revisits limitations at the thesis level, and outlines directions for future research.
+\Cref{chap:background} introduces the Git, release-engineering, supply-chain, credential, and \SWH concepts needed to formalise the problem.
+\Cref{chap:tags} specifies the snapshot-pair methodology and applies it to release-tag alterations.
+\Cref{chap:histories} extends the search from references to commit graphs and develops an operational detector.
+\Cref{chap:secrets} narrows file-removal candidates through staged filtering, content scanning, and non-intrusive validation.
+\Cref{chap:conclusion} synthesises what these studies imply for repository integrity and for future monitoring.

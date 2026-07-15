@@ -331,7 +331,7 @@ Within this release-level subset, no annotated-release metadata differences (mes
 
 A moved tag could be a harmless correction---for example, converting a lightweight tag to an annotated tag without changing commit or source tree targets, or temporarily deleting and recreating the same tag target.
 But in the majority of observed move events, the underlying content actually changes.
-Therefore, the typical move in the dataset is not only administrative; it alters the code that downstream users obtain when resolving the tag.
+Therefore, the typical move in the dataset alters the code that downstream users obtain when resolving the tag, rather than being purely administrative.
 
 The source-tree-level breakdown further characterizes the nature of these content-changing moves.
 As shown in Table~\ref{tab:tags-field-level}, among source tree diffs ($N=\DirectoryDiff$), file modifications are the most frequent signal (\DirModifiedRows, \DirModifiedRowsPercent), while file additions (\DirAddedRows, \DirAddedRowsPercent) and deletions (\DirDeletedRows, \DirDeletedRowsPercent) are also common; strict renames are less frequent (\DirRenamedRows, \DirRenamedRowsPercent).
@@ -462,7 +462,7 @@ The detailed enumeration of packages with a build error outcome is provided in T
 }
 \end{table}
 
-This evidence shows that tag alterations are not only theoretically capable of breaking the reproducibility of software builds; they have done so in real packages in a major Linux distribution.
+This evidence shows that tag alterations have broken the reproducibility of software builds in real packages of a major Linux distribution, not just in theory.
 The remaining \num{25} packages in this set did not fail the cache-disabled fetch check: their recorded source hashes match what the altered tag resolves to today.
 That is not evidence of ``no impact''---the upstream tag did change---but of a different outcome: Nix aborts loudly when the recorded hash no longer matches the current tag (\num{7} cases above), whereas these \num{25} recipes already encode the post-alteration tarball, most likely because the package definition was added or updated after the alteration.
 Rebuilds can therefore succeed while still abandoning any consumer who expected the pre-alteration source tree.
@@ -503,8 +503,8 @@ Tag alterations are practically consequential because they can break rebuilds, s
 \section{Discussion}
 \label{sec:tags-discussion}
 
-Our results show that tag mutability is not only a theoretical property of Git: it is exercised at scale and persists over time (\Cref{sec:tags-prevalence}), and a majority of moves change the source tree retrieved through an unchanged tag name (\Cref{sec:tags-taxonomy}).
-From a reproducibility perspective, the central problem is therefore not only that tags \emph{can} change, but that they are routinely relied upon as if they identified a fixed source state.
+Our results show that tag mutability is exercised at scale and persists over time, not just a theoretical property of Git (\Cref{sec:tags-prevalence}), and that a majority of moves change the source tree retrieved through an unchanged tag name (\Cref{sec:tags-taxonomy}).
+From a reproducibility perspective, the central problem is that tags are routinely relied upon as if they identified a fixed source state, even though they can change.
 
 \subsection{Benign Maintenance Versus Security-Relevant Risk}
 \label{subsec:tags-disc-benign-vs-security}
@@ -523,7 +523,7 @@ Likewise, not all moves change software content: some only affect commit- or rel
 However, the fact that a majority of moves modify the source tree content demonstrates that tag-based dependency resolution cannot, by itself, guarantee the stability of the retrieved source artifact.
 
 The Nixpkgs cross-analysis and the \texttt{tj-actions/changed-files} case connect this taxonomy to concrete outcomes: hash mismatches and quiet post-alteration matches in a real package ecosystem (\Cref{subsec:tags-reproducibility}), and a familiar tag silently redirected to malicious code in a live supply-chain attack (\Cref{subsec:tags-attack-case}).
-The implication is therefore semantic, not just technical: once a mutable reference is socially interpreted as a stable release handle, downstream users and tools may trust a continuity that no longer exists.
+The implication therefore goes beyond the technical mechanism: once a mutable reference is socially interpreted as a stable release handle, downstream users and tools may trust a continuity that no longer exists.
 
 The risk created by tag mutability is not restricted to traditional package managers.
 Convenience solutions, such as relying on tags or floating references, conflict with strong reproducibility guarantees unless they are paired with immutable identifiers or independent integrity verification (as Nixpkgs does).
@@ -536,8 +536,7 @@ The GitHub Actions ecosystem provides a useful example of the tension between mu
 In that ecosystem, the mutability of tags is not hidden: some official guidance has encouraged maintainers to move major-version tags that follow the release of minor-version tags~\cite{github_actions_versioning_recommendations}, while security guidance for consumers emphasizes pinning third-party actions to immutable commit hashes~\cite{github_secure_use_third_party_actions}.
 This does not make the ecosystem incoherent so much as it reveals that tags play two conflicting roles at once.
 For maintainers, a mutable tag can act as a moving compatibility label; for consumers, the same tag may be interpreted as a stable release anchor.
-The problem is not simply that developers are unaware that tags can move.
-Rather, different communities and tools assign different normative meanings to the same reference type.
+The problem is less that developers are unaware tags can move than that different communities and tools assign different normative meanings to the same reference type.
 Reproducibility failures can emerge when these meanings are conflated.
 
 Some communities have partially integrated the idea that certain tags behave as moving labels.
@@ -551,7 +550,7 @@ These findings have several implications for tool builders and platform operator
 First, build tools and package managers that target reproducibility should not treat tag names as sufficient dependency anchors on their own.
 The practical compromise is to record both the human-readable tag name and the cryptographic commit or content hash it resolved to at the time of reference, as Nixpkgs does when storing expected source hashes.
 This preserves the convenience of tag-based version selection while pinning the actual artifact identity.
-These recommendations are not merely precautionary: ecosystem experience shows that re-tagging has repeatedly caused concrete failures.
+Ecosystem experience shows why these recommendations matter beyond caution: re-tagging has repeatedly caused concrete failures.
 In Go modules, a 2025 incident on the GitHub repository \texttt{google/go-containerregistry} illustrates a failure mode: after \texttt{v0.20.4} was deleted and recreated with additional commits, consumers encountered a checksum mismatch, forcing the project to publish \texttt{v0.20.5} and document \texttt{v0.20.4} as unusable as a Go module~\cite{go_containerregistry_retagging_issue}.
 
 Second, code-hosting platforms could improve transparency by exposing native audit trails for tag creation, movement, and deletion, making reference mutability easier to monitor and reason about.
@@ -560,7 +559,7 @@ Recording commit identifiers rather than retrieved tree content would preserve a
 Tamper evidence could be provided through Merkle-anchored transparency logs for instance.
 
 An example of platform-level response to the tag mutability problem is GitHub's introduction of immutable releases in August 2025~\cite{github_immutable_releases}.
-It is important to note that this feature applies specifically to GitHub Releases---releases created through the GitHub web interface or the \texttt{gh} CLI tool---rather than to git tags in general.
+This feature applies specifically to GitHub Releases---releases created through the GitHub web interface or the \texttt{gh} CLI tool---rather than to git tags in general.
 Once enabled (the feature is opt-in and disabled by default), GitHub Releases become immutable: the associated git tag cannot be moved or deleted easily through git commands, and release assets cannot be modified.
 
 This implementation illustrates both the potential and the limitations of platform-level immutability enforcement.

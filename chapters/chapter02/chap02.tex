@@ -78,8 +78,8 @@ The social surface involves the people interacting with these systems: the contr
 Attackers frequently exploit the inherent trust between these distributed actors.
 Rather than breaking a server's encryption, an attacker might compromise a maintainer's account, use social engineering, or submit a malicious code commit disguised as a legitimate bug fix.
 
-Ultimately, this attack surface spans the entire end-to-end software supply chain.
-Securing it requires protecting not just the final SBOM or the source code, but every intermediate system and every human participant involved in the software's lifecycle.
+This attack surface spans the entire end-to-end software supply chain.
+Securing it requires protecting every intermediate system and human participant involved in the software's lifecycle, besides the final SBOM or the source code.
 
 The \emph{repository's attack surface} is too vast to be treated in its entirety, only a small portion of it will be relevant in this thesis: the mutability of the names and states a repository publishes.
 \label{subsec:bg-trust-dependencies}%
@@ -225,9 +225,8 @@ The old commits remain in object storage as long as they are retained locally or
 Because commit identifiers cover parent links, a direct change to one commit can propagate to descendants: later commits that point to the modified commit must also be replaced by new commits.
 The thesis describes this phenomenon as a snowball effect, where one direct modification can cause many reachable commit identifiers to disappear from a later public snapshot.
 
-History rewriting is therefore not inherently suspicious.
-It is a normal part of some development workflows, particularly for pull-request branches and automated maintenance branches.
-It becomes problematic when performed on public branches consumed as external artifacts (\Cref{sec:bg-software-supply-chain}), where rewrites can invalidate previously observed commit identifiers and complicate audit trails.
+History rewriting is therefore ordinary rather than inherently suspicious: it is a normal part of some development workflows, particularly for pull-request branches and automated maintenance branches.
+It only becomes problematic when performed on public branches consumed as external artifacts (\Cref{sec:bg-software-supply-chain}), where rewrites can invalidate previously observed commit identifiers and complicate audit trails.
 
 \subsection{Force Pushes and Reference Updates}
 \label{subsec:bg-force-pushes-reference-updates}
@@ -239,7 +238,7 @@ A force push changes the public ref to point to a new commit even when that comm
 The same principle applies to tags (\Cref{subsec:bg-branches-tags-references}).
 Tag deletion, recreation, and force-update are often legitimate, for example when correcting a release mistake or cleaning a repository.
 Git's own documentation nonetheless discourages reusing a published tag name: the \texttt{git-tag} manual recommends issuing a new version label (for example, ``X.1'') rather than force-updating ``X'', because two clones may then both claim ``version X'' while resolving to different commits, and Linus Torvalds argued as early as 2007 that silently overwriting an already fetched tag is a security problem that maintainers must announce explicitly rather than perform quietly~\cite{git_tag_retagging_docs,torvalds_retagging_2007}.
-The security and reproducibility issue is therefore not that such operations are always malicious, but that the practice runs against documented guidance and that downstream tools may not record enough information to detect its consequences.
+The security and reproducibility issue is that the practice runs against documented guidance and that downstream tools may not record enough information to detect its consequences, regardless of whether any individual operation is malicious.
 
 \section[Safety, Security, and Reproducibility of Repositories and the SSC]{Safety, Security, and Reproducibility of Repositories and the Supply Chain}
 \label{sec:bg-safety-security}
@@ -327,7 +326,7 @@ Two complementary lines of defence address credential exposure in repositories.
 The first is \emph{detection}: scanning repository contents for patterns that resemble known secret formats.
 Open-source tools such as gitleaks and TruffleHog implement large rule sets over file contents; benchmark studies show that their reported findings overlap only partially, meaning that, so far, no single detector captures the full set of machine-recognisable secrets~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
 The second is \emph{prevention at the forge}: hosting platforms can scan pushes, warn maintainers, notify credential providers, or block known-dangerous formats before they become part of the public history.
-GitHub, for example, rejects pushes that contain certain private-key formats and operates secret-scanning partnerships with major providers.
+GitHub, for example, rejects pushes that contain certain private-key formats and operates secrets-scanning partnerships with major providers.
 
 These mechanisms reduce risk but do not eliminate it.
 Detector coverage depends on the rule set, the file types scanned, and whether credentials are split, encoded, or stored under unusual paths.
