@@ -235,17 +235,17 @@ Réutiliser ce travail fait gagner du temps et permet aux développeurs de const
 Cela crée aussi une longue chaîne de confiance, mais un problème dans l'un de ces projets, aussi petit soit-il, peut toucher tous les systèmes qui en dépendent.
 
 Un logiciel public est généralement conservé dans un \emph{dépôt}.
-Ce dépôt contient les fichiers nécessaires à la construction du programme et un enregistrement des modifications apportées à ces fichiers au fil du développement.
-Les développeurs utilisent un outil nommé Git pour gérer cet enregistrement, et partagent les dépôts Git sur des sites d'hébergement comme GitHub ou GitLab.
+Ce dépôt contient les fichiers nécessaires à la construction du programme et un historique des modifications apportées à ces fichiers au fil du développement.
+Les développeurs utilisent un outil nommé Git pour gérer cet historique, et partagent les dépôts Git sur des sites d'hébergement comme GitHub ou GitLab.
 D'autres programmes peuvent alors télécharger un projet, l'inclure comme dépendance ou l'exécuter dans une tâche automatique.
 Cet ensemble de producteurs, de services d'hébergement, d'outils et d'utilisateurs forme la \emph{chaîne d'approvisionnement logicielle}.
 Comme une chaîne industrielle, le produit final dépend de nombreuses pièces fournies par d'autres acteurs.
 
 Lorsqu'ils accèdent à un projet, les utilisateurs ont besoin d'un moyen simple de choisir la version à utiliser~; c'est pourquoi les développeurs attachent des noms comme \texttt{v1.0} ou \texttt{v2.3.1} à des points importants de son histoire.
-Dans Git, un tel nom est appelé une \emph{étiquette}, ou tag.
-L'étiquette joue le rôle du titre imprimé sur une édition fixe d'un livre.
-Contrairement au titre d'un livre toutefois, une étiquette n'est pas immuable.
-En effet, Git autorise le responsable du dépôt à déplacer ou supprimer l'étiquette.
+Dans Git, un tel nom est appelé un \emph{tag}.
+Le tag joue le rôle du titre imprimé sur une édition fixe d'un livre.
+Contrairement au titre d'un livre toutefois, un tag n'est pas immuable.
+En effet, Git autorise le propriétaire du dépôt à déplacer ou supprimer le tag.
 Le nom peut rester identique alors que le code qu'il désigne change.
 
 Git utilise aussi des \emph{branches}.
@@ -256,30 +256,30 @@ L'ensemble des commits forme l'historique visible du projet.
 Les développeurs peuvent remplacer une partie de cet historique par une opération couramment appelée réécriture de l'historique.
 Après cette réécriture, d'anciens commits peuvent ne plus apparaître sur le site d'hébergement, même s'ils avaient été publics auparavant.
 
-Une dernière notion importante est que Git attribue à chaque fichier et à chaque commit une \emph{empreinte de contenu}, aussi appelée hash.
-Cet identifiant est calculé à partir des données~; si les données changent, l'empreinte change avec une probabilité extrêmement élevée.
-Le contenu lui-même ne peut donc pas être modifié silencieusement sous la même empreinte.
-La difficulté vient des noms placés devant ces empreintes.
-Les étiquettes et les branches peuvent être redirigées vers une autre empreinte.
-La plupart des personnes et des systèmes automatiques utilisent ces noms lisibles, car ils sont plus faciles à manipuler que de longs identifiants techniques.
+Une dernière notion importante est que Git attribue à chaque fichier et à chaque commit un \emph{fingerprint} de contenu, aussi appelé hash.
+Ce hash est calculé à partir des données~; si les données changent, le hash change avec une probabilité extrêmement élevée.
+Le contenu lui-même ne peut donc pas être modifié silencieusement sous le même hash.
+Le problème vient des références qui pointent vers ces hash.
+Les tags et les branches peuvent être redirigés vers un autre hash.
+La plupart des personnes et des systèmes automatiques utilisent ces références lisibles, car elles sont plus faciles à manipuler que de longs identifiants techniques.
 
 Les consommateurs de logiciels traitent souvent un nom de version publié comme s'il était permanent.
-Les instructions de construction, les dossiers de sécurité et les tâches automatiques peuvent conserver le nom sans conserver l'empreinte exacte que ce nom désignait au moment de l'utilisation.
-Si le nom est déplacé plus tard, la même instruction peut récupérer un code différent sans aucune action de la part du consommateur.
+Les instructions de build, les dossiers de sécurité et les tâches automatiques peuvent conserver la référence sans conserver le fingerprint exact que celle-ci désignait au moment de l'utilisation.
+Si la référence est déplacé plus tard, la même instruction peut récupérer un code différent sans aucune action de la part du consommateur.
 Et comme l'historique visible peut aussi être remplacé, une inspection ultérieure peut alors voir un dépôt propre, mais pas l'état que les utilisateurs précédents avaient téléchargé.
 
-En mars 2025, des attaquants ont modifié un composant d'automatisation très réutilisé nommé\\ \texttt{tj-actions/changed-files}.
-Ils ont redirigé \num{346} étiquettes de version existantes vers un même commit malveillant.
+En mars 2025, des attaquants ont modifié un composant d'automatisation très réutilisé nommé \texttt{tj-actions/changed-files}.
+Ils ont redirigé \num{346} tags existants vers un même commit malveillant.
 Les projets concernés n'avaient pas besoin de contenir eux-mêmes une vulnérabilité.
 Leur erreur était de supposer qu'un nom de version signifiait toujours ce qu'il avait signifié auparavant.
-Cet incident illustre une conséquence possible du déplacement d'une étiquette.
+Cet incident illustre une conséquence possible du déplacement d'un tag.
 Il ne signifie pas que chaque déplacement ou réécriture est une attaque.
-Les responsables utilisent aussi ces opérations pour corriger une version, organiser le travail en cours ou retirer une information publiée par erreur.
+Les propriétaires de dépôts utilisent aussi ces opérations pour corriger une version, organiser le travail en cours ou retirer une information publiée par erreur.
 
 Le problème central de cette thèse est cet écart entre l'usage et la conception.
-Git protège l'identité du contenu enregistré, mais ne garantit pas la continuité des noms et des historiques par lesquels ce contenu est consommé.
+Git protège l'identité du contenu enregistré, mais ne garantit pas la continuité des références et des historiques par lesquels ce contenu est consommé.
 La thèse pose trois questions liées.
-À quelle fréquence les étiquettes de version changent-elles~?
+À quelle fréquence les tags changent-ils~?
 À quelle fréquence les historiques publiés sont-ils réécrits, et que contiennent ces réécritures~?
 Lorsque des fichiers sensibles sont retirés par une réécriture, que reste-t-il dans les archives indépendantes~?
 
@@ -287,75 +287,75 @@ Montrer que Git permet ces opérations est facile.
 Les mesurer de manière fiable à l'échelle du logiciel public ne l'est pas.
 La première difficulté est l'observation.
 Un site d'hébergement montre principalement l'état actuel d'un dépôt.
-Lorsqu'une étiquette est déplacée ou qu'un historique est remplacé, l'état antérieur peut ne plus y être visible.
-Un chercheur qui commence son étude après le changement a besoin d'un enregistrement indépendant des états antérieur et ultérieur.
+Lorsqu'un tag est déplacé ou qu'un historique est remplacé, l'état antérieur peut ne plus y être visible.
+Un chercheur qui commence son étude après le changement a besoin d'un enregistrement indépendant des états antérieurs.
 
 La deuxième difficulté est l'échelle.
 Le logiciel public est réparti dans des centaines de millions de dépôts.
-Chaque dépôt peut contenir de nombreux noms, branches, commits et fichiers.
+Chaque dépôt peut contenir de nombreux références, branches, commits et fichiers.
 Il peut aussi changer entre deux observations.
 Télécharger et examiner manuellement tout ce contenu est impossible.
 Même un traitement automatique doit éviter les opérations coûteuses sur chaque fichier.
-La méthode doit commencer par des tests peu coûteux pour trouver des candidats, puis réserver l'analyse approfondie à un ensemble beaucoup plus réduit.
+La méthodologie doit commencer par des tests peu coûteux pour trouver des candidats, puis réserver l'analyse approfondie à un ensemble beaucoup plus réduit.
 
 La troisième difficulté est l'interprétation.
 Une attaque, une opération de maintenance et une modification accidentelle peuvent produire le même changement structurel.
-L'archive peut établir qu'un nom ou un historique a changé, mais elle ne peut généralement pas établir pourquoi.
+L'archive peut établir qu'une référence ou un historique a changé, mais elle ne peut généralement pas établir pourquoi.
 Une mesure utile doit donc séparer la détection du jugement.
 Elle doit décrire ce qui a changé sans qualifier automatiquement chaque changement de malveillant.
 
-La quatrième difficulté apparaît lorsque des identifiants sont en jeu.
-Un identifiant est une information, comme un mot de passe ou une clé privée, qui permet d'accéder à un service.
-Les outils de détection de secrets peuvent reconnaître un texte qui ressemble à un identifiant, mais ils peuvent se tromper.
+La quatrième difficulté apparaît lorsque des credentials sont en jeu.
+Un credential est une information, comme un mot de passe ou une clé privée, qui permet d'accéder à un service.
+Les outils de détection de secrets peuvent reconnaître un texte qui ressemble à un credential, mais ils peuvent se tromper.
 Un fichier peut contenir une clé bien formée qui a déjà été annulée.
-Tester si l'identifiant d'un tiers fonctionne encore peut créer un problème de sécurité et d'éthique.
-L'étude doit distinguer un secret possible, un identifiant structurellement valide et un identifiant toujours actif.
+Tester si le credential d'un tiers fonctionne encore peut créer un problème de sécurité et d'éthique.
+L'étude doit distinguer un secret possible, un credential structurellement valide et un credential toujours actif.
 
 La thèse résout le problème d'observation grâce à Software Heritage, la plus grande archive publique de code source.
 Software Heritage visite régulièrement les dépôts publics et sauvegarde leur état.
-Chaque état sauvegardé constitue un \emph{instantané}.
-Deux instantanés du même dépôt offrent une vue avant et après.
-L'instantané antérieur peut conserver un nom, un commit ou un fichier que le site d'hébergement n'affiche peut-être plus.
+Chaque état sauvegardé constitue un \emph{snapshot}.
+Deux snapshots du même dépôt offrent une vue avant et après.
+Le snapshot antérieur peut conserver une référence, un commit ou un fichier que le site d'hébergement n'affiche peut-être plus.
 
 Les trois études suivent la même stratégie générale.
 Elles sélectionnent d'abord les dépôts ayant au moins deux visites archivées.
-Elles comparent des instantanés successifs et recherchent une différence structurelle simple.
+Elles comparent des snapshots successifs et recherchent une différence structurelle simple.
 Elles classent ensuite cette différence.
 Seuls les candidats pertinents passent aux étapes plus coûteuses, comme la comparaison des fichiers, la récupération du contenu archivé ou l'utilisation d'outils de détection de secrets.
 Cette approche par étapes enregistre aussi ce que chaque filtre risque de manquer, et rend possible une étude à l'échelle de l'écosystème.
 
-La première étude suit les étiquettes de version pendant neuf années d'observations archivées.
-Elle considère \num{45,5}~millions de dépôts contenant au moins une étiquette.
-Pour chaque nom, elle demande si celui-ci disparaît ou pointe vers un autre objet dans un instantané ultérieur.
+La première étude suit les tags pendant neuf années d'observations archivées.
+Elle considère \num{45,5}~millions de dépôts contenant au moins un tag.
+Pour chaque tag, elle demande si celui-ci disparaît ou pointe vers un autre objet dans un snapshot ultérieur.
 Elle distingue ensuite plusieurs situations.
-Une étiquette peut être supprimée.
-Elle peut être déplacée alors que les fichiers sources restent identiques et que seules les informations descriptives changent.
-Elle peut enfin être déplacée vers un code source différent.
+Un tag peut être supprimé.
+Il peut être déplacé alors que les fichiers sources restent identiques et que seules les informations descriptives changent.
+Il peut enfin être déplacé vers un code source différent.
 
 L'étude trouve \num{10,2}~millions d'altérations observables dans environ \num{189000}~dépôts.
-Cela représente \num{0,41}\,\% des dépôts contenant des étiquettes dans le corpus.
-La proportion est faible, mais le nombre absolu est suffisamment important pour compter pour les logiciels qui dépendent de ces noms.
+Cela représente \num{0,41}\,\% des dépôts contenant des tags dans le corpus.
+La proportion est faible, mais le nombre absolu est suffisamment important pour compter pour les logiciels qui dépendent de ces tags.
 La plupart des événements observés sont des suppressions.
 Parmi les déplacements, environ \num{68}\,\% conduisent à des fichiers sources différents.
-L'étude trouve aussi des altérations dans des projets très utilisés, montrant que la popularité ne garantit pas qu'un nom de version restera stable.
+L'étude trouve aussi des altérations dans des projets très utilisés, montrant que la popularité ne garantit pas qu'un tag restera stable.
 
-Pour vérifier si ces changements ont des conséquences hors du dépôt, l'étude compare les étiquettes altérées à Nixpkgs, une grande collection d'instructions de construction de logiciels, qui enregistre une empreinte attendue pour le code source téléchargé.
-Plusieurs étiquettes altérées produisent une différence entre le code récupéré plus tard sous le même nom et l'empreinte enregistrée par Nixpkgs.
-Ce résultat constitue une preuve utile qui relie un changement dans un dépôt à un échec concret de reconstruction.
+Pour vérifier si ces changements ont des conséquences hors du dépôt, l'étude compare les tags altérés à Nixpkgs, une grande collection d'instructions de build de logiciels, qui enregistre un hash attendu pour le code source téléchargé.
+Plusieurs tags altérés produisent une différence entre le code récupéré plus tard sous le même nom et le hash enregistré par Nixpkgs.
+Ce résultat constitue une preuve utile qui relie un changement dans un dépôt à un échec concret de rebuild.
 L'incident \texttt{tj-actions/changed-files} fournit un exemple de sécurité distinct~: la même opération peut aussi rediriger des systèmes automatiques vers un code malveillant.
 
 Cette première étude fait progresser l'état de l'art en passant d'avertissements et d'exemples isolés à une grande mesure longitudinale.
 Elle fournit des définitions, une méthode de détection automatique et une classification qui sépare les suppressions, les changements descriptifs et les changements du code source.
-Elle relie aussi les observations dans les dépôts à des conséquences dans une collection réelle de logiciels et à une attaque documentée.
+Elle relie aussi les observations dans les dépôts à des conséquences dans un ensemble réelle de logiciels et à une attaque documentée.
 
 La deuxième étude étend la recherche des noms de version aux historiques complets des commits.
 Elle examine \num{111}~millions de dépôts visités au moins deux fois par Software Heritage.
-Une altération de l'historique est observée lorsqu'un commit accessible depuis une branche dans un instantané antérieur ne l'est plus depuis cette branche dans l'instantané suivant.
+Une altération de l'historique est observée lorsqu'un commit accessible depuis une branche dans un snapshot antérieur ne l'est plus depuis cette branche dans le snapshot suivant.
 Cette définition détecte le remplacement de l'historique affiché sans supposer de motif.
 
-L'analyse des historiques est plus difficile que celle des étiquettes.
-Modifier un ancien commit lui donne une nouvelle empreinte.
-Chaque commit plus récent qui le mentionne reçoit lui aussi une nouvelle empreinte, même si ses fichiers n'ont pas changé.
+L'analyse des historiques est plus difficile que celle des tags.
+Modifier un ancien commit lui donne un nouveau hash.
+Chaque commit plus récent qui le mentionne reçoit lui aussi un nouveau hash, même si ses fichiers n'ont pas changé.
 Une seule modification directe peut donc apparaître comme une longue chaîne d'altérations.
 La thèse sépare les causes directes de ces effets propagés.
 Elle regroupe aussi les noms de branches par rôle, afin de comparer les branches principales, les propositions de changement et les autres branches malgré des conventions de nommage différentes.
@@ -363,7 +363,7 @@ Elle regroupe aussi les noms de branches par rôle, afin de comparer les branche
 L'étude identifie \num{8,7}~millions de réécritures directes dans environ \num{1,22}~million de dépôts, soit \num{1,10}\,\% du corpus examiné.
 La plupart modifient des fichiers ou des répertoires.
 D'autres changent seulement des informations descriptives comme les dates, les auteurs ou les messages.
-Les réécritures apparaissent souvent sur les branches utilisées pour examiner des propositions, où le remplacement fait partie du travail normal.
+Les réécritures apparaissent souvent sur les branches utilisées pour examiner des propositions, où les réécritures font partie du processus de travail habituel.
 Elles apparaissent aussi sur les branches principales et dans des projets populaires.
 L'historique actuel ne doit donc pas être considéré comme un relevé complet de tout ce qui a été publié.
 
@@ -379,19 +379,19 @@ Il ne décide pas si un changement est malveillant.
 Son rôle est de rendre les preuves archivées utilisables en dehors de l'expérience à grande échelle d'origine.
 
 Cette deuxième étude fait avancer les travaux antérieurs de trois manières.
-Elle mesure le remplacement d'historiques publiés à l'échelle d'une grande archive.
+Elle mesure les réécritures d'historiques publiées à l'échelle d'une grande archive.
 Elle sépare les réécritures directes du grand nombre de changements produits indirectement par une modification antérieure.
 Enfin, elle transforme la méthode en outil opérationnel et utilise les preuves obtenues pour étudier les licences et le retrait de fichiers potentiellement sensibles.
 
 La troisième étude examine ce que contiennent les fichiers aux noms suspects trouvés par la deuxième.
 Elle part d'une distinction importante.
-Retirer un mot de passe ou une clé divulguée du dépôt visible est une opération de nettoyage, mais pour révoquer l'identifiant, il faut l'annuler auprès du service qui l'accepte.
+Retirer un mot de passe ou une clé divulguée du dépôt visible est une opération de nettoyage, mais pour révoquer le credential, il faut l'annuler auprès du service qui l'accepte.
 Cette dernière étape constitue une révocation.
-Le nettoyage change ce que verront les prochains visiteurs, mais seule la révocation supprime l'accès accordé par l'identifiant.
+Le nettoyage change ce que verront les prochains visiteurs, mais seule la révocation supprime l'accès accordé par le credential.
 
 L'archive contient trop de fichiers retirés pour tous les examiner.
 L'étude utilise donc une nouvelle procédure par étapes.
-Elle conserve d'abord les noms de fichiers qui indiquent couramment des identifiants.
+Elle conserve d'abord les noms de fichiers qui indiquent couramment des credentials.
 Elle récupère ensuite les fichiers archivés, retire les copies identiques et analyse chaque fichier unique avec deux outils indépendants de détection de secrets.
 Enfin, elle relie chaque résultat aux emplacements du dépôt où ce contenu est apparu.
 
@@ -407,42 +407,42 @@ Parmi les fichiers signalés comme clés privées par un détecteur, \num{86,4}\
 Cela réduit, sans l'éliminer, l'incertitude créée par la détection automatique.
 Le résultat ne montre toujours pas si les clés sont actives.
 
-Le statut actif de ces identifiants reste une question ouverte.
+Le statut actif de ces credentials reste une question ouverte.
 La thèse définit un processus de validation responsable en trois niveaux~: vérifications hors ligne, vérifications effectuées par le fournisseur du service, puis tests réseau étroitement autorisés.
 Seul le premier niveau est terminé pour les clés privées.
-Aucun taux d'identifiants actifs à l'échelle de l'écosystème n'est avancé.
+Aucun taux de credentials actifs à l'échelle de l'écosystème n'est avancé.
 Cette limite fait partie de la contribution~: la méthode précise quelles conclusions peuvent être atteintes automatiquement et lesquelles nécessitent une coopération et une autorisation.
 
-Cette troisième étude fait progresser les recherches sur les identifiants exposés en se concentrant sur le contenu retiré pendant un nettoyage de l'historique, plutôt que seulement sur les secrets visibles dans le dépôt actuel.
+Cette troisième étude fait progresser les recherches sur les credentials exposés en se concentrant sur le contenu retiré pendant un nettoyage de l'historique, plutôt que seulement sur les secrets visibles dans le dépôt actuel.
 Elle relie les preuves structurelles de réécriture au contenu archivé des fichiers.
 Elle combine aussi détection à grande échelle, récupération de l'origine, validation hors ligne et chemin responsable vers de futures vérifications d'activité.
 
 Ensemble, les études montrent trois niveaux du même problème.
-Un nom de version apparemment stable peut changer de cible.
+Un tag apparemment stable peut changer de cible.
 Un historique apparemment stable peut être remplacé.
 Un fichier retiré de cet historique peut rester disponible dans une archive indépendante.
 Même si la plupart des altérations sont anodines, l'état actuel de Git ne peut pas fournir la stabilité perçue sur laquelle les consommateurs comptent souvent.
 
-Les résultats constituent des limites basses prudentes, étant donné que Software Heritage visite les dépôts à intervalles réguliers~; par conséquent, un changement effectué puis annulé entre deux visites n'est pas observé.
+Les résultats constituent des bornes inférieures, étant donné que Software Heritage visite les dépôts à intervalles réguliers~; par conséquent, un changement effectué puis annulé entre deux visites n'est pas observé.
 De plus, plusieurs changements entre deux visites peuvent apparaître comme un seul, ce qui signifie que les dépôts sans assez d'observations archivées ne peuvent pas être étudiés par cette méthode.
 Le travail porte sur les dépôts Git représentés dans l'archive Software Heritage et ne s'étend pas automatiquement à chaque plateforme de développement ou système de gestion de versions.
 Les méthodes structurelles décrivent le changement, pas l'intention.
 Enfin, la troisième étude établit la présence de matériel secret détectable et souvent bien formé, mais pas si ce matériel accorde encore un accès.
 
-Malgré ces limites, la thèse augmente ce qui peut être connu sur l'intégrité des dépôts.
-Les travaux antérieurs décrivaient les risques liés aux noms modifiables, aux réécritures de l'historique ou aux identifiants divulgués, souvent à partir de cas individuels ou d'analyses de l'état actuel.
+Malgré ces limites, la thèse fait avancer ce qui peut être connu sur l'intégrité des dépôts.
+Les travaux antérieurs décrivaient les risques liés aux références modifiables, aux réécritures de l'historique ou aux credentials divulgués, souvent à partir de cas individuels ou d'analyses de l'état actuel.
 Cette thèse fournit une méthode archivistique commune qui suit les changements dans le temps, l'applique à l'échelle de l'écosystème, relie trois niveaux auparavant séparés, et produit des classifications et des outils réutilisables.
 Elle transforme une possibilité offerte par Git en un phénomène mesurable ayant des conséquences observables en aval.
 
 Les résultats conduisent à trois recommandations pratiques.
-Premièrement, l'utilisation d'un logiciel devrait enregistrer et vérifier une empreinte de contenu exacte en plus d'un nom de version lisible.
-Le nom reste utile aux personnes, tandis que l'empreinte détecte une substitution ultérieure.
-Deuxièmement, les archives indépendantes et les journaux des plateformes devraient conserver des preuves lorsque les noms ou les historiques changent.
+Premièrement, l'utilisation d'un logiciel devrait enregistrer et vérifier un hash exact en plus d'un nom de version lisible.
+Le nom reste utile aux personnes, tandis que le hash détecte une substitution ultérieure.
+Deuxièmement, les archives indépendantes et les journaux des plateformes devraient conserver des preuves lorsque les tags ou les historiques changent.
 Sans état antérieur, les utilisateurs ultérieurs ne peuvent pas reconstruire les événements de manière fiable.
-Troisièmement, corriger le dépôt ne suffit pas toujours à clore l'incident~: si une étiquette publiée a été redirigée vers un autre code, les constructions en aval qui s'y étaient appuyées peuvent encore devoir être mises à jour ou rejetées~; si un historique a été réécrit, les auditeurs peuvent encore avoir besoin d'accéder à l'état antérieur~; si un identifiant a été divulgué, il doit être révoqué chez le fournisseur émetteur, et non seulement retiré du dépôt visible.
+Troisièmement, corriger le dépôt ne suffit pas toujours à clore l'incident~: si un tag publié a été redirigé vers un autre code, les builds en aval qui s'y étaient appuyés peuvent encore devoir être mis à jour ou rejetés~; si un historique a été réécrit, les auditeurs peuvent encore avoir besoin d'accéder à l'état antérieur~; si un credential a été divulgué, il doit être révoqué chez le fournisseur émetteur, et non seulement retiré du dépôt visible.
 
 La souplesse des dépôts est utile et souvent nécessaire au développement.
 L'objectif est de cesser de traiter une vue actuelle pratique comme la preuve d'un passé immuable.
-Dans une chaîne d'approvisionnement logicielle construite sur des noms qui peuvent être déplacés, la confiance doit s'appuyer sur des preuves qui survivent à la dernière modification.
+Dans une chaîne d'approvisionnement logicielle construite sur des références qui peuvent être déplacés, la confiance doit s'appuyer sur des preuves qui survivent à la dernière modification.
 \end{SingleSpace}
 \clearpage
