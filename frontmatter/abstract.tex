@@ -6,7 +6,7 @@
 \chapter*{Abstract}
 \begin{SingleSpace}
 \initial{M}odern software is rarely written entirely from scratch.
-All sorts of software shuch as websites or mobile applications usually combines many existing software projects.
+All sorts of software such as websites or mobile applications usually combine many existing software projects.
 Some of these projects are developed inside the organisation that uses them.
 Many others are public and are maintained by people whom the final users will never meet.
 Reusing this work saves time and allows developers to build complex systems.
@@ -19,7 +19,7 @@ Other programs can then download a project, include it as a dependency, or execu
 This network of producers, hosting services, tools, and users is the \emph{software supply chain}.
 It is comparable to a manufacturing chain: the final product depends on many parts supplied by others.
 
-When accessing a project, users need a simple way to select which version to use, that is why developers attach names such as \texttt{v1.0} or \texttt{v2.3.1} to important points in its history.
+When accessing a project, users need a simple way to select which version to use; that is why developers attach names such as \texttt{v1.0} or \texttt{v2.3.1} to important points in its history.
 In Git, such a name is called a \emph{tag}.
 The tag acts as the title printed on a fixed edition of a book.
 Unlike a book title however, a tag is not immutable.
@@ -29,12 +29,12 @@ The name may remain the same while the code it designates changes.
 Git also uses \emph{branches}.
 A branch is a name for the latest point on one line of development.
 Unlike a numbered release, a branch is expected to move when new work is added.
-Git records every saved step as a \emph{commit}, whose purpose is to identifie the files at one moment, to record information such as an author and a date, and to point to earlier commits.
+Git records every saved step as a \emph{commit}, whose purpose is to identify the files at one moment, to record information such as an author and a date, and to point to earlier commits.
 Together, commits form the visible history of the project.
 Developers can replace part of that history through an operation commonly called a history rewrite.
 After the rewrite, old commits may no longer appear on the hosting website even though they were previously public.
 
-One important final notion is thah Git gives each file and commit a \emph{content fingerprint}, also called a hash.
+One important final notion is that Git gives each file and commit a \emph{content fingerprint}, also called a hash.
 This identifier is computed from the data, so if the data changes, the fingerprint changes with overwhelming probability.
 The content itself cannot therefore be silently modified under the same fingerprint.
 The difficulty comes from the names placed in front of these fingerprints.
@@ -176,7 +176,7 @@ Finally, it links each finding back to the repository locations where that conte
 The resulting corpus contains \num{281728} downloaded archived files selected because their names suggested sensitive content.
 Among these preselected files, \num{9.18}\% produce at least one detector finding.
 The result shows that a non-trivial part of this selected corpus contains text recognised as secret material, showing the effectiveness of the filename filter.
-However, this percentage must not be generalised to all removed files or all repositories because the earlier filename filter deliberately concentrate the analysis on likely cases.
+However, this percentage must not be generalised to all removed files or all repositories because the earlier filename filter deliberately concentrates the analysis on likely cases.
 
 Private keys receive an additional offline check.
 This check asks whether the detected text has the internal structure expected of a real key.
@@ -226,6 +226,7 @@ In a software supply chain built on names that can move, trust must be supported
 \clearpage
 
 \chapter*{Résumé}
+\begin{otherlanguage}{french}
 \begin{SingleSpace}
 \initial{L}es logiciels modernes sont rarement écrits entièrement à partir de zéro.
 Toutes sortes de logiciels, comme les sites web ou les applications mobiles, combinent généralement de nombreux projets existants.
@@ -265,7 +266,7 @@ La plupart des personnes et des systèmes automatiques utilisent ces référence
 
 Les consommateurs de logiciels traitent souvent un nom de version publié comme s'il était permanent.
 Les instructions de build, les dossiers de sécurité et les tâches automatiques peuvent conserver la référence sans conserver le fingerprint exact que celle-ci désignait au moment de l'utilisation.
-Si la référence est déplacé plus tard, la même instruction peut récupérer un code différent sans aucune action de la part du consommateur.
+Si la référence est déplacée plus tard, la même instruction peut récupérer un code différent sans aucune action de la part du consommateur.
 Et comme l'historique visible peut aussi être remplacé, une inspection ultérieure peut alors voir un dépôt propre, mais pas l'état que les utilisateurs précédents avaient téléchargé.
 
 En mars 2025, des attaquants ont modifié un composant d'automatisation très réutilisé nommé \texttt{tj-actions/changed-files}.
@@ -292,7 +293,7 @@ Un chercheur qui commence son étude après le changement a besoin d'un enregist
 
 La deuxième difficulté est l'échelle.
 Le logiciel public est réparti dans des centaines de millions de dépôts.
-Chaque dépôt peut contenir de nombreux références, branches, commits et fichiers.
+Chaque dépôt peut contenir de nombreuses références, branches, commits et fichiers.
 Il peut aussi changer entre deux observations.
 Télécharger et examiner manuellement tout ce contenu est impossible.
 Même un traitement automatique doit éviter les opérations coûteuses sur chaque fichier.
@@ -443,6 +444,7 @@ Troisièmement, corriger le dépôt ne suffit pas toujours à clore l'incident~:
 
 La souplesse des dépôts est utile et souvent nécessaire au développement.
 L'objectif est de cesser de traiter une vue actuelle pratique comme la preuve d'un passé immuable.
-Dans une chaîne d'approvisionnement logicielle construite sur des références qui peuvent être déplacés, la confiance doit s'appuyer sur des preuves qui survivent à la dernière modification.
+Dans une chaîne d'approvisionnement logicielle construite sur des références qui peuvent être déplacées, la confiance doit s'appuyer sur des preuves qui survivent à la dernière modification.
 \end{SingleSpace}
+\end{otherlanguage}
 \clearpage

@@ -6,10 +6,9 @@
 \chapter{Conclusion and Perspectives}
 \label{chap:conclusion}
 
-This thesis examined two properties the software supply chain needs from public repositories but that Git does not enforce: security against malicious substitution and operational safety, including reproduction and audit.
-Git protects the identity of stored objects, but it does not guarantee that a familiar tag, branch, or advertised history will continue to designate those objects.
-The studies examined the consequences of that distinction at the reference, commit-graph, and archived-content levels.
-This chapter focuses on what becomes visible only when the studies are considered together.
+This concluding chapter synthesises what the three empirical chapters established about reference stability, commit-graph mutability, and recoverable removal of sensitive files (\Cref{chap:tags,chap:histories,chap:secrets}).
+Git protects the identity of stored objects, but it does not guarantee that a familiar tag, branch, or advertised history will continue to designate those objects (\Cref{sec:intro-problem}).
+The sections below focus on what becomes visible only when those measurements are considered together.
 
 % \section{Summary of the Thesis}
 % \label{sec:concl-summary}
@@ -41,7 +40,7 @@ This chapter focuses on what becomes visible only when the studies are considere
 \label{sec:concl-synthesis}
 
 The preceding studies targeted reference stability, commit-graph mutability, and recoverable removal of sensitive files.
-This section distils the implications that emerge only when those measurements are viewed as parts of one integrity problem.
+The three questions posed in \Cref{sec:intro-rqs} receive direct empirical answers in \Cref{chap:tags,chap:histories,chap:secrets}; this section distils the implications that emerge only when those measurements are viewed as parts of one integrity problem.
 
 \subsection{Observable Mutability Is Not Self-Explaining}
 \label{subsec:concl-mutability-norm}
@@ -59,7 +58,7 @@ The supported conclusion is narrower: alterations are observable at ecosystem sc
 
 All three studies depend on evidence that outlives the state currently advertised by a forge.
 A tag move is visible only if both targets were retained; a history rewrite requires both commit graphs; and a removed file can be examined only if its former content remains reachable.
-\SWH supplies that evidence for the measurements in this thesis.
+\SWH supplies that evidence for the archive-scale measurements above.
 Its role here goes beyond preservation: it acts as an independent integrity witness whose repeated observations make overwritten states comparable.
 
 Dependence on episodic archival observation also changes how negative results must be read.
@@ -160,7 +159,7 @@ Applying equivalent before-and-after observations to other version control syste
 
 Current tooling often leaves the stability expected from a version name implicit.
 Future work should make that expectation machine-readable: a producer could declare whether a reference is mutable, append-only, or permanently bound; a consumer could declare whether it requires exact content identity, provenance continuity, or only the latest compatible source.
-Package managers, continuous integration systems, software bills of materials, and SLSA-style provenance could then verify the appropriate contract instead of assigning one meaning to every reference.
+Package managers, continuous integration (CI) systems, software bills of materials, and SLSA-style provenance could then verify the appropriate contract instead of assigning one meaning to every reference.
 
 Such contracts also create an evaluation framework for platform mechanisms.
 Signed references, immutable releases, transparency logs, and content-addressed lockfiles should be compared by the evidence they preserve and by the failures they prevent, rather than treated as interchangeable integrity features.

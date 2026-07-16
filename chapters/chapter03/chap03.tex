@@ -24,7 +24,7 @@ The \texttt{tj-actions/changed-files} attack that opened \Cref{chap:intro} demon
 Yet despite these risks, evidence at the ecosystem scale was missing before the study reported in this chapter: we lacked quantitative understanding of how often tag alterations occur, what kinds of alterations are most common, where they occur, and whether they already affect real package ecosystems.
 Without such evidence, recommendations on tag-based dependency resolution remain largely ad hoc rather than empirically grounded.
 
-\emph{Tag alterations} are observable changes to the state of a tag between successive archival snapshots of the same repository (\Cref{fig:tag-alteration}).
+\emph{Tag alterations} are observable changes to the state of a tag between successive archival snapshots of the same repository (\Cref{fig:tag-alteration,subsec:bg-tag-alterations}).
 They are inherently difficult to study empirically at scale, because once a tag is altered, its previous reference no longer exists in the repository and cannot be directly compared with the post-alteration state.
 Using \SWH~\cite{swhcacm2018}, we compare successive snapshots of the same origin, so that a tag's pre-alteration target remains recoverable even after the original forge state has been overwritten; the chapter extends the analysis we reported in prior work~\cite{rapaport2026tagalterations}.
 When a tag moves, the same version string can come to designate a different commit, a different revision identifier, or a different source tree; when a tag disappears, downstream workflows may lose the ability to resolve the reference at all.
@@ -110,13 +110,13 @@ This chapter supplies that evidence and connects it to reproducibility and suppl
 \section{Methodology}
 \label{sec:tags-methodology}
 
-This chapter carries the thesis' methodology in full, because it is the first of the three empirical studies.% and establishes the shared observational stance that Chapter~\ref{chap:histories} later reuses.
+This chapter establishes the shared empirical methodology in full, because it is the first of the three archive-scale studies.% and establishes the shared observational stance that Chapter~\ref{chap:histories} later reuses.
 The section first states that stance, then specialises it to \emph{tag-resolution} differencing: how the corpus is assembled, what counts as a tag move or deletion between consecutive snapshots, how alterations are categorised, how popularity is measured, and how reproducibility and security implications are validated through case studies and a package-ecosystem cross-analysis.
 
 \subsection{Research Design and Observational Stance}
 \label{subsec:tags-research-design}
 
-The central methodological bet, shared by this chapter and Chapter~\ref{chap:histories}, is that observable mutability can be studied without forge-internal logs by comparing successive public states of the same origin as recorded by an independent archive: because \SWH preserves successive snapshots even when an upstream forge overwrites a reference (\Cref{sec:bg-software-heritage}), we can compare tag targets before and after an alteration using the persistent identifiers (SWHIDs) it assigns to archived objects~\cite{swhcacm2018,cise-2020-doi,iso-swhid}.
+The central methodological bet, shared by this chapter and Chapter~\ref{chap:histories}, is that observable mutability can be studied without forge-internal logs by comparing successive public states of the same origin as recorded by an independent archive (\Cref{sec:bg-software-heritage,subsec:bg-swh-observability}).
 We therefore treat mutability as a property of sequences of archived observations, not as a claim about unobserved maintainer intent.
 
 Throughout the analysis, we keep separate three layers that downstream actors routinely conflate, refining the object--reference distinction of \Cref{sec:bg-mutability-git}: \textbf{references} (branch and tag names), which are mutable labels; \textbf{commits and annotated-tag/release objects}, identity-bearing nodes whose identifiers change under rewriting or metadata edits; and \textbf{directory trees}, the source contents a developer actually obtains when resolving a reference at a given time.
@@ -126,7 +126,7 @@ Finally, because the method only observes states between archival visits, all co
 \subsection{Data Collection and Repository Selection}
 \label{subsec:tags-data-collection}
 
-We leverage \SWH~\cite{swhcacm2018} to analyse repositories archived from major forges including GitHub, GitLab, Bitbucket, and others.
+We leverage the \SWH corpus described in \Cref{sec:bg-software-heritage} to analyse repositories archived from major forges including GitHub, GitLab, Bitbucket, and others.
 The study uses the \SWH graph snapshot from \DatasetDate~\cite{DBLP:conf/msr/PietriSZ20}, which preserves historical repository states even after tags are altered or deleted, enabling the analysis.
 
 The mutability studies in this thesis share a common snapshot-pair pipeline: (1)~assemble a corpus from \SWH's periodically crawled public repositories; (2)~detect alterations by comparing consecutive snapshots of the same origin; (3)~classify observed changes with a study-specific taxonomy; and (4)~assess downstream exposure and consequences through stratification, case studies, and ecosystem cross-checks.
@@ -200,7 +200,7 @@ We report two complementary views.
 \subsection{Case Studies and Threat Assessment}
 \label{subsec:tags-casestudy-method}
 
-To evaluate the security implications of tag mutability, we analyse the March~2025 supply-chain attack on the GitHub Action \texttt{tj-actions/changed-files}~\cite{paloalto_unit42_2025}.
+To evaluate the security implications of tag mutability, we analyse the March~2025 supply-chain attack on the GitHub Action \texttt{tj-actions/changed-files}~\cite{paloalto_unit42_2025}, introduced in \Cref{chap:intro}.
 Our dataset records the incident through the fork \texttt{zendesk/changed-files}: on 14~March~2025, a single snapshot transition moves \num{346} pre-existing version tags---including \texttt{v39} and \texttt{v47}---so that they all resolve to one commit (\texttt{swh:1:rev:0e58ed8671d6b60d0890c21b07f8835ace038e67}).
 That pattern is atypical for ordinary release engineering and matches the incident report's account of tag retargeting used to distribute malicious workflow code; because the action is widely reused, any downstream workflow that kept resolving it by an unchanged tag name would execute the altered payload on its next fetch.
 
@@ -497,14 +497,14 @@ In Nix, the seven hash mismatches are exposed only when binary-cache substitutio
 Once a cached entry is missing and Nix must fetch upstream again, the recorded hash no longer matches the altered tag and the build fails.
 The remaining \num{25} packages show the quieter counterpart: no immediate failure because the recipe already matches the post-alteration tarball, even though the tag did move.
 Those Nix-specific outcomes therefore illustrate reproducibility risk under hash pinning, not universal silent compromise on every build today.
-The \texttt{tj-actions/changed-files} retargeting is different in kind: it required no cache workaround and could redirect widely reused CI workflows as soon as they fetched the familiar tag again.
+The \texttt{tj-actions/changed-files} retargeting is different in kind (\Cref{chap:intro,subsec:tags-attack-case}): it required no cache workaround and could redirect widely reused CI workflows as soon as they fetched the familiar tag again.
 Tag alterations are practically consequential because they can break rebuilds, silently shift the source a label denotes, or---in the attack case---change what downstream consumers execute without changing the version string.
 
 \section{Discussion}
 \label{sec:tags-discussion}
 
 Our results show that tag mutability is exercised at scale and persists over time, not just a theoretical property of Git (\Cref{sec:tags-prevalence}), and that a majority of moves change the source tree retrieved through an unchanged tag name (\Cref{sec:tags-taxonomy}).
-From a reproducibility perspective, the central problem is that tags are routinely relied upon as if they identified a fixed source state, even though they can change.
+From a reproducibility perspective, tags are routinely relied upon as if they identified a fixed source state, even though they can change.
 
 \subsection{Benign Maintenance Versus Security-Relevant Risk}
 \label{subsec:tags-disc-benign-vs-security}
@@ -532,7 +532,7 @@ The results therefore support a general design principle: human-friendly release
 \subsection{Ecosystem Ambiguity and the Case of GitHub Actions}
 \label{subsec:tags-disc-github-actions}
 
-The GitHub Actions ecosystem provides a useful example of the tension between mutable git tags and stable release identifier.
+The GitHub Actions ecosystem provides a useful example of the gap between mutable git tags and stable release identifiers.
 In that ecosystem, the mutability of tags is not hidden: some official guidance has encouraged maintainers to move major-version tags that follow the release of minor-version tags~\cite{github_actions_versioning_recommendations}, while security guidance for consumers emphasizes pinning third-party actions to immutable commit hashes~\cite{github_secure_use_third_party_actions}.
 This does not make the ecosystem incoherent so much as it reveals that tags play two conflicting roles at once.
 For maintainers, a mutable tag can act as a moving compatibility label; for consumers, the same tag may be interpreted as a stable release anchor.
@@ -568,7 +568,7 @@ On the other hand, several factors limit its scope: the feature must be manually
 
 More broadly, because immutability is enforced at the platform level rather than in the git protocol itself, protections do not extend to other forges or to direct git operations outside GitHub's infrastructure.
 
-Taken together, these findings suggest that tag mutability is best understood as a socio-technical reproducibility problem rather than a version-control feature to be patched in isolation: it emerges from the interaction among flexible developer workflows, platform conventions, security advice, package metadata, and user expectations, and no single technical fix removes the underlying tension.
+Taken together, these findings suggest that tag mutability is best understood as a socio-technical reproducibility problem rather than a version-control feature to be patched in isolation: it emerges from the interaction among flexible developer workflows, platform conventions, security advice, package metadata, and user expectations, and no single technical fix removes the underlying mismatch.
 
 \section{Threats to Validity}
 \label{sec:tags-validity}
@@ -624,7 +624,7 @@ Likewise, Nixpkgs is especially informative for reproducibility research because
 Accordingly, we view Nixpkgs as a demonstrator of the phenomenon, not as a universal proxy for all package managers.
 
 The GitHub Actions discussion should be interpreted in the same spirit.
-We use it to illustrate a broader semantic tension around tags---between maintainers, who use mutable aliases, and consumers, who expect immutable dependency anchors---not to claim that all GitHub Actions usage is insecure or irreproducible by default.
+We use it to illustrate a broader semantic ambiguity around tags---between maintainers, who use mutable aliases, and consumers, who expect immutable dependency anchors---not to claim that all GitHub Actions usage is insecure or irreproducible by default.
 The ecosystem is internally heterogeneous, and official guidance itself reflects that heterogeneity.
 Our argument is that such ambiguity is precisely what makes tag mutability consequential for reproducibility and supply-chain integrity.
 
@@ -635,7 +635,7 @@ Git tags are commonly viewed as convenient release identifiers and dependency an
 This chapter conducted the first large-scale empirical study of tag alterations across public code, covering \TotalOriginsAnalyzedShort Git repositories observed between \CutoffDate and \DatasetDate.
 Across the repositories we analyzed, tag names are regularly moved or deleted, many moves change the underlying source content rather than metadata alone, and the phenomenon is not confined to obscure repositories: low-popularity projects dominate in absolute volume, while highly visible repositories exhibit the highest alteration prevalence and per-repository intensity.
 The Nixpkgs cross-analysis and the attack case study show that these alterations have already produced concrete reproducibility failures and supply-chain compromises; the practical consequences for developers, platforms, and tools were drawn in \Cref{subsec:tags-disc-practical}.
-We do not claim that every tag alteration is harmful, that every content-changing move reflects malicious intent, or that tags are unsuitable for release engineering in general; rather, mutable tag names and reproducible dependency resolution are in tension, and when downstream consumers require stable, time-invariant references, tags alone are insufficient.
+We do not claim that every tag alteration is harmful, that every content-changing move reflects malicious intent, or that tags are unsuitable for release engineering in general; rather, mutable tag names and reproducible dependency resolution are at odds, and when downstream consumers require stable, time-invariant references, tags alone are insufficient.
 
 This work also opens directions for future research: the motivations behind tag alterations remain to be studied more directly, for instance through maintainer surveys, and future work could investigate how different package ecosystems and build tools resolve and cache tags in practice, and how often this leads to silent drift.
 

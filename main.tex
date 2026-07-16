@@ -172,7 +172,7 @@
 % \usepackage{etex}						%eTeXÕs extended support for counters
 % \usepackage{fixltx2e}					%Eliminates some in felicities of the 
 									%original LaTeX kernel
-\usepackage[spanish,english]{babel}		%For languages characters and hyphenation
+\usepackage[french,english]{babel}		%For languages characters and hyphenation (english last = main language; french for the Résumé)
 \usepackage{color}                    				%Creates coloured text and background
 \usepackage[colorlinks=true,
 		     allcolors=black]{hyperref}              %Creates hyperlinks in cross references
@@ -242,6 +242,13 @@
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage[textsize=tiny]{todonotes}
+%
+% nag does not know memoir's subfloat caption commands, so a \label inside
+% \subtop/\subbottom is wrongly flagged as "\label in float, but not after
+% \caption". Register them as caption providers to silence the false positive.
+\makeatletter
+\g@addto@macro\nag@captions{,subtop,subbottom,contsubtop,contsubbottom,subcaption,contsubcaption}
+\makeatother
 %							
 %Reduce widows  (the last line of a paragraph at the start of a page) and orphans 
 % (the first line of paragraph at the end of a page)
@@ -328,7 +335,7 @@
 	\indentcaption{0.75cm}
 	\captionstyle[\centering]{}
 	\setlength{\belowcaptionskip}{10pt}
-	\ifx \@empty#1 \caption{#2}\else \caption[#1]{#2}
+	\ifx \@empty#1 \caption{#2}\else \caption[#1]{#2}\fi
 }
 %
 % Custom subcaption style
@@ -338,7 +345,7 @@
 	\subcaptionlabelfont{\rmfamily}
 	\sidecapstyle{\raggedright}
 	\setlength{\belowcaptionskip}{10pt}
-	\ifx \@empty#1 \subcaption{#2}\else \subcaption[#1]{#2}
+	\ifx \@empty#1 \subcaption{#2}\else \subcaption[#1]{#2}\fi
 }
 %
 %An initial of the very first character of the content
@@ -419,13 +426,13 @@
 \addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
 \clearemptydoublepage
 %
-% \listoftables
-% \addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
-% \clearemptydoublepage
+\listoftables
+\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
+\clearemptydoublepage
 %
-% \listoffigures
-% \addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
-% \clearemptydoublepage
+\listoffigures
+\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
+\clearemptydoublepage
 %
 %
 % The bulk of the document is delegated to these chapter files in

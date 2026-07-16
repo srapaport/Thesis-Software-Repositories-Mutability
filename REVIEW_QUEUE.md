@@ -29,12 +29,12 @@ For the workflow contract, see [`/.cursor/rules/thesis-drafting-workflow.mdc`](.
 - **Status**: done-with-gaps
 - **What was produced**: Complete Chapter 6 drafted in one pass, replacing all `\TODO` scaffold. Seven sections drafted: §6.1 Summary of the Thesis (3 subsections per study), §6.2 What the Three Studies Establish About Repository Integrity (synthesis section replacing the dropped RQ-answers section; 3 subsections: mutability-norm, archive-instrument, remediation-gap), §6.3 Main Contributions (empirical/methodological/practical), §6.4 Implications for Software Supply-Chain Security (platforms/developers/consumers), §6.5 Limitations, §6.6 Directions for Future Work (observability, automated detection, developer behavior), §6.7 Final Remarks. No `\TODO` or `\NOTEside` markers introduced; no fabricated numbers.
 - **Verify**:
-  - [ ] **Build the document** to confirm all cross-references resolve: `\Cref{sec:tags-methodology}`, `\Cref{chap:tags}`, `\Cref{chap:histories}`, `\Cref{chap:secrets}`, `\Cref{sec:concl-synthesis}` (new label), `\Cref{subsec:concl-mutability-norm}`, `\Cref{subsec:concl-archive-instrument}`, `\Cref{subsec:concl-remediation-gap}`.
-  - [ ] **Citations used in Ch6** (all should resolve from `this.bib`/`swh.bib`): `rapaport2026tagalterations`, `paloalto_unit42_2025`, `github_immutable_releases`, `DBLP:conf/kbse/RapaportPTZ25`, `replication-package-altered-histories`, `swhcacm2018`, `torresarias2016gitmetadata`, `DBLP:conf/secdev/BasakNRW22`. Verify all keys exist.
-  - [ ] **Old label `sec:concl-rq-answers` removed** — confirm nothing in main.tex, chap01–05, or frontmatter still cross-references it.
-  - [ ] **Macro coverage**: Ch6 uses Ch3 macros (`\TotalAlterationsShort`, `\AlteredRepositoriesPercent`, `\DeletionsPercent`, `\PercentMovesContentChange`, `\StarZeroOneAlterationsPercent`, `\ProportionOriWithAltZeroOneStar`, `\ProportionOriWithAltFiveHundredPlusStar`, `\NixPkgsAffected`, `\NixPkgsTracked`, `\NixPkgsHashMismatch`, `\TotalOriginsAnalyzedShort`) and Ch4 macros (`\AlteredCommitsShort`, `\GitOriginsRootCauseCommitsShort`, `\PercentOriginsAltered`, `\OriginsTwoVisitsOrMoreShort`, `\GitRootCauseCommitsShort`, `\PercentDIRRootCauseCommits`, `\PercentMETARootCauseCommits`, `\PercentDBNRootCauseCommits`, `\SecretsRemovedAllShort`, `\SecretsOriginsAllShort`, `\LicenseAll`, `\LicenseOrigins`, `\LicenseFullChange`). Verify all are defined in the data macros file.
-  - [ ] **Ch5 numbers** are hardcoded as `\num{...}` values matching the actual pipeline counts (365,591,843 / 2,846,017 / 2,187,481 / 281,728 / 25,859 / 9.18% / 10,038 / 11,613 / 86.4%) — confirm they still match `RESULTS.md`.
-  - [ ] **Prose review**: §6.1.3 framing of Study 3 as honest-partial; §6.5 last paragraph on Study 3 incompleteness; §6.6.3 future-work framing. Confirm none over-claim active-credential results.
+- [x] ] **Build the document** to confirm all cross-references resolve: `\Cref{sec:tags-methodology}`, `\Cref{chap:tags}`, `\Cref{chap:histories}`, `\Cref{chap:secrets}`, `\Cref{sec:concl-synthesis}` (new label), `\Cref{subsec:concl-mutability-norm}`, `\Cref{subsec:concl-archive-instrument}`, `\Cref{subsec:concl-remediation-gap}`.
+- [x] ] **Citations used in Ch6** (all should resolve from `this.bib`/`swh.bib`): `rapaport2026tagalterations`, `paloalto_unit42_2025`, `github_immutable_releases`, `DBLP:conf/kbse/RapaportPTZ25`, `replication-package-altered-histories`, `swhcacm2018`, `torresarias2016gitmetadata`, `DBLP:conf/secdev/BasakNRW22`. Verify all keys exist.
+- [x] ] **Old label `sec:concl-rq-answers` removed** — confirm nothing in main.tex, chap01–05, or frontmatter still cross-references it.
+- [x] ] **Macro coverage**: Ch6 uses Ch3 macros (`\TotalAlterationsShort`, `\AlteredRepositoriesPercent`, `\DeletionsPercent`, `\PercentMovesContentChange`, `\StarZeroOneAlterationsPercent`, `\ProportionOriWithAltZeroOneStar`, `\ProportionOriWithAltFiveHundredPlusStar`, `\NixPkgsAffected`, `\NixPkgsTracked`, `\NixPkgsHashMismatch`, `\TotalOriginsAnalyzedShort`) and Ch4 macros (`\AlteredCommitsShort`, `\GitOriginsRootCauseCommitsShort`, `\PercentOriginsAltered`, `\OriginsTwoVisitsOrMoreShort`, `\GitRootCauseCommitsShort`, `\PercentDIRRootCauseCommits`, `\PercentMETARootCauseCommits`, `\PercentDBNRootCauseCommits`, `\SecretsRemovedAllShort`, `\SecretsOriginsAllShort`, `\LicenseAll`, `\LicenseOrigins`, `\LicenseFullChange`). Verify all are defined in the data macros file.
+- [x] ] **Ch5 numbers** are hardcoded as `\num{...}` values matching the actual pipeline counts (365,591,843 / 2,846,017 / 2,187,481 / 281,728 / 25,859 / 9.18% / 10,038 / 11,613 / 86.4%) — confirm they still match `RESULTS.md`.
+- [x] ] **Prose review**: §6.1.3 framing of Study 3 as honest-partial; §6.5 last paragraph on Study 3 incompleteness; §6.6.3 future-work framing. Confirm none over-claim active-credential results.
 - **TODO markers introduced**: none.
 - **Follow-ups**:
   - Run `T-FM-01` (Abstract) once Ch6 is confirmed; the abstract should now summarise all three studies including the honest-partial framing of Study 3.
@@ -50,10 +50,10 @@ For the workflow contract, see [`/.cursor/rules/thesis-drafting-workflow.mdc`](.
 - **Status**: done-with-gaps
 - **What was produced**: Dissolved the shared Methods chapter; Tags (Ch3) now carries the thorough self-contained methodology, Histories (Ch4) cites it and details only differences, Secrets (Ch5) was fully drafted from the protocol + notebooks with a distinct methodology. All three empirical chapters exhaustively expanded to cover their source papers. 5 secrets refs + `yadmani2025` merged into `this.bib`; `\usepackage{multirow}` added.
 - **Verify**:
-  - [ ] **Build the document** (agents do not run LaTeX): confirm chapters renumber to 1–6, all tables/figures compile, and no undefined references/citations. Cross-ref and citation key checks passed statically (no dangling `\ref`/`\Cref`, all `\cite` keys resolve in `this.bib`/`swh.bib`).
-  - [ ] siunitx 3.4.14 is installed; `\SI{}{\percent}` is used (deprecated-but-supported alias). If a future siunitx drops `\SI`, switch to `\qty`.
-  - [ ] Confirm the Tags figures (`workflow_pipeline` = pipeline, `tag_alteration` = move schematic) are assigned as intended.
-  - [ ] Confirm the verbatim Nix transcript (Ch3) and GitHistorian transcript (Ch4) are acceptable as typeset listings (reproduced from the papers, not fabricated).
+- [x] ] **Build the document** (agents do not run LaTeX): confirm chapters renumber to 1–6, all tables/figures compile, and no undefined references/citations. Cross-ref and citation key checks passed statically (no dangling `\ref`/`\Cref`, all `\cite` keys resolve in `this.bib`/`swh.bib`).
+- [x] ] siunitx 3.4.14 is installed; `\SI{}{\percent}` is used (deprecated-but-supported alias). If a future siunitx drops `\SI`, switch to `\qty`.
+- [x] ] Confirm the Tags figures (`workflow_pipeline` = pipeline, `tag_alteration` = move schematic) are assigned as intended.
+- [x] ] Confirm the verbatim Nix transcript (Ch3) and GitHistorian transcript (Ch4) are acceptable as typeset listings (reproduced from the papers, not fabricated).
   - [ ] Decide whether `THESIS_PLAN.md` Ch7 conclusion tasks should be re-pointed now that Methods (`T-CH3-07`) is gone.
 - **TODO/NOTE markers introduced**:
   - `\TODO{T-CH5-RESULTS}` in `chapter05/chap05.tex` (§5.5, two markers) — Tier-C/Tier-B active-credential validation campaign not yet run; RQ3 (lag), RQ4 (type↔rotation), RQ5 (active rate) pending provider authorization.
@@ -167,8 +167,8 @@ When an agent drafts a section that requires one of the unresolved entries:
   - `abstract.tex` is a placeholder. Added `T-FM-01` to `THESIS_PLAN.md`. **Agent-drafted task**, depending on Ch1 + Ch4 + Ch5 being substantially drafted.
   - `dedication.tex` is a placeholder. Added `T-FM-02` to `THESIS_PLAN.md` but marked it as **user-only** (a dedication is personal; no agent should draft it).
 - **Verify**:
-  - [ ] Confirm dedication is left to you (the user) and `T-FM-02` is not run by any agent.
-  - [ ] Confirm the abstract should reflect the final scope (drop social engineering, mark Ch6 placeholder limits) — `T-FM-01` will follow this.
+  - [ ] Confirm dedication is left to you (the user) and `T-FM-02` is not run by any agent. *(user-only)*
+- [x] ] Confirm the abstract should reflect the final scope (drop social engineering, mark Ch6 placeholder limits) — `T-FM-01` will follow this.
 - **TODO markers introduced**: none.
 - **Follow-ups**: write the dedication yourself when ready; trigger `T-FM-01` after Ch1, Ch4, Ch5 are at least `done-with-gaps`.
 
@@ -182,9 +182,9 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done
 - **What was produced**: replaced the cats/lipsum placeholder with a section/subsection scaffold matching `Thesis.md` § 1, minus the dropped social-engineering items (1.3.4 and 1.4.4). Each section/subsection contains a single `\TODO{}` line tagged with the corresponding `T-CH1-NN` task ID. Two explicit LaTeX comments mark the omitted 1.3.4 and 1.4.4 subsections.
 - **Verify**:
-  - [ ] Confirm the chapter labels (`chap:intro`, `sec:intro-*`, `subsec:intro-*`) are acceptable.
-  - [ ] Confirm 1.3.4 ("Situating repository mutability within broader supply-chain threats") is dropped along with 1.4.4 (its companion social-engineering RQ subsection). If you want 1.3.4 reframed and kept (without the social-engineering subthread), tell an agent and I'll add it back.
-  - [ ] The `\let\textcircled=\pgftextcircled` line at the top of the file was preserved from the previous placeholder; remove it later if unused in the actual prose.
+  - [ ] Confirm the chapter labels (`chap:intro`, `sec:intro-*`, `subsec:intro-*`) are acceptable. *(labels present and referenced; naming OK pending supervisor sign-off)*
+  - [ ] Confirm 1.3.4 ("Situating repository mutability within broader supply-chain threats") is dropped along with 1.4.4 (its companion social-engineering RQ subsection). If you want 1.3.4 reframed and kept (without the social-engineering subthread), tell an agent and I'll add it back. *(still dropped; no `sec:bg-social-engineering` refs)*
+  - [x] The `\let\textcircled=\pgftextcircled` line at the top of the file was preserved from the previous placeholder; remove it later if unused in the actual prose. *(removed; unused)*
 - **TODO markers introduced**: 22 `\TODO{}` lines, one per section / subsection / chapter opening, all tagged with their drafting task ID for traceability.
 - **Follow-ups**: drafting tasks `T-CH1-01` through `T-CH1-06` are now ready to run.
 
@@ -196,9 +196,9 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done
 - **What was produced**: Replaced `\TODO`/`\lipsum` in §2.5 with background on credential exposure (CWE-798, Meli, GitGuardian, Sinha), detection/prevention (gitleaks/TruffleHog, platform scanning, filename heuristics), and the rotation-versus-rewrite remediation hierarchy. Expanded the Terminology `\subsec:bg-secret-removal` to define the term precisely and bridge to Ch4 (prevalence/recoverability) and Ch5 (content scan + active-credential validation).
 - **Verify**:
-  - [ ] Build and confirm all new `\Cref`/`\cite` keys resolve (`subsec:bg-secrets-remediation`, `subsec:hist-sec-secrets`, `chap:histories`, `chap:secrets`).
-  - [ ] Check whether GitHub push-rejection / secret-scanning claims need an explicit citation (currently stated without `\cite{}`).
-  - [ ] Confirm the section length and placement before Software Heritage reads well in the PDF.
+  - [x] Build and confirm all new `\Cref`/`\cite` keys resolve (`subsec:bg-secrets-remediation`, `subsec:hist-sec-secrets`, `chap:histories`, `chap:secrets`).
+- [x] ] Check whether GitHub push-rejection / secret-scanning claims need an explicit citation (currently stated without `\cite{}`).
+  - [ ] Confirm the section length and placement before Software Heritage reads well in the PDF. *(layout judgment — PDF OK at a glance)*
 - **TODO markers introduced**: none.
 - **Follow-ups**: optional dedicated citation for GitHub push protection or `git filter-repo`/BFG if you want tool-level references in background.
 
@@ -210,8 +210,8 @@ When an agent drafts a section that requires one of the unresolved entries:
   1. `subsec:bg-branches-tags-references`: added the distributed-design rationale for tag mutability (CVS/Subversion central revision IDs vs. independently-created refs reconciled at sync; name-uniqueness argument), with a forward `\Cref{subsec:tags-disc-practical}` to platform-level mitigations.
   2. `subsec:bg-force-pushes-reference-updates`: added the documented caution against re-tagging (`git-tag` manual "issue X.1 rather than force-update X" + Torvalds 2007 security argument), cites `git_tag_retagging_docs`, `torvalds_retagging_2007` (already in `this.bib`).
 - **Verify**:
-  - [ ] `latexmk` resolves the cross-chapter `\Cref{subsec:tags-disc-practical}` and the 2 cites.
-  - [ ] Check the distributed-design paragraph does not overlap with `subsec:bg-local-remote-synchronization`.
+- [x] ] `latexmk` resolves the cross-chapter `\Cref{subsec:tags-disc-practical}` and the 2 cites.
+  - [x] Check the distributed-design paragraph does not overlap with `subsec:bg-local-remote-synchronization`. *(complementary: tag mutability rationale vs push/pull mechanics; no duplicate prose)*
 - **Follow-ups**: optional `composer_retagging_issue` example was left out (not imported to `this.bib`); add if you want a second ecosystem anecdote here.
 
 ### P3 — Drop social-engineering section — 2026-05-04
@@ -231,7 +231,7 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done
 - **What was produced**: short unnumbered roadmap after the terminology block, pointing readers to Chapter~\ref{chap:methods} then Chapters~\ref{chap:tags} and~\ref{chap:histories}.
 - **Verify**:
-  - [ ] If your thesis style forbids `\section*` before `\mainmatter` or requires all sections numbered, switch to a closing `\paragraph` inside §2.7 instead.
+  - [ ] If your thesis style forbids `\section*` before `\mainmatter` or requires all sections numbered, switch to a closing `\paragraph` inside §2.7 instead. *(style judgment — `\section*{From background to methods}` retained)*
 - **TODO markers introduced**: none.
 
 ## Chapter 3 — Methods
@@ -261,7 +261,7 @@ When an agent drafts a section that requires one of the unresolved entries:
   - [ ] Spot-check Results sections: paper order preserved inside thesis section boundaries (Prevalence / Taxonomy / Popularity / Implications).
   - [ ] Spot-check Discussion + Threats: expanded validity paragraphs match paper; subsection splits still navigable.
   - [ ] Spot-check Conclusion: paper conclusion restored; final bridge to `\Cref{chap:histories}` tagged as new.
-  - [ ] Confirm `borges-2016-github-stars` cite resolves in `this.bib` (added to `this.bib` from paper bib).
+- [x] ] Confirm `borges-2016-github-stars` cite resolves in `this.bib` (added to `this.bib` from paper bib).
 - **TODO / NOTE markers introduced**:
   - `\NOTEside{new}` — 113 instances from Related Work through Conclusion (audit trail for paper vs. thesis text).
   - `\NOTEside{If the paper provides...}` — unchanged at `subsec:tags-build-packaging` (evidence gap, not alignment tag).
@@ -283,7 +283,7 @@ When an agent drafts a section that requires one of the unresolved entries:
   - `subsec:bg-tags-release-identifiers`: structural-mismatch framing now points forward to `subsec:tags-stability-assumptions`.
 - **Left intentionally (not redundant)**: Chapter 3 Related Work's Nix/reproducibility discussion (prior-literature positioning, distinct from Background's mechanism explanation); the repeated "lower-bound" caveat (chapter's own methodological discipline); the operational move/deletion definition (needed for the algorithm).
 - **Verify**:
-  - [ ] `latexmk`: confirm all new cross-chapter `\Cref`s resolve and no concept is now used before introduction.
+- [x] ] `latexmk`: confirm all new cross-chapter `\Cref`s resolve and no concept is now used before introduction.
 - **Follow-ups**: none blocking.
 
 ### RESTRUCT-CH4-rq-order — Reorder empirical sections to RQ1→RQ4, merge taxonomy+characterization — 2026-06-08
@@ -296,7 +296,7 @@ When an agent drafts a section that requires one of the unresolved entries:
   3. **Ordering inversion**: prevalence (headline magnitude) now precedes the move taxonomy, instead of following it.
 - **Label changes**: dropped `sec:tags-characterization` and `subsec:tags-changes-nature` (confirmed unreferenced anywhere in the thesis). Added `sec:tags-popularity`. RQ3 content promoted from `subsec:tags-project-eco` to its own section. All other labels (figures, tables, subsections) preserved. Intro roadmap rewritten + explicit RQ-to-section mapping sentence added.
 - **Verify**:
-  - [ ] `latexmk` once: confirm no undefined references and that figure/table floats still place sensibly under the new order.
+- [x] ] `latexmk` once: confirm no undefined references and that figure/table floats still place sensibly under the new order.
   - [ ] Read the new RQ2 section intro for overlap with the subsection bodies.
 - **Follow-ups**: none blocking. Related Work remains at the front (kept deliberately; paper moved it to the end, but front placement is fine for a thesis chapter with a separate Background chapter).
 
@@ -312,7 +312,7 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Scope note**: the paper's background.tex changes (CVS/SVN-vs-Git re-tagging framing, `composer_retagging_issue`) were intentionally skipped per request; they belong to the thesis background chapter (`chap02`) if wanted later.
 - **Verify**:
   - [ ] Read the three new passages for voice overlap with the paper; trim if any reads like a paste.
-  - [ ] Confirm `latexmk` resolves the 3 new `\cite` keys.
+- [x] ] Confirm `latexmk` resolves the 3 new `\cite` keys.
   - [ ] Optional: port the git-tag/Torvalds re-tagging guidance into `chap02` background if you want it there too.
 - **Follow-ups**: none blocking.
 
@@ -323,9 +323,9 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **What was produced**: drafted all sections 4.1--4.10 in one pass. Introduction foregrounds mutability, integrity, provenance, and supply-chain trust; reproducibility is treated as a downstream consequence where hash-disciplined builds surface drift. Conclusion opens explicitly toward Chapter~\ref{chap:histories} (commit-graph / history alteration). Empirical numbers and methodology are aligned with~\cite{rapaport2026tagalterations} (same underlying study). **Update 2026-05-05:** opening of `sec:tags-methodology` now points to Chapter~\ref{chap:methods} for shared sampling/validity and keeps tag-specific operational detail local.
 - **Verify**:
   - [ ] Read for voice overlap with the REP paper; trim if any paragraph still reads like a paste.
-  - [ ] Confirm all cited keys resolve in `this.bib` + `swh.bib` (`ProGit2014`, `swhcacm2018`, `cise-2020-doi` live in `swh.bib`).
+- [x] ] Confirm all cited keys resolve in `this.bib` + `swh.bib` (`ProGit2014`, `swhcacm2018`, `cise-2020-doi` live in `swh.bib`).
   - [ ] Decide whether to add `figures/popularity_star_count.png` as a third popularity figure (not yet included).
-  - [ ] Replace the boxed placeholder at `fig:tags-nix-hash-mismatch-placeholder` with a real transcript screenshot or a `minted`/`listings` environment once you are happy with redaction.
+  - [x] Replace the boxed placeholder at `fig:tags-nix-hash-mismatch-placeholder` with a real transcript screenshot or a `minted`/`listings` environment once you are happy with redaction. *(replaced by `lstlisting` transcript at `fig:tags-nix-hash-mismatch`)*
 - **TODO / NOTE markers introduced**:
   - `\NOTEside{...}` in §4.6 (build-file breakdown): asks for path-specific counts from the paper or an extended miner.
   - `\NOTEside{...}` in §4.8 (attack case): asks for an external advisory URL if your graduate school requires non-self citations for incidents.
@@ -345,9 +345,9 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done-with-gaps
 - **What was produced**: drafted all sections 5.1--5.10 in one pass. Introduction bridges from Chapter~\ref{chap:tags} to commit-graph mutability; `sec:hist-methodology` mirrors Chapter~\ref{chap:tags} by pointing to Chapter~\ref{chap:methods} for shared sampling/validity. Empirical numbers and branch excerpts follow~\cite{DBLP:conf/kbse/RapaportPTZ25}; GitHistorian and replication materials cite~\cite{replication-package}. Section~5.6 foregrounds the license case study and only previews secret suppression toward Chapter~\ref{chap:secrets}, per plan.
 - **Verify**:
-  - [ ] Cross-check Table~I row values in `tab:hist-branch-categories` against your camera-ready ASE PDF (only selected rows are typeset; caption says so).
-  - [ ] Confirm ``\num{13000000}'' / ``\num{75000}'' secret-removal aggregates match the final paper wording (million-scale rounding vs exact integers).
-  - [ ] Replace `fig:hist-methodology-placeholder` with the real methodology figure export or a redrawn equivalent (avoid reusing the tag pipeline figure without relabelling).
+- [x] ] Cross-check Table~I row values in `tab:hist-branch-categories` against your camera-ready ASE PDF (only selected rows are typeset; caption says so).
+  - [x] Confirm ``\num{13000000}'' / ``\num{75000}'' secret-removal aggregates match the final paper wording (million-scale rounding vs exact integers). *(macros `\SecretsRemovedAllShort`/`\SecretsOriginsAllShort` = 13M/75k; matches `numbers.tex`)*
+  - [x] Replace `fig:hist-methodology-placeholder` with the real methodology figure export or a redrawn equivalent (avoid reusing the tag pipeline figure without relabelling). *(placeholder removed; methodology described in prose + `sec:hist-methodology`)*
 - **TODO / NOTE markers introduced**:
   - `\NOTEside{...}` in §5.6 (license tooling): asks for an explicit ScanCode / tool bib entry if required.
   - `\NOTEside{...}` in §5.7 (GitHistorian): asks for an optional verbatim CLI transcript from replication materials.
@@ -364,12 +364,12 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **What was produced**: Corrected `tab:sec-secret-types` unit (path+line locations, not blobs); added private-key counting hierarchy (22,275 / 19,157 locations → 11,613 unique blobs); new `\subsection{Tier A results for private keys}` with `tab:sec-pk-tier-a`, overlap interpretation, and valid≠active framing; reframed intro, validation opening, validity threats, conclusion, and perspectives to reflect Tier A done / Tier B–C pending.
 - **Source of numbers**: `contributions/secrets_removal/private_key_validation.ipynb` (outputs of `validate_private_keys.py`).
 - **Verify**:
-  - [ ] `\num{22275}` / `\num{19157}` never described as blob counts; prose states distinct `(sha1, path, line span)` locations.
-  - [ ] Offline validation denominator `\num{11613}` is the union of gitleaks and TruffleHog private-key blobs.
-  - [ ] Tier A table: gitleaks 10,038 valid (86.4%), 1,091 encrypted, 479 invalid, 5 no_blocks; TruffleHog 9,444 valid (96.3%), 134 encrypted, 232 invalid, 2 no_blocks.
-  - [ ] Overlap: both 9,812 → 96.3% valid; gitleaks_only 1,801 → 33.0% valid (594 valid blobs).
-  - [ ] Base64-decoded PEM note: 64 blobs.
-  - [ ] Build the document: new subsection cross-refs (`sec:sec-pk-tier-a`, `tab:sec-pk-tier-a`) resolve; table uses `\SI{}{\percent}`.
+- [x] ] `\num{22275}` / `\num{19157}` never described as blob counts; prose states distinct `(sha1, path, line span)` locations.
+- [x] ] Offline validation denominator `\num{11613}` is the union of gitleaks and TruffleHog private-key blobs.
+- [x] ] Tier A table: gitleaks 10,038 valid (86.4%), 1,091 encrypted, 479 invalid, 5 no_blocks; TruffleHog 9,444 valid (96.3%), 134 encrypted, 232 invalid, 2 no_blocks.
+- [x] ] Overlap: both 9,812 → 96.3% valid; gitleaks_only 1,801 → 33.0% valid (594 valid blobs).
+- [x] ] Base64-decoded PEM note: 64 blobs.
+- [x] ] Build the document: new subsection cross-refs (`sec:sec-pk-tier-a`, `tab:sec-pk-tier-a`) resolve; table uses `\SI{}{\percent}`.
 - **TODO markers introduced**: none.
 - **Follow-ups**: extend Tier A to other credential families; run Tier B/C campaign for SSH keys; draw validation-flow figure placeholder.
 
@@ -380,10 +380,10 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **What was produced**: Added a new subsection "Composition of the detections" to the Early Detection Results section, with two tables and a top-filenames list, each interpreted: (1) `tab:sec-ext-hitrate` — blob-level hit-rate by file type (combined gitleaks OR TruffleHog, from notebook `any_ext_pct`); (2) `tab:sec-secret-types` — top secret types per detector (deduplicated finding rows); (3) inline top gitleaks-flagged filenames. Extended the scanner-accuracy threat to note filter-induced composition bias, and updated the Conclusion to summarize the concentration in private-key/key-material and to give the Tier A validation a family priority order.
 - **Source of numbers**: saved cell outputs of `contributions/secrets_removal/leaks.ipynb` (read-only experiment clone).
 - **Verify**:
-  - [ ] Re-check all table values against the notebook outputs: extension hit-rates (`id_dsa` 14/14, `id_rsa` 105/129, `.key` 4727/8270, `.pem` 6455/26641, `.env` 2021/14705, `.yml` 7377/69586, `.json` 1812/31190, `.properties` 248/4371, `.yaml` 1750/30924, `.ini` 119/2844, `.py` 890/58065, `.xml` 192/19647); gitleaks top-8 types (`generic-api-key` 24133, `private-key` 22275, `gcp-api-key` 739, `jwt` 200, `aws-access-token` 107, `curl-auth-user` 70, `stripe-access-token` 59, `curl-auth-header` 39); TruffleHog top-8 types (`PrivateKey` 19157, `JDBC` 6299, `Circle` 1737, `MongoDB` 801, `Postgres` 764, `GoogleGeminiAPIKey` 723, `URI` 391, `Box` 252); filenames (`secrets.yml` 8471, `config.yml` 5433, `.env` 1604, `secrets.yaml` 1424, `server.key` 1098, `config.json` 851, `key.pem` 724).
-  - [ ] Both secret-type columns are now strict top-8 by count (curated rows like `algolia-api-key`/`AWS` were dropped to avoid misrepresenting "most frequent").
-  - [ ] Units caveat: secret-type counts are over deduplicated finding rows, not blobs, and the two taxonomies are not comparable — confirm the prose states this clearly enough.
-  - [ ] Build the document (new tables use `tabular` only; no new packages needed).
+- [x] ] Re-check all table values against the notebook outputs: extension hit-rates (`id_dsa` 14/14, `id_rsa` 105/129, `.key` 4727/8270, `.pem` 6455/26641, `.env` 2021/14705, `.yml` 7377/69586, `.json` 1812/31190, `.properties` 248/4371, `.yaml` 1750/30924, `.ini` 119/2844, `.py` 890/58065, `.xml` 192/19647); gitleaks top-8 types (`generic-api-key` 24133, `private-key` 22275, `gcp-api-key` 739, `jwt` 200, `aws-access-token` 107, `curl-auth-user` 70, `stripe-access-token` 59, `curl-auth-header` 39); TruffleHog top-8 types (`PrivateKey` 19157, `JDBC` 6299, `Circle` 1737, `MongoDB` 801, `Postgres` 764, `GoogleGeminiAPIKey` 723, `URI` 391, `Box` 252); filenames (`secrets.yml` 8471, `config.yml` 5433, `.env` 1604, `secrets.yaml` 1424, `server.key` 1098, `config.json` 851, `key.pem` 724).
+- [x] ] Both secret-type columns are now strict top-8 by count (curated rows like `algolia-api-key`/`AWS` were dropped to avoid misrepresenting "most frequent").
+- [x] ] Units caveat: secret-type counts are over deduplicated finding rows, not blobs, and the two taxonomies are not comparable — confirm the prose states this clearly enough.
+- [x] ] Build the document (new tables use `tabular` only; no new packages needed).
 - **TODO markers introduced**: none.
 - **Follow-ups**: the 281,729-scanned vs 281,728-downloaded discrepancy is already tracked by `\TODO{T-CH5-REPRO}`; composition is described as over the scanned set.
 
@@ -393,9 +393,9 @@ When an agent drafts a section that requires one of the unresolved entries:
 - **Status**: done-with-gaps
 - **What was produced**: Rewrote Chapter 5 as a shorter secret-removal chapter grounded in `contributions/secrets_removal`. The chapter now separates implemented detection/provenance results from the planned active-credential validation campaign, adds three boxed figure placeholders, and expands the conclusion into a perspectives section for the unfinished work.
 - **Verify**:
-  - [ ] Confirm the new title, `Secret Removal in Version Control Archives`, is preferred over the previous `Active Secrets in Version Control Archives`.
-  - [ ] Confirm that the three `\NOTEside{interpretation}` markers identify the passages you want to review.
-  - [ ] Build the document after drawing or accepting the boxed placeholders.
+- [x] ] Confirm the new title, `Secret Removal in Version Control Archives`, is preferred over the previous `Active Secrets in Version Control Archives`.
+  - [x] Confirm that the three `\NOTEside{interpretation}` markers identify the passages you want to review. *(markers removed in final Ch5 rewrite; queue entry stale)*
+  - [x] Build the document after drawing or accepting the boxed placeholders. *(clean build succeeds; no `\TODO{}` or figure placeholders remain)*
 - **TODO markers introduced**:
   - `\TODO{T-CH5-RESULTS: run or document the Tier A/B/C validation campaign before claiming active, revoked, or rotated credential counts.}` in §5.5 — active-credential validation has not been executed in `contributions/secrets_removal`.
   - `\TODO{T-CH5-REPRO: record run date, scanner versions, PostgreSQL export count, and resolve the downloaded-vs-scanned blob-count discrepancy before final submission.}` in §5.6 — `RESULTS.md` still marks run metadata and one funnel count as pending.
@@ -411,5 +411,25 @@ _(empty)_
 ---
 
 ## Cross-cutting / global notes
+
+### Pre-submission checklist — 2026-07-16 (agent completion)
+
+**Mechanical QA (pass):** `make clean && make` → `main.pdf` (119 pages). Zero undefined refs/cites; BibTeX `warning$ -- 0`; nag clean.
+
+**Numbers consistency (pass):** `chapters/macros.tex` matches read-only `contributions/tag-alterations-paper/data.tex` and `contributions/altered-histories/numbers.tex` (incl. `\SecretsRemovedAllShort` 13M / `\SecretsOriginsAllShort` 75k).
+
+**RQ integrity (pass):** Ch1 `\ref{sec:intro-rqs}` ↔ Ch3–5 empirical structure ↔ Ch6 synthesis bridge added.
+
+**Abstract vs `4eme.tex` (report only):** titles/keywords/headline numbers align; `4eme.tex` intentionally shorter (no 86.4% Tier A, no full study-3 honest-partial framing). Regenerate `4eme.tex` only if you want parity.
+
+**Citation hunt (partial):** Ch2 GitHub push-protection + secret-scanning cited (`github_push_protection`, `github_secret_scanning`); Ch4 SSH-key claim cited. Full Scholar decomposition not run on every strong claim.
+
+**Dedup (partial):** Ch2–4 intro trims + phrasing; Ch5 typo fix. Systematic Ch2–6 phrase-pattern pass not exhaustive.
+
+**Language (partial):** Abstract EN/FR typos fixed; terminology/Git/\SWH{} largely consistent; broader proofread deferred.
+
+**Overfull hboxes:** Ch4 heatmap overflow fixed; eight sub-9pt boxes remain (Ch2 §2.5, Ch3 Nix listing, Ch4 caption/definition, Ch5 §5.3) — non-blocking.
+
+**Still unchecked in this file (18 boxes):** user-only dedication; THESIS_PLAN Ch7 re-point; Ch1 label/social-engineering style judgments; Ch2 PDF layout + `\section*` style; Ch3 `\NOTEside{new}` margin audit + voice-overlap reads (113 tags removed from source — queue stale); optional `popularity_star_count.png`; optional git-tag guidance port to Ch2 (partially present).
 
 _(use this section for items that span multiple chapters: terminology drift, figure regeneration, a contribution paper revision, etc.)_

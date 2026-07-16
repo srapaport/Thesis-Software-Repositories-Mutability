@@ -13,15 +13,15 @@
 \label{sec:sec-intro}
 
 Chapter~\ref{chap:histories} established that \SecretsRemovedAllShort history alterations across \SecretsOriginsAllShort repositories removed files whose names suggested private keys, credentials, and authentication tokens---concrete examples included \texttt{secret.yaml} and \texttt{samlKey.jks}---and that Software Heritage still archives many of those files (\Cref{subsec:hist-sec-secrets}).
-That case study stopped at filename evidence: it flagged removals whose paths looked liked the file contained credentials, but did not retrieve and scan the archived content to establish whether those files actually contained detectable secrets.
+That case study stopped at filename evidence: it flagged removals whose paths looked like credential-bearing files, but did not retrieve and scan the archived content to establish whether those files actually contained detectable secrets.
 This chapter carries the investigation forward in two further stages---first recovering and scanning candidate file contents with secret detectors (\Cref{sec:sec-methodology,sec:sec-bearing-files}), then testing whether the credentials those scans find are still valid (\Cref{sec:sec-validation}).
 Even a positive detection still answers only half the security question: a file that once held a scanner-detectable secret says nothing about whether the credential it exposed still grants access to anything.
 
-The two actions available to a developer after a leak are not interchangeable, and this chapter's argument rests on keeping them distinct throughout.
+The two actions available to a developer after a leak are not interchangeable (\Cref{subsec:bg-secrets-remediation}).
 \emph{Cleanup} rewrites the repository record: amending or rebasing commits, then force-pushing so the current view of the project no longer shows the offending file.
-\emph{Rotation} instead revokes the token, replaces the key, or resets the password---it acts on the credential itself, at the provider that issued it, and only rotation invalidates a leak (\Cref{subsec:bg-secrets-remediation}).
+\emph{Rotation} instead revokes the token, replaces the key, or resets the password---it acts on the credential itself, at the provider that issued it, and only rotation invalidates a leak.
 The problem this chapter targets is that cleanup is easy to mistake for rotation: it is immediately visible in the repository and can satisfy organisational policy about advertised history, while rotation requires provider-side action that a developer under no external pressure may simply skip.
-An archive cannot observe that omission directly---it cannot see whether a key was revoked at GitHub or an access key deactivated at AWS---but it can show whether the secrets developers tried to erase through cleanup remain recoverable.
+An archive cannot observe that omission directly, but it can show whether the secrets developers tried to erase through cleanup remain recoverable.
 If they do, and if even a fraction are still active, the consequence is not an untidy Git history: valid secrets can open access to source repositories, deployment systems, cloud accounts, payment providers, messaging platforms, databases, or continuous-integration environments, depending on the credential family.
 Platform-side scanning reduces this risk but is necessarily partial (\Cref{subsec:bg-secrets-detection}), leaving a gap between what cleanup removes from Git history and what rotation removes from the credential's authority.
 
@@ -40,7 +40,7 @@ Credential leakage in version control is a persistent and well-documented proble
 GitGuardian reported that exposed secrets in public GitHub repositories more than doubled between 2020 and 2021, exceeding six million disclosed credentials in a single year~\cite{segura2022secrets}.
 Sinha et al. identified credential leakage in source-code repositories as an emerging security concern and argued that version control systems should incorporate automated mechanisms to prevent leaks and assist developers~\cite{DBLP:conf/msr/SinhaSDPM15}.
 Meli et al. analysed a large sample of public GitHub repositories and recovered over \num{200000} API keys and tokens embedded directly in source code, showing that leakage is systematic rather than incidental~\cite{DBLP:conf/ndss/MeliMR19}.
-The underlying weakness, hard-coded credentials, is catalogued as CWE-798 and recurs in the CWE Top~25 Most Dangerous Software Weaknesses, which places it among the most consequential classes of software defect.
+The underlying weakness, hard-coded credentials, is catalogued as CWE-798 and has ranked among the CWE Top~25 Most Dangerous Software Weaknesses in recent years~\cite{cwe798,cwe_top25_2023}, placing it among the most consequential classes of software defect.
 
 This chapter differs from these prior detection studies in population, pre-selection, and detection scope.
 Meli et al.\ monitor public GitHub at large scale---billions of files from the Search API and a BigQuery snapshot---but their pipeline still targets a fixed inventory of formats: private-key material and API keys from eleven platforms with distinctive, hand-crafted regular expressions~\cite{DBLP:conf/ndss/MeliMR19}.
@@ -98,7 +98,7 @@ It yields \SecretFirstExtractionShort (\SecretFirstExtraction) file records.
 \label{tab:sec-filename-broad}
 \scriptsize
 \renewcommand{\arraystretch}{1.12}
-\begin{tabular}{@{}p{2.6cm}p{0.7cm}p{9.9cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.4cm}>{\centering\arraybackslash}p{0.65cm}>{\raggedright\arraybackslash}p{\dimexpr\textwidth-3.7cm\relax}@{}}
 \hline
 \textbf{Family} & \textbf{Lvl} & \textbf{Patterns} \\
 \hline
@@ -158,7 +158,7 @@ Credential-like\\basenames &
 \subsection{Secret detection}
 
 \paragraph{Recovering and scanning content.}
-For each remaining candidate, the corresponding archived file is recovered from Software Heritage, and identical copies are deduplicated so that content shared across many repositories is fetched only once.
+For each remaining candidate, the corresponding archived file is recovered from Software Heritage; identical copies are deduplicated so that content shared across many repositories is fetched only once.
 The recovered files are scanned with gitleaks and TruffleHog, two widely used secret detectors~\cite{DBLP:conf/msr/BasakNRW23}.
 Prior benchmarks show that their true-positive sets overlap only partially, so relying on either tool alone misses secrets the other finds~\cite{DBLP:conf/esem/BasakCRW23}.
 
@@ -190,19 +190,6 @@ After deduplication, the pipeline identified \num{281740} unique content blobs, 
 Among the downloaded blobs, \num{25859} had at least one gitleaks or TruffleHog finding, for an overall detection rate of \SI{9.18}{\percent}.
 
 This does not mean that \SI{9.18}{\percent} of all altered files in the prior study contained secrets; it is a rate over downloaded blobs after a filename filter that intentionally enriched the sample for likely secret-bearing paths.
-
-\begin{figure}[h]
-\centering
-\fbox{%
-\begin{minipage}{0.92\linewidth}
-\small
-\textbf{Figure placeholder (current-run attrition funnel).}
-Draw a funnel with these stages and counts: first filename selection \num{365591843}; refined filename selection \num{2846017}; locations resolved to archived content \num{2187481}; unique recoverable content blobs \num{281740}; downloaded blobs \num{281728}; blobs with at least one finding \num{25859} (\SI{9.18}{\percent} of downloaded blobs).
-\end{minipage}%
-}
-\mycaption[Current-run attrition funnel]{TBD}
-\label{fig:sec-attrition}
-\end{figure}
 
 \Cref{tab:sec-current-run} lays these numbers out as a single funnel; the first two rows carry over the filename-selection stages of \Cref{sec:sec-methodology} (they are not detection results), and every row below them is a property of the recovered content itself.
 
@@ -369,7 +356,7 @@ Among the \num{9812} blobs flagged by both tools, \num{9444} (\SI{96.3}{\percent
 Among the \num{1801} blobs flagged only by gitleaks, only \num{594} (\SI{33.0}{\percent}) parse as syntactically valid; gitleaks-only matches form the main false-positive pool at this stage.
 TruffleHog therefore acts as a useful pre-filter for unparseable text that resembled key material, but relying on gitleaks alone would retain substantially more scanner noise in the Tier~A denominator.
 
-Sixty-four blobs yielded syntactically valid keys only after base64 decoding from configuration lines (for example environment files or CI YAML), illustrating why literal PEM search alone would miss some genuine key material.
+Sixty-four blobs yielded syntactically valid keys only after base64 decoding from configuration lines (for example environment files or continuous integration (CI) YAML), illustrating why literal PEM search alone would miss some genuine key material.
 Encrypted blobs (\num{1091} under gitleaks) are syntactically plausible but cannot be parsed without a passphrase; they are excluded from any future active-check numerator.
 The \num{10038} gitleaks-flagged blobs classified as valid offline form the syntactic denominator for a future Tier~B or Tier~C SSH-key activity study, subject to provider authorisation and responsible-disclosure constraints.
 The corresponding outreach message has been sent to GitHub's security team, requesting either an aggregate provider-side check (Tier~B) or explicit written authorisation for a single read-only banner probe per key (Tier~C); no active-rate result is reported here because GitHub's response is still pending at the time of writing.

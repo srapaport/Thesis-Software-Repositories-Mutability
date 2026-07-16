@@ -22,11 +22,11 @@ Packages are identified by \emph{versions}---labels such as \texttt{2.3.1} that 
 
 Downstream projects rarely fetch those dependencies by hand.
 They rely on \emph{package managers}: tools that download the right package from the registry for each declared version and wire it into the build.
-npm (for JavaScript), PyPI (for Python), crates.io (for Rust), and Maven Central (for Java) are among the most widely used; together they resolve version specifications for millions of developers every day, usually by consulting the upstream projects where each package is maintained.
+npm (for JavaScript), PyPI (for Python), crates.io (for Rust), and Maven Central (for Java) are among the most widely used; together they resolve version specifications for millions of developers every day, usually by consulting the upstream projects where each package is maintained~\cite{DBLP:conf/msr/PietriSZ20}.
 
 Once dependencies are declared, teams need to know that a build still works when code changes.
 \emph{Continuous integration} (CI) pipelines automate that check: on each change, they install the declared dependencies, compile or test the project, and report failure before broken code reaches users.
-On GitHub, CI is commonly run through \emph{GitHub Actions}: reusable workflow steps, packaged as \emph{actions}, that one repository can invoke in its own pipeline by name or version tag.
+On GitHub, CI is commonly run through \emph{GitHub Actions}: reusable workflow steps, packaged as \emph{actions}, that one repository can invoke in its own pipeline by name or version tag~\cite{github_composite_actions}.
 Actions are not always self-contained: a \emph{composite action} can invoke other actions as steps of its own definition, so a single declared action can transitively pull in third-party actions that a workflow author never referenced directly---a dependency chain specific to the CI platform, with its own attack surface (\Cref{sec:bg-supply-chain-attacks}).
 Many projects also keep a \emph{lockfile}---a machine-generated record of the exact sources retrieved during a successful build---or a \emph{software bill of materials} (SBOM), an inventory of every component that went into that build, so that the same inputs can be recovered later for auditing or reproduction.
 Provenance frameworks such as Supply-chain Levels for Software Artifacts (SLSA) attach further metadata documenting where those inputs came from~\cite{tamanna2024analyzingchallengesdeploymentslsa}.
@@ -99,7 +99,7 @@ In this section I introduce the object model and references that the rest of the
 Git stores repository data in a content-addressable object store.
 Each object is named by an \emph{identifier}: a cryptographic digest (hash) computed from its content and metadata, historically using SHA-1 and, in newer configurations, SHA-256~\cite{ProGit2014}.
 The identifier is therefore a fingerprint of the object: retrieving an object under a given hash and recomputing the digest must yield the same value, or the content has been altered.
-Finding a different object that hashes to an already published identifier requires brute-forcing a space of roughly $2^{160}$ possibilities for SHA-1 and $2^{256}$ for SHA-256, which is computationally infeasible with current hardware; collision attacks against SHA-1 exist for adversarially crafted inputs, but substituting arbitrary Git objects while preserving a target hash remains impractical in ordinary threat models.
+Finding a different object that hashes to an already published identifier requires brute-forcing a space of roughly $2^{160}$ possibilities for SHA-1 and $2^{256}$ for SHA-256, which is computationally infeasible with current hardware; collision attacks against SHA-1 exist for adversarially crafted inputs~\cite{stevens2017shattered}, but substituting arbitrary Git objects while preserving a target hash remains impractical in ordinary threat models.
 The main object types relevant to this thesis are blobs, trees, commits, and annotated tags.
 Blobs store file contents.
 Trees describe directory structures by linking names to blobs and other trees.
@@ -165,26 +165,7 @@ History rewriting breaks this simple model.
 If a public branch is updated to point to a commit that is not a descendant of the previous branch tip, the remote ref has changed in a non-fast-forward way.
 Downstream users who previously observed the old branch state may now hold commits that are no longer reachable from the public branch.
 Users who clone after the rewrite may never see those commits at all.
-% Figure~\ref{fig:bg-sync-rewrite} contrasts the append-only and rewritten cases.
 This is the practical setting in which repository mutability becomes observable and consequential.
-
-% \begin{figure}[t]
-% \centering
-% \fbox{%
-% \begin{minipage}{0.92\linewidth}
-% \small
-% \textbf{Figure placeholder (fast-forward versus history rewrite).}
-% Two-panel figure for the same public branch ref.
-% Left panel: a fast-forward push where the branch tip moves to a descendant commit and all prior history remains reachable.
-% Right panel: a force push where the branch tip jumps to a commit that is not a descendant; previously public commits become unreachable from the branch while possibly still existing in object storage.
-% Annotate downstream effects for an early clone versus a post-rewrite clone.
-% \end{minipage}%
-% }
-% \mycaption[Fast-forward update versus non-fast-forward rewrite]{%
-% Placeholder for a before/after diagram of branch synchronization, contrasting append-only advancement with a history rewrite that orphans previously public commits.%
-% }
-% \label{fig:bg-sync-rewrite}
-% \end{figure}
 
 The result is a system in which the names downstream actors consume---branch and tag refs---are exactly the part of the repository that the version control system permits to change.
 The next section examines the mechanisms that change them.
@@ -232,7 +213,7 @@ It only becomes problematic when performed on public branches consumed as extern
 \label{subsec:bg-force-pushes-reference-updates}
 
 Public history rewriting is usually made visible through reference updates.
-A remote repository may reject non-fast-forward updates by default, but maintainers can often override this protection through force pushes or platform-specific settings.
+A remote repository may reject non-fast-forward updates by default, but maintainers can often override this protection through force pushes or platform-specific settings~\cite{ProGit2014}.
 A force push changes the public ref to point to a new commit even when that commit does not extend the previous public history.
 
 The same principle applies to tags (\Cref{subsec:bg-branches-tags-references}).
@@ -293,7 +274,7 @@ A updated tag can cause the fetch to succeed while producing a different source 
 The second case is more subtle because the dependency name still resolves.
 
 This distinction is visible in package managers that record integrity metadata.
-Nix, for example, stores expected hashes for fixed-output sources.
+Nix, for example, stores expected hashes for fixed-output sources~\cite{DBLP:conf/lisa/DolstraJV04}.
 If a tag later resolves to different content, the build does not silently accept the new source; it fails with a hash mismatch.
 This behavior avoids silent substitution, but it also shows that tag mutability can become an availability and rebuildability problem.
 A package that was reproducible while a cached source artifact was available may become unrebuildable later if rebuilding requires fetching a tag that no longer matches the recorded hash.
@@ -314,7 +295,7 @@ When authentication material is committed by mistake, the repository becomes an 
 In this thesis, a \emph{secret} denotes any credential or key material whose disclosure would grant access to a protected resource: API tokens, passwords, database connection strings, private keys, certificates, and similar values that should remain outside version control.
 
 The weakness is well known in software security practice.
-Hard-coded credentials are catalogued as CWE-798~\footnote{https://cwe.mitre.org/data/definitions/798.html} and recur among the most consequential classes of software defect.
+Hard-coded credentials are catalogued as CWE-798~\cite{cwe798} and recur among the most consequential classes of software defect.
 Empirical work on public GitHub repositories shows that leakage is systematic rather than anecdotal: Meli et al.\ recovered more than \num{200}\,k API keys and tokens embedded directly in source code~\cite{DBLP:conf/ndss/MeliMR19}, and industry monitoring reports describe millions of exposed credentials in public repositories in a single year~\cite{segura2022secrets}.
 Sinha et al.\ argued early that version control systems should incorporate automated mechanisms to prevent such leaks and to assist developers after exposure~\cite{DBLP:conf/msr/SinhaSDPM15}.
 Because public repositories are copied, forked, indexed, and archived, a single push can propagate sensitive values far beyond the maintainer's immediate workspace.
@@ -326,7 +307,7 @@ Two complementary lines of defence address credential exposure in repositories.
 The first is \emph{detection}: scanning repository contents for patterns that resemble known secret formats.
 Open-source tools such as gitleaks and TruffleHog implement large rule sets over file contents; benchmark studies show that their reported findings overlap only partially, meaning that, so far, no single detector captures the full set of machine-recognisable secrets~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
 The second is \emph{prevention at the forge}: hosting platforms can scan pushes, warn maintainers, notify credential providers, or block known-dangerous formats before they become part of the public history.
-GitHub, for example, rejects pushes that contain certain private-key formats and operates secrets-scanning partnerships with major providers.
+GitHub, for example, can block pushes that match configured secret-scanning patterns---including private keys where generic-pattern detection is enabled---when push protection is active (repository-level protection is opt-in), and operates secret-scanning partnerships that notify credential providers~\cite{github_push_protection,github_secret_scanning}.
 
 These mechanisms reduce risk but do not eliminate it.
 Detector coverage depends on the rule set, the file types scanned, and whether credentials are split, encoded, or stored under unusual paths.
@@ -340,10 +321,10 @@ Filename heuristics---matching paths such as \texttt{.env}, \texttt{id\_rsa}, or
 Surveys of secret-management practice converge on a clear hierarchy.
 Credentials should be kept out of source entirely, through environment variables, secret managers, and short-lived tokens that can be rotated without rewriting history~\cite{DBLP:conf/secdev/BasakNRW22,DBLP:journals/corr/abs-2211-06213}.
 When exposure occurs despite these precautions, the security remediation is to invalidate the leaked value: revoke the token, replace the key, reset the password, or otherwise remove the authority that the exposed string grants.
-Krause et al.\ study how developers prevent and respond to accidental commits; their findings reinforce that rotation, not deletion from the repository alone, closes the security gap~\cite{DBLP:journals/corr/abs-2211-06213}.
+Krause et al.\ study how developers prevent and respond to accidental commits; their findings reinforce that rotation, not repository deletion alone, closes the security gap~\cite{DBLP:journals/corr/abs-2211-06213}.
 
 History rewriting is nonetheless a common cleanup action after a leak.
-Maintainers can amend or rebase recent commits, run history-filtering tools over past trees, and force-push the rewritten branch so that the current public view no longer contains the offending file (\Cref{subsec:bg-history-rewriting,subsec:bg-force-pushes-reference-updates}).
+Maintainers can amend or rebase recent commits, run history-filtering tools, and force-push the rewritten branch so the public view no longer contains the offending file (\Cref{subsec:bg-history-rewriting,subsec:bg-force-pushes-reference-updates}).
 This action can reduce the chance that a future clone or casual inspection rediscovers the value, and it may satisfy organisational policy about what may remain in advertised project history.
 It does not, however, act on the credential itself.
 Nor does it erase every copy of the exposed commits: forks, local clones, search indexes, and independent archives may retain the pre-rewrite state long after the upstream repository looks clean (\Cref{sec:bg-software-heritage}).
@@ -385,24 +366,6 @@ In the tag-alterations contribution, the same comparison is applied to release t
 In both cases, the archive preserves evidence of states that may no longer be visible in the current upstream repository.
 This before-and-after observability is what makes the measurements in this thesis possible, and it directly serves supply-chain safety and security: it lets a consumer or auditor establish what a reference designated when it was trusted, even after the forge has overwritten it.
 
-% \begin{figure}[t]
-% \centering
-% \fbox{%
-% \begin{minipage}{0.92\linewidth}
-% \small
-% \textbf{Figure placeholder (Software Heritage snapshot comparison).}
-% Show one software origin visited at times $t_i$ and $t_{i+1}$, producing snapshots $S_i$ and $S_{i+1}$.
-% For each snapshot, list visible refs and the commits reachable from them.
-% Highlight a commit present in $S_i$ but missing from $S_{i+1}$ (history alteration) and a tag resolving to different targets across snapshots (tag alteration).
-% Optionally annotate SWHIDs as persistent archival identifiers.
-% \end{minipage}%
-% }
-% \mycaption[Comparing consecutive Software Heritage snapshots]{%
-% Placeholder for a schematic of archival snapshot differencing, the observability backbone of the empirical contributions.%
-% }
-% \label{fig:bg-swh-snapshots}
-% \end{figure}
-
 This observability also explains why some mutability is hard to detect from the forge alone.
 Rewritten histories may go unnoticed by users who perform fresh clones, because they see only the current public state.
 Users who previously cloned the repository may detect disruption when pulling, but many automated workflows do not preserve such state.
@@ -412,7 +375,7 @@ The archival view also imposes limits.
 It can only observe alterations that occur between visits and remain visible long enough to be captured.
 If a reference is changed and restored between two archival visits, the alteration may be missed.
 If several changes happen between two visits, they may be observed as one aggregate transition.
-Software Heritage also does not visit every origin at the same rate: a scheduling heuristic prioritises more active origins for more frequent snapshots, so popular and heavily maintained repositories tend to be observed more often than dormant ones.
+Software Heritage also does not visit every origin at the same rate: scheduling policies use origin activity and visit statistics to revisit more active origins more frequently~\cite{swh_scheduler_architecture}, so popular and heavily maintained repositories tend to be observed more often than dormant ones.
 That uneven coverage can bias prevalence estimates, because alterations in rarely visited origins are easier to miss, but the bias is not uniformly harmful for a supply-chain reading of the results: widely used repositories are both sampled more densely and disproportionately likely to matter as attack targets or as source states that downstream consumers actually rebuild.
 Counts derived from such snapshots should therefore be interpreted as lower bounds on observable alterations, not as complete records of every repository event.
 

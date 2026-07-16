@@ -294,29 +294,25 @@ location = {Rennes, France},
 series = {ACM REP '24}
 }
 
-@online{paloalto_unit42_2025,
+@misc{paloalto_unit42_2025,
   author = {
 Omer Gil and 
 Aviad Hahami and 
 Asi Greenholts and 
 Yaron Avital},
   title = {GitHub Actions Supply Chain Attack: reviewdog/action-setup Compromise Leads to Malicious Code Execution},
-  organization = {Palo Alto Networks Unit 42},
+  howpublished = {Palo Alto Networks Unit 42, \url{https://unit42.paloaltonetworks.com/github-actions-supply-chain-attack/}},
   year = {2025},
   month = {mar},
-  url = {https://unit42.paloaltonetworks.com/github-actions-supply-chain-attack/},
-  urldate = {2026-03-16},
   note = {Accessed: 2026-03-16}
 }
 
-@online{commonflow2010,
+@misc{commonflow2010,
   author = {Jim Myhrberg},
   title = {Git Common-Flow A sensible git workflow for teams who ship},
-  organization = {Common-Flow},
+  howpublished = {\url{https://commonflow.org/}},
   year = {2026},
   month = {jan},
-  url = {https://commonflow.org/},
-  urldate = {2026-03-16},
   note = {Accessed: 2026-03-16}
 }
 
@@ -726,69 +722,118 @@ Yaron Avital},
   bibsource    = {dblp computer science bibliography, https://dblp.org},
   	abstract = {Modern software engineering builds up on the composability of software components, that rely on more and more direct and transitive dependencies to build their functionalities. This principle of reusability however makes it harder to reproduce projects' build environments, even though reproducibility of build environments is essential for collaboration, maintenance and component lifetime. In this work, we argue that functional package managers provide the tooling to make build environments reproducible in space and time, and we produce a preliminary evaluation to justify this claim. Using historical data, we show that we are able to reproduce build environments of about 7 million Nix packages, and to rebuild 99.94\% of the 14 thousand packages from a 6-year-old Nixpkgs revision.}
 }
-@online{github_actions_versioning_recommendations,
+@misc{github_actions_versioning_recommendations,
   author       = {{GitHub}},
-  organization = {GitHub},
   title        = {Versioning (GitHub Actions Toolkit Documentation)},
+  howpublished = {\url{https://github.com/actions/toolkit/blob/master/docs/action-versioning.md#recommendations}},
   year         = {2020},
   month        = jul,
-  url          = {https://github.com/actions/toolkit/blob/master/docs/action-versioning.md#recommendations},
-  urldate      = {2026-03-20},
-  note         = {Recommendation section documents moving major-version tags (last updated 2020-07-21).}
+  note         = {Recommendation section documents moving major-version tags (last updated 2020-07-21). Accessed: 2026-03-20}
 }
 
-@online{github_secure_use_third_party_actions,
+@misc{github_secure_use_third_party_actions,
   author       = {{GitHub}},
-  organization = {GitHub Docs},
   title        = {Secure use reference --- Using third-party actions},
+  howpublished = {GitHub Docs, \url{https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions}},
   year         = {2026},
   month        = mar,
-  url          = {https://docs.github.com/en/actions/reference/security/secure-use#using-third-party-actions},
-  urldate      = {2026-03-20},
-  note         = {Security guidance recommending pinning third-party actions to full commit SHAs (last updated 2026-03-13).}
+  note         = {Security guidance recommending pinning third-party actions to full commit SHAs (last updated 2026-03-13). Accessed: 2026-03-20}
 }
 
-@online{github_immutable_releases,
+@misc{github_immutable_releases,
   author       = {{GitHub}},
-  organization = {GitHub Docs},
   title        = {Immutable releases},
+  howpublished = {GitHub Docs, \url{https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases}},
   year         = {2025},
   month        = aug,
-  url          = {https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases},
-  urldate      = {2026-03-22},
-  note         = {Documentation for immutable releases feature preventing tags and release assets from being changed after publication (feature commit dated 2025-08-26).}
+  note         = {Documentation for immutable releases feature preventing tags and release assets from being changed after publication (feature commit dated 2025-08-26). Accessed: 2026-03-22}
 }
 
-@online{git_tag_retagging_docs,
+@misc{github_push_protection,
+  author       = {{GitHub}},
+  title        = {Push protection},
+  howpublished = {GitHub Docs, \url{https://docs.github.com/en/code-security/concepts/secret-security/push-protection}},
+  year         = {2026},
+  month        = mar,
+  note         = {Documents blocking of pushes that match configured secret-scanning patterns; repository-level protection is opt-in and requires Secret Protection, while account-level protection applies by default to pushes toward public repositories. Accessed: 2026-07-16}
+}
+
+@misc{github_secret_scanning,
+  author       = {{GitHub}},
+  title        = {About secret scanning},
+  howpublished = {GitHub Docs, \url{https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning}},
+  year         = {2026},
+  month        = mar,
+  note         = {Documents secret scanning, generic-pattern detection (including private keys), and provider-notification partnerships for exposed credentials on GitHub. Accessed: 2026-07-16}
+}
+
+@misc{github_composite_actions,
+  author       = {{GitHub}},
+  title        = {Creating a composite action},
+  howpublished = {GitHub Docs, \url{https://docs.github.com/en/actions/creating-actions/creating-a-composite-action}},
+  year         = {2026},
+  month        = mar,
+  note         = {Documents composite actions as reusable step bundles that can invoke other actions transitively. Accessed: 2026-07-16}
+}
+
+@misc{swh_scheduler_architecture,
+  author       = {{Software Heritage}},
+  title        = {Software Architecture Overview},
+  howpublished = {Software Heritage Documentation, \url{https://docs.softwareheritage.org/devel/architecture/overview.html}},
+  year         = {2026},
+  note         = {Describes visit-centric scheduling that uses origin activity and visit statistics to choose revisit intervals. Accessed: 2026-07-16}
+}
+
+@misc{stevens2017shattered,
+  author       = {Marc Stevens and Elie Bursztein and Pierre Karpman and Ange Albertini and Yarik Markov},
+  title        = {The First Collision for Full {SHA-1}},
+  howpublished = {Cryptology {ePrint} Archive, Report 2017/190},
+  year         = {2017},
+  url          = {https://eprint.iacr.org/2017/190},
+  note         = {Demonstrates practical SHA-1 collision attacks on adversarially crafted inputs. Accessed: 2026-07-16}
+}
+
+@misc{cwe798,
+  author       = {{MITRE Corporation}},
+  title        = {{CWE-798}: Use of Hard-coded Credentials},
+  howpublished = {\url{https://cwe.mitre.org/data/definitions/798.html}},
+  year         = {2026},
+  note         = {MITRE Common Weakness Enumeration entry. Accessed: 2026-07-16}
+}
+
+@misc{cwe_top25_2023,
+  author       = {{MITRE Corporation}},
+  title        = {2023 {CWE} Top 25 Most Dangerous Software Weaknesses},
+  howpublished = {\url{https://cwe.mitre.org/top25/}},
+  year         = {2023},
+  note         = {Annual ranking of the most consequential software weakness classes. Accessed: 2026-07-16}
+}
+
+@misc{git_tag_retagging_docs,
   author       = {{Git Project}},
-  organization = {Git Documentation},
   title        = {git-tag --- On Re-tagging},
+  howpublished = {Git Documentation, \url{https://git-scm.com/docs/git-tag#_on_re_tagging}},
   year         = {2025},
   month        = nov,
-  url          = {https://git-scm.com/docs/git-tag#_on_re_tagging},
-  urldate      = {2026-06-08},
-  note         = {Official guidance recommending a new version label rather than reusing a published tag name.}
+  note         = {Official guidance recommending a new version label rather than reusing a published tag name. Accessed: 2026-06-08}
 }
 
-@online{torvalds_retagging_2007,
+@misc{torvalds_retagging_2007,
   author       = {Linus Torvalds},
   title        = {Re: git-pull and tag objects},
+  howpublished = {\url{http://public-inbox.org/git/Pine.LNX.4.64.0702100938540.8424@woody.linux-foundation.org/}},
   year         = {2007},
   month        = feb,
-  url          = {http://public-inbox.org/git/Pine.LNX.4.64.0702100938540.8424@woody.linux-foundation.org/},
-  urldate      = {2026-06-08},
-  note         = {Mailing-list post arguing that silently overwriting a fetched tag would be a security problem and that maintainers must announce forced tag updates explicitly.}
+  note         = {Mailing-list post arguing that silently overwriting a fetched tag would be a security problem and that maintainers must announce forced tag updates explicitly. Accessed: 2026-06-08}
 }
 
-@online{go_containerregistry_retagging_issue,
+@misc{go_containerregistry_retagging_issue,
   author       = {WanzenBug and Jason Hall and others},
-  organization = {google/go-containerregistry},
   title        = {ggcr: retagging v0.20.4 causes ``verifying module: checksum mismatch''},
+  howpublished = {google/go-containerregistry, \url{https://github.com/google/go-containerregistry/issues/2107}},
   year         = {2025},
   month        = may,
-  url          = {https://github.com/google/go-containerregistry/issues/2107},
-  urldate      = {2026-06-08},
-  note         = {Bug report and maintainer response after \texttt{v0.20.4} was deleted and recreated, causing \texttt{go.sum} checksum mismatches for direct fetches.}
+  note         = {Bug report and maintainer response after \texttt{v0.20.4} was deleted and recreated, causing \texttt{go.sum} checksum mismatches for direct fetches. Accessed: 2026-06-08}
 }
 
 @misc{tamanna2024analyzingchallengesdeploymentslsa,
