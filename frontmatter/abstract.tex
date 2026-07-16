@@ -5,55 +5,444 @@
 
 \chapter*{Abstract}
 \begin{SingleSpace}
-\initial{P}ublic software repositories are the foundation on which the modern software supply chain is built.
-Package managers, continuous integration pipelines, and reproducible-build systems all resolve dependencies against repository state under an implicit assumption: that a named version label like \texttt{v1.0} designates stable, fixed content.
-Git's design, however, separates immutable content-addressed objects from mutable references.
-Tags, branches, and other symbolic names can be silently updated at any time, while the version string in a downstream configuration file remains unchanged.
-This gap between assumption and reality is the subject of this thesis.
+\initial{M}odern software is rarely written entirely from scratch.
+All sorts of software shuch as websites or mobile applications usually combines many existing software projects.
+Some of these projects are developed inside the organisation that uses them.
+Many others are public and are maintained by people whom the final users will never meet.
+Reusing this work saves time and allows developers to build complex systems.
+It also creates a long chain of trust, but a problem in one of those projects, however small, can affect every system that depends on it.
 
-The thesis measures that gap empirically, at ecosystem scale, using \textbf{Software Heritage} --- the largest public archive of source code --- as its primary data source.
-By comparing consecutive archival snapshots of the same repository, it recovers the before-and-after states of alterations that would otherwise be irrecoverable from the forge once the repository has been updated.
-This snapshot-pair methodology is applied to hundreds of millions of repositories across three empirical studies.
+Public software is commonly stored in a \emph{repository}.
+A repository contains the files needed to build a program and a record of the changes made to those files throughout development.
+Developers use a tool called Git to manage this record, and they share Git repositories through hosting websites such as GitHub or GitLab.
+Other programs can then download a project, include it as a dependency, or execute it as part of an automated task.
+This network of producers, hosting services, tools, and users is the \emph{software supply chain}.
+It is comparable to a manufacturing chain: the final product depends on many parts supplied by others.
 
-The \textbf{first study} analyses tag alterations in 45.5 million repositories observed over nine years.
-It detects \num{10.2} million alterations in \num{189000} repositories (\num{0.41}\% of all repositories with tags), produces a taxonomy of alteration forms distinguishing tag moves that changed content, metadata-only moves, and deletions, and demonstrates through a cross-analysis with the Nixpkgs package set that tag moves cause concrete build reproducibility failures in real downstream package ecosystems.
+When accessing a project, users need a simple way to select which version to use, that is why developers attach names such as \texttt{v1.0} or \texttt{v2.3.1} to important points in its history.
+In Git, such a name is called a \emph{tag}.
+The tag acts as the title printed on a fixed edition of a book.
+Unlike a book title however, a tag is not immutable.
+Indeed, Git allows the maintainer of a repository to move or delete the tag.
+The name may remain the same while the code it designates changes.
 
-The \textbf{second study} examines commit-graph history alterations in \num{111} million repositories, identifying \num{8.7} million root-cause rewrites across \num{1.22} million repositories (\num{1.10}\%).
-It characterises the distribution of alterations by branch type and repository popularity, introduces a taxonomy of alteration forms (directory-content changes, metadata-only changes, and branch relocations), and documents two security-relevant patterns at ecosystem scale: \num{13} million removals of files whose names suggested secrets across \num{75000} repositories, and retroactive license changes in \num{32000} repositories.
-The study further produces \textit{GitHistorian}, a command-line tool that operationalises history alteration detection on the Software Heritage graph for practitioner use.
+Git also uses \emph{branches}.
+A branch is a name for the latest point on one line of development.
+Unlike a numbered release, a branch is expected to move when new work is added.
+Git records every saved step as a \emph{commit}, whose purpose is to identifie the files at one moment, to record information such as an author and a date, and to point to earlier commits.
+Together, commits form the visible history of the project.
+Developers can replace part of that history through an operation commonly called a history rewrite.
+After the rewrite, old commits may no longer appear on the hosting website even though they were previously public.
 
-The \textbf{third study} pursues the question left open by the second: of the removed files that had contained credentials and that remain archived in Software Heritage, how many contain detectable, syntactically valid secrets?
-Working from the corpus of removals of files whose names suggested secrets, it applies a multi-stage pipeline that recovers archived blobs, scans them with two independent secret detectors, and links findings back to their repository provenance.
-Among \num{281728} downloaded blobs, \num{9.18}\% yield at least one finding.
-Among private-key blobs specifically, \num{86.4}\% of flagged blobs pass offline syntactic validation.
-Whether these credentials remain active is the central open question: the study suggests a detection infrastructure and a staged responsible-disclosure protocol designed to answer it.
+One important final notion is thah Git gives each file and commit a \emph{content fingerprint}, also called a hash.
+This identifier is computed from the data, so if the data changes, the fingerprint changes with overwhelming probability.
+The content itself cannot therefore be silently modified under the same fingerprint.
+The difficulty comes from the names placed in front of these fingerprints.
+Tags and branches can be redirected to another fingerprint.
+Most people and automated systems use these readable names because they are easier to handle than long technical identifiers.
 
-Together, the three studies establish that repository mutability is an active, recurring phenomenon with measurable supply-chain consequences, and that without archival snapshots all we can observe in a public repository is what its current references let us see.
+Software consumers often treat a published version name as if it were permanent.
+Build instructions, security records, and automated workflows may keep the name but not the exact fingerprint that the name designated at the time of use.
+If the name later moves, the same instruction can retrieve different code without any action taken by the consumer.
+And since the visible history can also be replaced, a later inspection may then see a clean repository but not the state that earlier users downloaded.
+
+In March 2025, attackers modified a widely reused automation component named\\ \texttt{tj-actions/changed-files}.
+They redirected \num{346} existing version tags to one malicious commit.
+Projects that trusted any of those familiar names then ran code controlled by the attackers.
+The affected projects did not need to contain a vulnerability of their own.
+Their mistake was to assume that a version name still meant what it had meant before.
+This incident illustrates the possible consequence of a tag move.
+It does not mean that every tag move or history rewrite is an attack.
+Maintainers also use these operations to correct releases, organise ongoing work, or remove information published by mistake.
+
+The central problem of this thesis is this mismatch between use and design.
+Git protects the identity of stored content, but it does not guarantee the continuity of the names and histories through which that content is consumed.
+The thesis asks three connected questions.
+How often do version tags change?
+How often are published histories rewritten, and what kinds of changes do these rewrites contain?
+When sensitive files are removed through a rewrite, what remains available in independent archives?
+
+While showing that Git permits these operations is easy, measuring them reliably across public software is harder.
+The first difficulty is observation.
+A hosting website mainly shows the current state of a repository.
+Once a tag has moved or a history has been replaced, the earlier state may no longer be visible there.
+A researcher starting their research after the change needs an independent record of both the earlier and later states.
+
+The second difficulty is scale.
+Public software is spread across hundreds of millions of repositories.
+Each repository may contain many names, branches, commits, and files.
+It may also change between two observations.
+Downloading and manually inspecting all this material is impossible.
+Even automatic processing must avoid expensive work on every file.
+The method must first use inexpensive tests to find candidates, then reserve deeper analysis for a much smaller set.
+
+The third difficulty is interpretation.
+An attack, a maintenance operation, and an accidental edit can produce the same structural change.
+The archive can establish that a name or history changed, but usually cannot establish why.
+A useful measurement must therefore separate detection from judgement.
+It must describe what changed without automatically calling every change malicious.
+
+The fourth difficulty appears when credentials are involved.
+A credential is information, such as a password or a private key, that grants access to a service.
+Secret-detection tools can recognise text that resembles a credential, but they can make mistakes.
+A file can contain a well-formed key that has already been cancelled.
+Testing whether a third party's credential still works can itself create a security and ethical problem.
+The study must distinguish a possible secret, a structurally valid credential, and a credential that is still active.
+
+The thesis addresses the observation problem with Software Heritage, the largest public archive of source code.
+Software Heritage regularly visits public repositories and saves their state.
+Each saved state is a \emph{snapshot}.
+Two snapshots of the same repository provide a before-and-after view.
+The earlier snapshot can preserve a name, commit, or file that the hosting website possibly no longer displays.
+
+The three studies use the same general strategy.
+They first select repositories with at least two archived visits.
+They compare consecutive snapshots and identify a simple structural difference.
+They then classify that difference.
+Only the relevant candidates pass to more expensive steps, such as comparing files, recovering archived content, or running secret-detection tools.
+This staged approach also records what each filter may miss, and makes an ecosystem-wide study possible.
+
+The first study follows version tags across nine years of archived observations.
+It considers \num{45.5} million repositories containing at least one tag.
+For each tag name, it asks whether the name disappears or points to another object in a later snapshot.
+It then distinguishes several situations.
+A tag may be deleted.
+It may move while the source files remain identical and only descriptive information changes.
+Or it may move to different source code.
+
+The study finds \num{10.2} million observable tag alterations in about \num{189000} repositories.
+This represents \num{0.41}\% of the repositories with tags in the corpus.
+The proportion is small, but the absolute number is large enough to matter for software that depends on these names.
+Most observed events are deletions.
+Among tag moves, about \num{68}\% lead to different source files.
+The study also finds alterations in widely used projects, showing that popularity is not a guarantee that a version name will remain stable.
+
+To test whether these changes have consequences outside the repository, the study compares altered tags with Nixpkgs, a large collection of instructions for building software, which record an expected fingerprint for downloaded source code.
+Several altered tags lead to a mismatch between the code later retrieved under the same name and the fingerprint stored by Nixpkgs.
+This is useful evidence that connects a change in a repository to a concrete failure to rebuild software.
+The \texttt{tj-actions/changed-files} incident provides a separate security example: the same operation can also redirect automated systems to malicious code.
+
+This first study advances the state of the art by moving from isolated warnings and examples to a large, longitudinal measurement.
+It provides definitions, an automatic detection method, and a classification that separates deletions, descriptive changes, and source-code changes.
+It also connects repository observations to consequences in a real package collection and to a documented attack.
+
+The second study extends the search from version names to complete commit histories.
+It examines \num{111} million repositories that Software Heritage visited at least twice.
+A history alteration is observed when a commit reachable from a branch in an earlier snapshot is no longer reachable from that branch in the next snapshot.
+This definition captures replacement of advertised history without assuming a motive.
+
+History analysis is harder than tag analysis.
+Changing one old commit gives that commit a new fingerprint.
+Every later commit that refers to it also receives a new fingerprint, even if its files did not change.
+One direct edit can therefore appear as a long chain of alterations.
+The thesis separates the direct causes from these propagated effects.
+It also groups branch names by role so that main development branches, proposed changes, and other branches can be compared despite different naming conventions.
+
+The study identifies \num{8.7} million direct rewrite events across about \num{1.22} million repositories, or \num{1.10}\% of the examined corpus.
+Most direct rewrites change files or directories.
+Others alter only descriptive information such as dates, authors, or messages.
+Rewrites occur frequently on branches used to review proposed changes, where replacement is often part of normal work.
+They also occur on main branches and in popular projects.
+Current history should therefore not be treated as a complete record of everything previously published.
+
+Two patterns observable at file-level show why this matters.
+The study finds retroactive changes to licence files in about \num{32000} repositories.
+Such a change does not by itself determine the legal status of earlier releases, but it can make older licensing evidence harder to obtain from the current repository.
+The study also finds about \num{13} million removals of files whose names suggest passwords, private keys, certificates, or similar sensitive material, across about \num{75000} repositories.
+At this stage, filenames are only a warning signal.
+They do not prove that every removed file contains a real secret.
+
+The thesis packages this detection work into \textit{GitHistorian}, a tool allowing a user to query pre-computed alteration data for a particular repository and to inspect evidence of history rewriting.
+It does not decide whether a change is malicious.
+Its purpose is to make archival evidence usable outside the original large-scale experiment.
+
+This second study advances prior work in three ways.
+It measures published-history replacement across an archive-scale corpus.
+It separates direct rewrites from the large number of changes caused indirectly by one earlier edit.
+Finally, it turns the method into an operational tool and uses the resulting evidence to study licence changes and the removal of potentially sensitive files.
+
+The third study asks what is inside the suspiciously named files found by the second study.
+Its starting point is an important distinction.
+Removing a leaked password or key from the visible repository is a cleanup action, but in order to revoke the credential, it needs to be cancelled at the service that accepts it.
+The latter is a revocation action.
+Cleanup changes what future visitors see, but only revocation removes the access granted by the credential.
+
+The archive contains too many removed files to inspect them all.
+The study therefore uses another staged process.
+It first keeps filenames that commonly indicate credentials.
+It then recovers the archived files, removes duplicate copies, and scans each unique file with two independent secret-detection tools.
+Finally, it links each finding back to the repository locations where that content appeared.
+
+The resulting corpus contains \num{281728} downloaded archived files selected because their names suggested sensitive content.
+Among these preselected files, \num{9.18}\% produce at least one detector finding.
+The result shows that a non-trivial part of this selected corpus contains text recognised as secret material, showing the effectiveness of the filename filter.
+However, this percentage must not be generalised to all removed files or all repositories because the earlier filename filter deliberately concentrate the analysis on likely cases.
+
+Private keys receive an additional offline check.
+This check asks whether the detected text has the internal structure expected of a real key.
+It does not contact any external service and does not attempt to authenticate.
+Among files flagged as private keys by one detector, \num{86.4}\% pass this structural validation.
+This reduces, but does not eliminate, the uncertainty created by automatic detection.
+It still does not show whether the keys are active.
+
+The active status of these credentials remains an open question.
+The thesis defines a responsible validation process with three levels: offline checks, checks performed by the service provider, and narrowly authorised network checks.
+Only the first level is completed for private keys.
+No ecosystem-wide rate of active credentials is claimed.
+This boundary is part of the contribution: the method makes explicit which conclusions can be reached automatically and which require cooperation and authorisation.
+
+This third study advances research on exposed credentials by focusing on content removed during history cleanup rather than only on secrets visible in the current repository.
+It connects structural evidence of rewriting to archived file content.
+It also combines large-scale detection, provenance recovery, offline validation, and a responsible path towards later activity checks.
+
+Together, the studies show three layers of the same problem.
+A stable-looking version name can change its target.
+A stable-looking project history can be replaced.
+A file removed from that history can remain available in an independent archive.
+Even if most alterations are harmless, the current state of Git cannot provide the perceived stability that consumers often rely on.
+
+The results are conservative lower bounds given that Software Heritage visits repositories at intervals, and consequently a change made and reversed between two visits is not observed.
+Moreover, several changes between visits may appear as one, meaning that repositories without enough archived observations cannot be studied with this method.
+The work focuses on Git repositories represented in the Software Heritage archive and does not automatically generalise to every development platform or version-control system.
+The structural methods describe change, not intent.
+Finally, the third study establishes the presence of detectable and often well-formed secret material, but not whether that material still grants access.
+
+Despite these limits, the thesis increases what can be known about repository integrity.
+Earlier work described the risks of mutable names, history rewriting, or leaked credentials, often through individual cases or current-state scans.
+This thesis supplies a shared archival method that follows changes over time, applies it at ecosystem scale, connects three previously separated layers, and produces reusable classifications and tooling.
+It turns a property permitted by Git into a measurable phenomenon with observable downstream consequences.
+
+The findings lead to three practical recommendations.
+First, utilisation of software should record and verify an exact content fingerprint as well as a readable version name.
+The name remains useful for people, while the fingerprint detects later substitution.
+Second, independent archives and platform logs should preserve evidence when names or histories change.
+Without an earlier state, later users cannot reliably reconstruct what happened.
+Third, fixing the repository is not always enough to close the incident: if a published tag has been retargeted to different code, downstream builds that relied on it may still need to be updated or rejected; if a history has been rewritten, auditors may still need access to the earlier state; if a credential has been leaked, it must be revoked at the issuing provider, not only removed from the visible repository.
+
+Repository flexibility is useful and often necessary for development.
+The goal is to stop treating a convenient current view as proof of an unchanging past.
+In a software supply chain built on names that can move, trust must be supported by evidence that survives the last edit.
 \end{SingleSpace}
 \clearpage
 
 \chapter*{Résumé}
 \begin{SingleSpace}
-\initial{L}es dépôts logiciels publics constituent la fondation sur laquelle repose la chaîne d'approvisionnement logicielle moderne.
-Les gestionnaires de paquets, les pipelines d'intégration continue et les systèmes de construction reproductibles résolvent tous leurs dépendances en s'appuyant sur l'état des dépôts, sous l'hypothèse implicite qu'une étiquette de version comme \texttt{v1.0} désigne un contenu stable et fixe.
-La conception de Git sépare cependant les objets immuables adressés par contenu des références mutables~: les tags, les branches et autres noms symboliques peuvent être mis à jour silencieusement à tout moment, tandis que la chaîne de version dans les fichiers de configuration des consommateurs reste inchangée.
-Ce fossé entre l'hypothèse et la réalité est le sujet de cette thèse.
+\initial{L}es logiciels modernes sont rarement écrits entièrement à partir de zéro.
+Toutes sortes de logiciels, comme les sites web ou les applications mobiles, combinent généralement de nombreux projets existants.
+Certains de ces projets sont développés au sein de l'organisation qui les utilise.
+Beaucoup d'autres sont publics et entretenus par des personnes que les utilisateurs finaux ne rencontreront jamais.
+Réutiliser ce travail fait gagner du temps et permet aux développeurs de construire des systèmes complexes.
+Cela crée aussi une longue chaîne de confiance, mais un problème dans l'un de ces projets, aussi petit soit-il, peut toucher tous les systèmes qui en dépendent.
 
-La thèse mesure cet écart empiriquement, à l'échelle de l'écosystème, en utilisant \textbf{Software Heritage} --- la plus grande archive publique de code source --- comme principale source de données.
-En comparant des snapshots archivés successifs d'un même dépôt, elle rend observables les états avant et après les altérations qui seraient autrement irrecouvrables depuis la forge une fois le dépôt mis à jour.
-Cette méthodologie par paires d'snapshots est appliquée à des centaines de millions de dépôts, au travers de trois études empiriques.
+Un logiciel public est généralement conservé dans un \emph{dépôt}.
+Ce dépôt contient les fichiers nécessaires à la construction du programme et un enregistrement des modifications apportées à ces fichiers au fil du développement.
+Les développeurs utilisent un outil nommé Git pour gérer cet enregistrement, et partagent les dépôts Git sur des sites d'hébergement comme GitHub ou GitLab.
+D'autres programmes peuvent alors télécharger un projet, l'inclure comme dépendance ou l'exécuter dans une tâche automatique.
+Cet ensemble de producteurs, de services d'hébergement, d'outils et d'utilisateurs forme la \emph{chaîne d'approvisionnement logicielle}.
+Comme une chaîne industrielle, le produit final dépend de nombreuses pièces fournies par d'autres acteurs.
 
-La \textbf{première étude} analyse les altérations de tags dans \num{45,5}~millions de dépôts observés sur neuf ans.
-Elle détecte \num{10,2}~millions d'altérations dans \num{189000}~dépôts (\num{0,41}\,\% de tous les dépôts avec au moins un tag), produit une taxonomie distinguant les déplacements de tags modifiant le contenu, les déplacements ne modifiant que les métadonnées et les suppressions, et démontre, par une analyse croisée avec l'ensemble de paquets Nixpkgs, que les déplacements de tags provoquent des échecs concrets de reproductibilité dans des écosystèmes réels.
+Lorsqu'ils accèdent à un projet, les utilisateurs ont besoin d'un moyen simple de choisir la version à utiliser~; c'est pourquoi les développeurs attachent des noms comme \texttt{v1.0} ou \texttt{v2.3.1} à des points importants de son histoire.
+Dans Git, un tel nom est appelé une \emph{étiquette}, ou tag.
+L'étiquette joue le rôle du titre imprimé sur une édition fixe d'un livre.
+Contrairement au titre d'un livre toutefois, une étiquette n'est pas immuable.
+En effet, Git autorise le responsable du dépôt à déplacer ou supprimer l'étiquette.
+Le nom peut rester identique alors que le code qu'il désigne change.
 
-La \textbf{deuxième étude} examine les altérations de l'historique de commits dans \num{111}~millions de dépôts, identifiant \num{8,7}~millions de commits directement ciblés par une alteration dans \num{1,22}~million de dépôts (\num{1,10}\,\%).
-Elle caractérise la distribution des altérations par type de branche et par popularité du dépôt, introduit une taxonomie des formes d'altération, et documente deux schémas à caractère sécuritaire à l'échelle de l'écosystème~: \num{13}~millions de suppressions de fichiers à caractère secret dans \num{75000}~dépôts, et des modifications rétroactives de licences dans \num{32000}~dépôts.
-L'étude produit également \textit{GitHistorian}, un outil en ligne de commande qui opérationnalise la détection d'altérations d'historique sur le graphe Software Heritage.
+Git utilise aussi des \emph{branches}.
+Une branche est le nom du dernier point d'une ligne de développement.
+Contrairement à une version numérotée, une branche est censée avancer lorsque du travail est ajouté.
+Git enregistre chaque étape sauvegardée sous la forme d'un \emph{commit}, dont le rôle est d'identifier les fichiers à un instant donné, d'enregistrer des informations comme l'auteur et la date, et de pointer vers des commits antérieurs.
+L'ensemble des commits forme l'historique visible du projet.
+Les développeurs peuvent remplacer une partie de cet historique par une opération couramment appelée réécriture de l'historique.
+Après cette réécriture, d'anciens commits peuvent ne plus apparaître sur le site d'hébergement, même s'ils avaient été publics auparavant.
 
-La \textbf{troisième étude} poursuit la question laissée ouverte par la seconde~: parmi les fichiers supprimés contenant des informations secrètes qui restent archivés dans Software Heritage, combien contiennent des secrets détectables et syntaxiquement valides~?
-Parmi \num{281728}~blobs téléchargés, \num{9,18}\,\% sont détectés comme ayant au moins un secret~; parmi ces blobs, \num{86,4}\,\% passent la validation syntaxique hors ligne.
-La thèse propose une infrastructure de détection et un protocole de divulgation responsable qui permettrait de tester la validité des secrets pour répondre à cette question.
+Une dernière notion importante est que Git attribue à chaque fichier et à chaque commit une \emph{empreinte de contenu}, aussi appelée hash.
+Cet identifiant est calculé à partir des données~; si les données changent, l'empreinte change avec une probabilité extrêmement élevée.
+Le contenu lui-même ne peut donc pas être modifié silencieusement sous la même empreinte.
+La difficulté vient des noms placés devant ces empreintes.
+Les étiquettes et les branches peuvent être redirigées vers une autre empreinte.
+La plupart des personnes et des systèmes automatiques utilisent ces noms lisibles, car ils sont plus faciles à manipuler que de longs identifiants techniques.
 
-Ensemble, les trois études établissent que la mutabilité des dépôts est un phénomène actif et récurrent aux conséquences mesurables sur la chaîne d'approvisionnement, et que, sans snapshots archivés, tout ce que nous pouvons observer dans un dépôt public est ce que ses références actuelles nous laissent voir.
+Les consommateurs de logiciels traitent souvent un nom de version publié comme s'il était permanent.
+Les instructions de construction, les dossiers de sécurité et les tâches automatiques peuvent conserver le nom sans conserver l'empreinte exacte que ce nom désignait au moment de l'utilisation.
+Si le nom est déplacé plus tard, la même instruction peut récupérer un code différent sans aucune action de la part du consommateur.
+Et comme l'historique visible peut aussi être remplacé, une inspection ultérieure peut alors voir un dépôt propre, mais pas l'état que les utilisateurs précédents avaient téléchargé.
+
+En mars 2025, des attaquants ont modifié un composant d'automatisation très réutilisé nommé\\ \texttt{tj-actions/changed-files}.
+Ils ont redirigé \num{346} étiquettes de version existantes vers un même commit malveillant.
+Les projets concernés n'avaient pas besoin de contenir eux-mêmes une vulnérabilité.
+Leur erreur était de supposer qu'un nom de version signifiait toujours ce qu'il avait signifié auparavant.
+Cet incident illustre une conséquence possible du déplacement d'une étiquette.
+Il ne signifie pas que chaque déplacement ou réécriture est une attaque.
+Les responsables utilisent aussi ces opérations pour corriger une version, organiser le travail en cours ou retirer une information publiée par erreur.
+
+Le problème central de cette thèse est cet écart entre l'usage et la conception.
+Git protège l'identité du contenu enregistré, mais ne garantit pas la continuité des noms et des historiques par lesquels ce contenu est consommé.
+La thèse pose trois questions liées.
+À quelle fréquence les étiquettes de version changent-elles~?
+À quelle fréquence les historiques publiés sont-ils réécrits, et que contiennent ces réécritures~?
+Lorsque des fichiers sensibles sont retirés par une réécriture, que reste-t-il dans les archives indépendantes~?
+
+Montrer que Git permet ces opérations est facile.
+Les mesurer de manière fiable à l'échelle du logiciel public ne l'est pas.
+La première difficulté est l'observation.
+Un site d'hébergement montre principalement l'état actuel d'un dépôt.
+Lorsqu'une étiquette est déplacée ou qu'un historique est remplacé, l'état antérieur peut ne plus y être visible.
+Un chercheur qui commence son étude après le changement a besoin d'un enregistrement indépendant des états antérieur et ultérieur.
+
+La deuxième difficulté est l'échelle.
+Le logiciel public est réparti dans des centaines de millions de dépôts.
+Chaque dépôt peut contenir de nombreux noms, branches, commits et fichiers.
+Il peut aussi changer entre deux observations.
+Télécharger et examiner manuellement tout ce contenu est impossible.
+Même un traitement automatique doit éviter les opérations coûteuses sur chaque fichier.
+La méthode doit commencer par des tests peu coûteux pour trouver des candidats, puis réserver l'analyse approfondie à un ensemble beaucoup plus réduit.
+
+La troisième difficulté est l'interprétation.
+Une attaque, une opération de maintenance et une modification accidentelle peuvent produire le même changement structurel.
+L'archive peut établir qu'un nom ou un historique a changé, mais elle ne peut généralement pas établir pourquoi.
+Une mesure utile doit donc séparer la détection du jugement.
+Elle doit décrire ce qui a changé sans qualifier automatiquement chaque changement de malveillant.
+
+La quatrième difficulté apparaît lorsque des identifiants sont en jeu.
+Un identifiant est une information, comme un mot de passe ou une clé privée, qui permet d'accéder à un service.
+Les outils de détection de secrets peuvent reconnaître un texte qui ressemble à un identifiant, mais ils peuvent se tromper.
+Un fichier peut contenir une clé bien formée qui a déjà été annulée.
+Tester si l'identifiant d'un tiers fonctionne encore peut créer un problème de sécurité et d'éthique.
+L'étude doit distinguer un secret possible, un identifiant structurellement valide et un identifiant toujours actif.
+
+La thèse résout le problème d'observation grâce à Software Heritage, la plus grande archive publique de code source.
+Software Heritage visite régulièrement les dépôts publics et sauvegarde leur état.
+Chaque état sauvegardé constitue un \emph{instantané}.
+Deux instantanés du même dépôt offrent une vue avant et après.
+L'instantané antérieur peut conserver un nom, un commit ou un fichier que le site d'hébergement n'affiche peut-être plus.
+
+Les trois études suivent la même stratégie générale.
+Elles sélectionnent d'abord les dépôts ayant au moins deux visites archivées.
+Elles comparent des instantanés successifs et recherchent une différence structurelle simple.
+Elles classent ensuite cette différence.
+Seuls les candidats pertinents passent aux étapes plus coûteuses, comme la comparaison des fichiers, la récupération du contenu archivé ou l'utilisation d'outils de détection de secrets.
+Cette approche par étapes enregistre aussi ce que chaque filtre risque de manquer, et rend possible une étude à l'échelle de l'écosystème.
+
+La première étude suit les étiquettes de version pendant neuf années d'observations archivées.
+Elle considère \num{45,5}~millions de dépôts contenant au moins une étiquette.
+Pour chaque nom, elle demande si celui-ci disparaît ou pointe vers un autre objet dans un instantané ultérieur.
+Elle distingue ensuite plusieurs situations.
+Une étiquette peut être supprimée.
+Elle peut être déplacée alors que les fichiers sources restent identiques et que seules les informations descriptives changent.
+Elle peut enfin être déplacée vers un code source différent.
+
+L'étude trouve \num{10,2}~millions d'altérations observables dans environ \num{189000}~dépôts.
+Cela représente \num{0,41}\,\% des dépôts contenant des étiquettes dans le corpus.
+La proportion est faible, mais le nombre absolu est suffisamment important pour compter pour les logiciels qui dépendent de ces noms.
+La plupart des événements observés sont des suppressions.
+Parmi les déplacements, environ \num{68}\,\% conduisent à des fichiers sources différents.
+L'étude trouve aussi des altérations dans des projets très utilisés, montrant que la popularité ne garantit pas qu'un nom de version restera stable.
+
+Pour vérifier si ces changements ont des conséquences hors du dépôt, l'étude compare les étiquettes altérées à Nixpkgs, une grande collection d'instructions de construction de logiciels, qui enregistre une empreinte attendue pour le code source téléchargé.
+Plusieurs étiquettes altérées produisent une différence entre le code récupéré plus tard sous le même nom et l'empreinte enregistrée par Nixpkgs.
+Ce résultat constitue une preuve utile qui relie un changement dans un dépôt à un échec concret de reconstruction.
+L'incident \texttt{tj-actions/changed-files} fournit un exemple de sécurité distinct~: la même opération peut aussi rediriger des systèmes automatiques vers un code malveillant.
+
+Cette première étude fait progresser l'état de l'art en passant d'avertissements et d'exemples isolés à une grande mesure longitudinale.
+Elle fournit des définitions, une méthode de détection automatique et une classification qui sépare les suppressions, les changements descriptifs et les changements du code source.
+Elle relie aussi les observations dans les dépôts à des conséquences dans une collection réelle de logiciels et à une attaque documentée.
+
+La deuxième étude étend la recherche des noms de version aux historiques complets des commits.
+Elle examine \num{111}~millions de dépôts visités au moins deux fois par Software Heritage.
+Une altération de l'historique est observée lorsqu'un commit accessible depuis une branche dans un instantané antérieur ne l'est plus depuis cette branche dans l'instantané suivant.
+Cette définition détecte le remplacement de l'historique affiché sans supposer de motif.
+
+L'analyse des historiques est plus difficile que celle des étiquettes.
+Modifier un ancien commit lui donne une nouvelle empreinte.
+Chaque commit plus récent qui le mentionne reçoit lui aussi une nouvelle empreinte, même si ses fichiers n'ont pas changé.
+Une seule modification directe peut donc apparaître comme une longue chaîne d'altérations.
+La thèse sépare les causes directes de ces effets propagés.
+Elle regroupe aussi les noms de branches par rôle, afin de comparer les branches principales, les propositions de changement et les autres branches malgré des conventions de nommage différentes.
+
+L'étude identifie \num{8,7}~millions de réécritures directes dans environ \num{1,22}~million de dépôts, soit \num{1,10}\,\% du corpus examiné.
+La plupart modifient des fichiers ou des répertoires.
+D'autres changent seulement des informations descriptives comme les dates, les auteurs ou les messages.
+Les réécritures apparaissent souvent sur les branches utilisées pour examiner des propositions, où le remplacement fait partie du travail normal.
+Elles apparaissent aussi sur les branches principales et dans des projets populaires.
+L'historique actuel ne doit donc pas être considéré comme un relevé complet de tout ce qui a été publié.
+
+Deux motifs observables au niveau des fichiers montrent pourquoi cela importe.
+L'étude trouve des modifications rétroactives de fichiers de licence dans environ \num{32000}~dépôts.
+Un tel changement ne détermine pas à lui seul le statut juridique des versions antérieures, mais peut rendre les preuves de licence plus difficiles à obtenir à partir du dépôt actuel.
+L'étude trouve aussi environ \num{13}~millions de suppressions de fichiers dont les noms évoquent des mots de passe, des clés privées, des certificats ou un matériel sensible similaire, dans environ \num{75000}~dépôts.
+À ce stade, les noms de fichiers ne sont qu'un signal d'alerte.
+Ils ne prouvent pas que chaque fichier retiré contient un vrai secret.
+
+La thèse rassemble ce travail de détection dans \textit{GitHistorian}, un outil permettant à un utilisateur d'interroger des données d'altération précalculées pour un dépôt particulier et d'examiner les preuves d'une réécriture de l'historique.
+Il ne décide pas si un changement est malveillant.
+Son rôle est de rendre les preuves archivées utilisables en dehors de l'expérience à grande échelle d'origine.
+
+Cette deuxième étude fait avancer les travaux antérieurs de trois manières.
+Elle mesure le remplacement d'historiques publiés à l'échelle d'une grande archive.
+Elle sépare les réécritures directes du grand nombre de changements produits indirectement par une modification antérieure.
+Enfin, elle transforme la méthode en outil opérationnel et utilise les preuves obtenues pour étudier les licences et le retrait de fichiers potentiellement sensibles.
+
+La troisième étude examine ce que contiennent les fichiers aux noms suspects trouvés par la deuxième.
+Elle part d'une distinction importante.
+Retirer un mot de passe ou une clé divulguée du dépôt visible est une opération de nettoyage, mais pour révoquer l'identifiant, il faut l'annuler auprès du service qui l'accepte.
+Cette dernière étape constitue une révocation.
+Le nettoyage change ce que verront les prochains visiteurs, mais seule la révocation supprime l'accès accordé par l'identifiant.
+
+L'archive contient trop de fichiers retirés pour tous les examiner.
+L'étude utilise donc une nouvelle procédure par étapes.
+Elle conserve d'abord les noms de fichiers qui indiquent couramment des identifiants.
+Elle récupère ensuite les fichiers archivés, retire les copies identiques et analyse chaque fichier unique avec deux outils indépendants de détection de secrets.
+Enfin, elle relie chaque résultat aux emplacements du dépôt où ce contenu est apparu.
+
+Le corpus obtenu contient \num{281728} fichiers archivés téléchargés et sélectionnés parce que leurs noms évoquaient un contenu sensible.
+Parmi ces fichiers présélectionnés, \num{9,18}\,\% produisent au moins un résultat de détection.
+Ce résultat montre qu'une part non négligeable de ce corpus sélectionné contient du texte reconnu comme matériel secret, ce qui atteste l'efficacité du filtre sur les noms de fichiers.
+Ce pourcentage ne doit toutefois pas être généralisé à tous les fichiers retirés ni à tous les dépôts, car le filtre précédent sur les noms de fichiers concentre volontairement l'analyse sur les cas probables.
+
+Les clés privées font l'objet d'une vérification supplémentaire hors ligne.
+Cette vérification demande si le texte détecté possède la structure interne attendue d'une vraie clé.
+Elle ne contacte aucun service extérieur et ne tente aucune authentification.
+Parmi les fichiers signalés comme clés privées par un détecteur, \num{86,4}\,\% passent cette validation structurelle.
+Cela réduit, sans l'éliminer, l'incertitude créée par la détection automatique.
+Le résultat ne montre toujours pas si les clés sont actives.
+
+Le statut actif de ces identifiants reste une question ouverte.
+La thèse définit un processus de validation responsable en trois niveaux~: vérifications hors ligne, vérifications effectuées par le fournisseur du service, puis tests réseau étroitement autorisés.
+Seul le premier niveau est terminé pour les clés privées.
+Aucun taux d'identifiants actifs à l'échelle de l'écosystème n'est avancé.
+Cette limite fait partie de la contribution~: la méthode précise quelles conclusions peuvent être atteintes automatiquement et lesquelles nécessitent une coopération et une autorisation.
+
+Cette troisième étude fait progresser les recherches sur les identifiants exposés en se concentrant sur le contenu retiré pendant un nettoyage de l'historique, plutôt que seulement sur les secrets visibles dans le dépôt actuel.
+Elle relie les preuves structurelles de réécriture au contenu archivé des fichiers.
+Elle combine aussi détection à grande échelle, récupération de l'origine, validation hors ligne et chemin responsable vers de futures vérifications d'activité.
+
+Ensemble, les études montrent trois niveaux du même problème.
+Un nom de version apparemment stable peut changer de cible.
+Un historique apparemment stable peut être remplacé.
+Un fichier retiré de cet historique peut rester disponible dans une archive indépendante.
+Même si la plupart des altérations sont anodines, l'état actuel de Git ne peut pas fournir la stabilité perçue sur laquelle les consommateurs comptent souvent.
+
+Les résultats constituent des limites basses prudentes, étant donné que Software Heritage visite les dépôts à intervalles réguliers~; par conséquent, un changement effectué puis annulé entre deux visites n'est pas observé.
+De plus, plusieurs changements entre deux visites peuvent apparaître comme un seul, ce qui signifie que les dépôts sans assez d'observations archivées ne peuvent pas être étudiés par cette méthode.
+Le travail porte sur les dépôts Git représentés dans l'archive Software Heritage et ne s'étend pas automatiquement à chaque plateforme de développement ou système de gestion de versions.
+Les méthodes structurelles décrivent le changement, pas l'intention.
+Enfin, la troisième étude établit la présence de matériel secret détectable et souvent bien formé, mais pas si ce matériel accorde encore un accès.
+
+Malgré ces limites, la thèse augmente ce qui peut être connu sur l'intégrité des dépôts.
+Les travaux antérieurs décrivaient les risques liés aux noms modifiables, aux réécritures de l'historique ou aux identifiants divulgués, souvent à partir de cas individuels ou d'analyses de l'état actuel.
+Cette thèse fournit une méthode archivistique commune qui suit les changements dans le temps, l'applique à l'échelle de l'écosystème, relie trois niveaux auparavant séparés, et produit des classifications et des outils réutilisables.
+Elle transforme une possibilité offerte par Git en un phénomène mesurable ayant des conséquences observables en aval.
+
+Les résultats conduisent à trois recommandations pratiques.
+Premièrement, l'utilisation d'un logiciel devrait enregistrer et vérifier une empreinte de contenu exacte en plus d'un nom de version lisible.
+Le nom reste utile aux personnes, tandis que l'empreinte détecte une substitution ultérieure.
+Deuxièmement, les archives indépendantes et les journaux des plateformes devraient conserver des preuves lorsque les noms ou les historiques changent.
+Sans état antérieur, les utilisateurs ultérieurs ne peuvent pas reconstruire les événements de manière fiable.
+Troisièmement, corriger le dépôt ne suffit pas toujours à clore l'incident~: si une étiquette publiée a été redirigée vers un autre code, les constructions en aval qui s'y étaient appuyées peuvent encore devoir être mises à jour ou rejetées~; si un historique a été réécrit, les auditeurs peuvent encore avoir besoin d'accéder à l'état antérieur~; si un identifiant a été divulgué, il doit être révoqué chez le fournisseur émetteur, et non seulement retiré du dépôt visible.
+
+La souplesse des dépôts est utile et souvent nécessaire au développement.
+L'objectif est de cesser de traiter une vue actuelle pratique comme la preuve d'un passé immuable.
+Dans une chaîne d'approvisionnement logicielle construite sur des noms qui peuvent être déplacés, la confiance doit s'appuyer sur des preuves qui survivent à la dernière modification.
 \end{SingleSpace}
 \clearpage
