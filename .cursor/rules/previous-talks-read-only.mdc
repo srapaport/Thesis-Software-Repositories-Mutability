@@ -1,0 +1,41 @@
+---
+description: defense/previous_talks/ holds read-only archived conference slides
+alwaysApply: true
+---
+
+# Previous Talks Are Read-Only Archives
+
+The `defense/previous_talks/` directory contains **archived Beamer slide decks** from prior conference presentations (ASE, REP). Treat every path under `defense/previous_talks/` as **read-only** in this repository.
+
+## Required behavior
+
+- **Do not modify** any file under `defense/previous_talks/` (`.tex`, `.sty`, figures, build artifacts, scripts, etc.).
+- **You may read freely** any source file when drafting the thesis defense slides (`defense/slides.tex`): slide wording, figure paths, numerical macros, and narrative structure are useful reference material.
+- **Prefer LaTeX sources over PDFs** when reusing content: grep `short.tex` and `numbers.tex` rather than extracting text from rendered PDFs.
+- When adapting prior material, **edit `defense/slides.tex`** (and its `defense/` assets) — never edit the archived decks in place.
+
+If a task requires changing an archived talk, stop and tell the user to edit the upstream project or copy the deck out of `previous_talks/` first.
+
+## Current inventory
+
+### `defense/previous_talks/ASE_talk/` (ASE — altered git histories)
+
+Beamer deck for the altered-histories paper. Key files:
+
+- `short.tex` — slide entry point
+- `numbers.tex` — numerical macros
+- `figs/` — talk figures (classification, SWH diagrams, distributions)
+- `feedback.md` — presentation feedback notes
+- `short.pdf`, `research-1797-slides*.pdf` — rendered exports
+
+### `defense/previous_talks/REP_talk/` (ACM REP 2026 — git tag alterations)
+
+Beamer deck for the tag-alterations paper. Key files:
+
+- `short.tex` — slide entry point
+- `numbers.tex` — numerical macros
+- `figs/` — talk figures (taxonomy, temporal evolution, popularity, SWH snapshots)
+- `beamerthemetptng.sty` — shared beamer theme (also present in ASE_talk)
+- `short.pdf` — rendered export
+
+New archived talks may appear under `defense/previous_talks/` over time; the same read-only rule applies to all of them.
