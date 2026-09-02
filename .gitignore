@@ -31,3 +31,11 @@ models/GUIDELINES_FOR_IP PARIS_THESES _LAYOUT.pdf
 models/LaTeX/4eme.pdf
 models/LaTeX/1ere.pdf
 *_old.tex
+
+vulgarisation.txt
+defense/previous_talks/*
+defense/slides.pdf
+*.listing
+*.nav
+*.snm
+*.vrb
