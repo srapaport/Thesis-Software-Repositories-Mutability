@@ -41,6 +41,7 @@
 \usepackage[babel]{microtype}
 \usepackage{booktabs}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 \usepackage{calc}
 \usepackage[useregional]{datetime2}
 \usepackage{multirow}
@@ -85,6 +86,24 @@
         breaklines=true
     }
 }
+\newtcblisting{terminalboxsmall}{
+    listing only,
+    colback=black,
+    coltext=green!70!white,
+    fontupper=\ttfamily\footnotesize\bfseries,
+    arc=3mm,
+    boxrule=0pt,
+    left=6pt,
+    right=6pt,
+    top=2pt,
+    bottom=2pt,
+    breakable,
+    listing options={
+        basicstyle=\ttfamily\footnotesize\bfseries\color{green!70!white},
+        frame=none,
+        breaklines=true
+    }
+}
 
 % Side text+figure layouts: pull into the theme left margin (24mm frieze)
 % so text sits further left and the figure can grow.
@@ -123,7 +142,9 @@
 \newcommand{\AttackStableDaysLowerBound}{\num{148}\xspace}
 \newcommand{\AttackStableCases}{\num{340}\xspace}
 \newcommand{\StarPropZeroOnePct}{0.0248\%\xspace}
+\newcommand{\StarPropZeroOnePctTrunc}{\num{0.02}\%\xspace}
 \newcommand{\StarPropFiveHundredPlusPct}{0.7488\%\xspace}
+\newcommand{\StarPropFiveHundredPlusPctTrunc}{\num{0.75}\%\xspace}
 \newcommand{\StarZeroOneAlterationsPercent}{\num{74.29}\%\xspace}
 
 % --- Study 2: histories (from ASE_talk/numbers.tex) ---
@@ -186,6 +207,30 @@
 
 \maketitle
 
+\begin{frame}{Doctoral committee}
+
+    {\small
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Name} & \textbf{Affiliation} & \textbf{Role} \\
+        \midrule
+        Samia Bouzefrane     & Professeure, CNAM                      & Reviewer \\
+        Yvon Kermarrec       & Professeur, IMT-Atlantic               & Reviewer \\
+        Christelle Urtado    & Professeure, IMT-Mines d'Ales          & Examiner \\
+        Olivier Zendra       & Charg\'e de Recherche, INRIA           & Examiner \\
+        Laurent Pautet       & Professeur, T\'el\'ecom Paris          & Supervisor \\
+        Stefano Zacchiroli   & Professeur, T\'el\'ecom Paris          & Co-supervisor \\
+        Samuel Tardieu       & Ma\^itre de Conf.,\ T\'el\'ecom Paris  & Co-supervisor \\
+        Gregory Blanc        & Ma\^itre de Conf.,\ T\'el\'ecom SudParis & Guest \\
+        \bottomrule
+    \end{tabular}
+    }
+
+    \vspace{1em}
+
+    {\small Thesis prepared at T\'el\'ecom Paris, Institut Polytechnique de Paris.}
+\end{frame}
+
 \begin{frame}{Outline}
     \tableofcontents
 \end{frame}
@@ -201,12 +246,10 @@
         \begin{column}{0.44\linewidth}
             {\small
             \begin{itemize}
-                \item A deployable artifact depends on \textbf{hundreds to thousands} of upstream components.
-                \item Most ship as a \textbf{package}, picked by a \textbf{version label}
-                      (\texttt{2.3.1}) and fetched by a package manager: npm, PyPI, crates.io,
-                      Maven.
+                \item A deployable artifact can depend on \textbf{hundreds to thousands} of upstream components.
+                \item Most ship as a \textbf{package}, picked by a \textbf{version label} (\texttt{2.3.1}) and fetched by a package manager: npm, PyPI, crates.io, Maven.
                 \item \textbf{CI} installs and runs them on every change; \textbf{lockfiles}, \textbf{SBOMs}, SLSA provenance record what went in~\cite{ladisa2023supplychain,tamanna2024analyzingchallengesdeploymentslsa}.
-                \item One premise underlies all of it: \emph{resolving a dependency today yields the same artifact as yesterday.}
+                \item Premise: \emph{Resolving a dependency today yields the same artifact as yesterday.}
             \end{itemize}
             }
         \end{column}
@@ -224,6 +267,23 @@
     % \begingroup, not a brace group: a brace group here would be swallowed
     % as the frame subtitle.
     \begingroup\small
+    \begin{itemize}\setlength{\itemsep}{0.4em}
+        \item \textbf{Collaboration workspace:} developers push, pull, and reorganise work in progress. Rewriting recent work here is \textbf{accepted practice}.
+        \item \textbf{Distribution point:} package managers, CI, auditors, and researchers consume the \emph{same} repository as an \textbf{external artifact}, where stability is expected.
+        \item Downstream actors treat published \textbf{names / tags} as durable identifiers --- the repository becomes a \textbf{trust anchor}.
+        \item \textbf{Thesis scope:} the mutability of the names and states a repository publishes --- not the full supply-chain attack surface.
+    \end{itemize}
+    \endgroup
+    % \vspace{0.5em}
+    % {\small\emph{One artefact, two incompatible sets of expectations.}}
+\end{frame}
+
+% --- CUT: merged into ``two roles'' above; Ladisa definition spoken ---
+\iffalse
+\begin{frame}{A public repository plays two roles at once}
+    % \begingroup, not a brace group: a brace group here would be swallowed
+    % as the frame subtitle.
+    \begingroup\small
     \begin{itemize}\setlength{\itemsep}{0.3em}
         \item \textbf{Collaboration workspace:} developers push, pull, and reorganise work in progress. Rewriting recent work here is \textbf{accepted practice}.
         \item \textbf{Distribution point:} package managers, CI, auditors, and researchers consume the \emph{same} repository as an \textbf{external artifact}, where stability is expected.
@@ -235,7 +295,6 @@
     {\small\emph{One artefact, two incompatible sets of expectations.}}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Supply-chain attacks and the repository attack surface}
     \begin{block}{Definition}
         \small A \textbf{software supply-chain attack} compromises downstream users \emph{not}
@@ -253,8 +312,12 @@
               states a\\repository publishes}
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+% --- CUT: talk the object model over Git_arch ---
+\iffalse
 \begin{frame}{The Git object model: identity comes from content}
     \begin{itemize}
         \item \textbf{Blobs}, \textbf{trees}, \textbf{commits}, \textbf{releases} (annotated
@@ -267,17 +330,21 @@
               the repository boundary.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Objects inside the DAG, references at the boundary}
     \hspace*{-14mm}%
     \begin{minipage}{\dimexpr\textwidth+14mm\relax}
     \centering
-    \includegraphics[width=\linewidth,height=0.84\textheight,keepaspectratio]{Git_arch.drawio.pdf}
+    \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{Git_arch.drawio.pdf}\\[0.3em]
+    {\small Hashes name objects \emph{inside} the DAG; \textbf{branches and tags} sit at the boundary.}
     \end{minipage}
 \end{frame}
 
-% ------------------------------------------------------------------
+% --- CUT: talk branch-vs-tag and force-push over git_amend ---
+\iffalse
 \begin{frame}{References: mutable names on top of immutable objects}
     \begin{itemize}
         \item Users do not always handle hashes. They handle \textbf{references}:
@@ -294,7 +361,6 @@
     \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{How published history actually changes}
     \begin{itemize}
         \item \texttt{git commit --amend} replaces a recent commit;
@@ -307,13 +373,16 @@
               public ref to a commit that does not extend the previous history.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Amend and rebase: new objects, orphaned originals}
     \hspace*{-14mm}%
     \begin{minipage}{\dimexpr\textwidth+14mm\relax}
     \centering
-    \includegraphics[width=\linewidth,height=0.84\textheight,keepaspectratio]{git_amend.drawio.pdf}
+    \includegraphics[width=\linewidth,height=0.76\textheight,keepaspectratio]{git_amend.drawio.pdf}\\[0.25em]
+    {\small Branches are meant to move; \textbf{tags} are treated as stable \\ yet any ref can be deleted or retargeted, then \texttt{push --force}.}
     \end{minipage}
 \end{frame}
 
@@ -347,6 +416,8 @@
         \item Attackers retargeted \AttackTagMovesCount{} existing versions
               (\texttt{v39}\dots\texttt{v47}) to \textbf{one malicious
               commit}~\cite{paloalto_unit42_2025}.
+        \item \AttackStableCases{} of those tags had been stable
+              $\geq\AttackStableDaysLowerBound{}$ days --- trusted pins, not fresh noise.
         \item Anyone resolving a familiar version name then \textbf{ran attacker code}
               that could leak developer credentials.
     \end{itemize}
@@ -361,6 +432,33 @@ $ # same name -> different code after the next fetch
 \end{frame}
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{Thesis question and three nested layers}
+    \begin{block}{Central question}
+        {\small Can changes that undermine trust in a repository be \textbf{detected after the fact},
+        \textbf{at ecosystem scale}, and \textbf{classified}?}
+    \end{block}
+    \vspace{0.05em}
+    \begin{center}
+    \begin{tikzpicture}[
+        layer/.style={draw=tptred, line width=0.8pt, rounded corners=2pt,
+                      text width=0.90\linewidth, inner xsep=6pt, inner ysep=2.5pt, align=left}
+    ]
+        \node[layer] (l1) {\footnotesize\textbf{Layer 1 --- Tags}\quad
+            A release \emph{name} can resolve to different code while it persists in workflows.};
+        \node[layer, below=3pt of l1] (l2) {\footnotesize\textbf{Layer 2 --- History}\quad
+            A published \emph{commit graph} can be replaced: the branch seems to advance, the past is rewritten.};
+        \node[layer, below=3pt of l2] (l3) {\footnotesize\textbf{Layer 3 --- Content}\quad
+            A \emph{file removed} during a rewrite may survive in clones and archives --- possibly secrets.};
+    \end{tikzpicture}
+    \end{center}
+    % \vspace{0.25em}
+    % {\footnotesize Study~1 / Ch.\,3 \quad$\cdot$\quad Study~2 / Ch.\,4 \quad$\cdot$\quad Study~3 / Ch.\,5.
+    %  One method: compare archival snapshots, then filter and classify.}
+\end{frame}
+
+% --- CUT: merged into ``thesis question and three nested layers'' ---
+\iffalse
 \begin{frame}{One problem at three nested layers}
     \begin{itemize}
         \item \textbf{Layer 1 --- Reference:} a release \emph{tag} can resolve to different
@@ -375,7 +473,6 @@ $ # same name -> different code after the next fetch
      classification, and none should be labelled an ``attack'' by default.}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Thesis question and three studies}
     \begin{block}{Central question}
         Can changes that undermine trust in a repository be \textbf{detected after the fact},
@@ -391,12 +488,41 @@ $ # same name -> different code after the next fetch
     {\small One method throughout: compare independent archival snapshots,\\
      then filter and classify.}
 \end{frame}
+\fi
+% --- END CUT ---
 
 %##############################################################################
 \section{Method: Observing Mutability}
 %##############################################################################
 
 % ------------------------------------------------------------------
+\begin{frame}{Software Heritage: an independent witness}
+    \sidefigbegin
+    \begin{columns}[T,totalwidth=\linewidth]
+        \begin{column}{0.46\linewidth}
+            \small
+            \vspace{1em}
+            \begin{itemize}
+                \item A forge only shows the \textbf{current, official} history --- the one that was (re)written.
+                \item \textbf{Software Heritage}~\cite{swhcacm2018} revisits forges and records
+                      \textbf{successive snapshots} with persistent, content-derived
+                      identifiers~\cite{cise-2020-doi,iso-swhid}.
+                \item Two visits = a \textbf{before/after pair}; the earlier snapshot retains objects the forge no longer advertises~\cite{DBLP:conf/msr/PietriSZ20}.
+                \item Scale: \SWHOriginShort{} origins, \SWHRevisionsShort{} revisions~\cite{saner-2020-swh-graph}.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.52\linewidth}
+            \begin{center}
+                \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]%
+                                {swh-without-time-slides.drawio.pdf}
+            \end{center}
+        \end{column}
+    \end{columns}
+    \sidefigend
+\end{frame}
+
+% --- CUT: merged into ``Software Heritage: an independent witness'' ---
+\iffalse
 \begin{frame}{A forge only shows the winners' history}
     \begin{itemize}
         \item On GitHub/GitLab you see the \textbf{current, official} version of a
@@ -408,7 +534,6 @@ $ # same name -> different code after the next fetch
     \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Software Heritage + the snapshot-pair method}
     % \sidefigbegin
     % \begin{columns}[T,totalwidth=\linewidth]
@@ -437,6 +562,8 @@ $ # same name -> different code after the next fetch
     % \end{columns}
     % \sidefigend
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Three studies, one staged method}
@@ -455,7 +582,7 @@ $ # same name -> different code after the next fetch
         \midrule
         Tags      & tag targets across snapshots   & Nixpkgs / attack validation \\
         Histories & reachable commit graphs        & root-cause + category taxonomy \\
-        Secrets   & removed files $\to$ content     & recover, scan, validate \\
+        Secrets   & removed files     & recover, scan, validate \\
         \bottomrule
     \end{tabular}
     \end{center}
@@ -523,6 +650,8 @@ $ # same name -> different code after the next fetch
 \end{frame}
 
 % ------------------------------------------------------------------
+% --- CUT: speak the questions on the mismatch slide ---
+\iffalse
 \begin{frame}{Problem statement}
     \begin{itemize}
         \item Tags can be altered in theory and practice---but is that a real problem if developers
@@ -532,8 +661,11 @@ $ # same name -> different code after the next fetch
               on builds, packages, or supply-chain integrity?
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
-% ------------------------------------------------------------------
+% --- CUT: duplicate of Method; fig_swh_snapshots already in backup ---
+\iffalse
 \begin{frame}{Detection + Scale $\Rightarrow$ Software Heritage}
     \begin{itemize}
         \item Once a forge overwrites a tag, the previous target is gone locally.
@@ -544,13 +676,18 @@ $ # same name -> different code after the next fetch
         \includegraphics[width=0.85\linewidth]{fig_swh_snapshots.drawio.pdf}
     \end{center}
 \end{frame}
+\fi
+% --- END CUT ---
 
-% ------------------------------------------------------------------
+% --- CUT: pipeline figure ---
+\iffalse
 \begin{frame}{Detection pipeline}
     \begin{center}
         \includegraphics[width=0.74\linewidth]{workflow_pipeline.drawio.pdf}
     \end{center}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Scale: tag alterations are not anecdotal}
@@ -572,7 +709,7 @@ $ # same name -> different code after the next fetch
         \end{column}
         \begin{column}{0.64\linewidth}
             \begin{center}
-                \includegraphics[width=\linewidth]{temporal_evolution.pdf}
+                \includegraphics[width=1.05\linewidth]{temporal_evolution.pdf}
             \end{center}
         \end{column}
     \end{columns}
@@ -595,7 +732,7 @@ $ # same name -> different code after the next fetch
             \vspace{2em}
         \end{column}
         \begin{column}{0.59\linewidth}
-            \includegraphics[width=\linewidth,height=0.82\textheight,keepaspectratio]{taxonomy.pdf}
+            \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]{taxonomy.pdf}
         \end{column}
     \end{columns}
     \sidefigend
@@ -608,9 +745,9 @@ $ # same name -> different code after the next fetch
         \begin{column}{0.37\linewidth}
             \vspace{1em}
             \begin{itemize}
-                \item \textbf{Volume:} \StarZeroOneAlterationsPercent{} of alterations in 0--1 star repos (long tail).
-                \item \textbf{Prevalence:} $P(\geq 1$ alteration$)$ rises with stars:\\
-                      \StarPropZeroOnePct{} (0--1) $\rightarrow$ \StarPropFiveHundredPlusPct{} (501+).
+                \item \textbf{Volume:}\\\StarZeroOneAlterationsPercent{} of alterations in 0--1 star repos.
+                \item \textbf{Prevalence:}\\$P(\geq 1$ alteration$)$ rises with stars:\\
+                      \small{\StarPropZeroOnePctTrunc{} (0--1) $\rightarrow$ \StarPropFiveHundredPlusPctTrunc{} (501+).}
                 \item Popularity does \textbf{not} protect against tag alterations ---
                       though stars are an imperfect, gameable
                       proxy~\cite{borges-2016-github-stars,DBLP:journals/corr/abs-2412-13459}.
@@ -627,6 +764,40 @@ $ # same name -> different code after the next fetch
 \end{frame}
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}[fragile]{Impact: coordinated retargeting, and Nixpkgs already fails}
+    % \sidefigbegin
+    % \begin{columns}[T,totalwidth=\linewidth]
+    %     \begin{column}{0.48\linewidth}
+    %         \small
+            \begin{itemize}
+                \item Fork \AttackRepoFork{}: \AttackTagMovesCount{} tags moved to \textbf{one} malicious revision.
+                \item Nix pins by fixed-output hash~\cite{DBLP:conf/lisa/DolstraJV04}:
+                      \NixPkgsTracked{} packages in our altered-tag set;
+                      \NixPkgsHashMismatch{} confirmed rebuild failures
+                      (\NixPkgsFailDeletion{} deletion, \NixPkgsFailHashMismatch{} hash mismatch).
+            \end{itemize}
+            \vspace{0.3em}
+            \begin{terminalbox}
+$ nix build ...#libv3270.src --rebuild
+error: hash mismatch:
+  specified: sha256-...
+  got:       sha256-...
+            \end{terminalbox}
+            % \vspace{0.4em}
+            % {\small Tag \emph{names} are not stable anchors: record the
+            %  \textbf{commit / content hash}. Not every alteration is malicious.}
+    %     \end{column}
+    %     \begin{column}{0.50\linewidth}
+    %         \centering
+    %         \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_attack_retarget.pdf}
+    %     \end{column}
+    % \end{columns}
+    % \sidefigend
+\end{frame}
+
+% --- CUT: merged into Impact (attack + Nixpkgs) ---
+\iffalse
 \begin{frame}{Threat: delayed retargeting in a real attack}
     \begin{itemize}
         \item Fork \AttackRepoFork{} (related to \texttt{tj-actions/changed-files}).
@@ -636,7 +807,6 @@ $ # same name -> different code after the next fetch
     \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}[fragile]{Threat: Nixpkgs already sees the failures}
     \begin{itemize}
         \item Nix pins sources by fixed-output hash~\cite{DBLP:conf/lisa/DolstraJV04}:
@@ -654,8 +824,11 @@ error: hash mismatch in fixed-output derivation '...':
             got:    sha256-...
     \end{lstlisting}
 \end{frame}
+\fi
+% --- END CUT ---
 
-% ------------------------------------------------------------------
+% --- CUT: takeaway folded into Impact ---
+\iffalse
 \begin{frame}{Study 1 --- conclusion}
     \begin{itemize}
         \item Tag \emph{names} are useful for humans; they are \textbf{not} stable dependency anchors.
@@ -669,6 +842,8 @@ error: hash mismatch in fixed-output derivation '...':
         \item We do \textbf{not} claim every alteration is malicious---only that mutable names and time-invariant references are in tension.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 %##############################################################################
 \section{Study 2: Altered Histories}
@@ -701,7 +876,8 @@ error: hash mismatch in fixed-output derivation '...':
     \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------
+% --- CUT: duplicate of Method (SWH as independent witness) ---
+\iffalse
 % [feedback] Winners' history + SWH as the archive that preserves the real past.
 \begin{frame}{You only see the version of the winners}
     \begin{itemize}
@@ -715,8 +891,44 @@ error: hash mismatch in fixed-output derivation '...':
     \vspace{0.4em}
     {\small We detect and classify the rewrites; the archive is what makes the vanished past observable again.}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+\begin{frame}{Method and scale: detecting rewritten histories}
+    \sidefigbegin
+    \centering
+    \includegraphics[width=\linewidth,height=0.52\textheight,keepaspectratio]{flowchart.drawio.pdf}
+    \vspace{0.35em}
+    \begin{columns}[T,totalwidth=\linewidth]
+        \begin{column}{0.48\linewidth}
+            \small
+            \raggedright
+            \begin{itemize}
+                \item Compare successive SWH snapshots of
+                      \textbf{\OriginsTwoVisitsOrMoreShort{}} Git origins.
+                \item Isolate \textbf{root-cause} commits from snowball-propagated descendants.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\linewidth}
+            \small
+            \raggedright
+            \begin{itemize}
+                \item \textbf{\GitOriginsRootCauseCommitsShort{}} repositories
+                      (\textasciitilde\PercentOriginsAltered{}) with
+                      \textbf{\GitRootCauseCommitsShort{}} root-cause
+                      commits~\cite{DBLP:conf/kbse/RapaportPTZ25}.
+                \item Same popularity gradient as Study~1:
+                      \StarAlterRateZeroOne{} (0--1 stars) $\rightarrow$
+                      \StarAlterRateThousandPlus{} (1000+).
+            \end{itemize}
+        \end{column}
+    \end{columns}
+    \sidefigend
+\end{frame}
+
+% --- CUT: merged into ``Method and scale'' ---
+\iffalse
 \begin{frame}{Methodology}
     \vfill
     \begin{columns}[T,totalwidth=\textwidth]
@@ -740,7 +952,6 @@ error: hash mismatch in fixed-output derivation '...':
     \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{How often are histories altered?}
     \begin{itemize}
         \item \textbf{\GitOriginsRootCauseCommitsShort{} repositories} with observable
@@ -754,6 +965,8 @@ error: hash mismatch in fixed-output derivation '...':
               \textbf{disappear} from the forge, so the archive is what makes the count possible.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Where alterations land: branch distribution}
@@ -781,6 +994,8 @@ error: hash mismatch in fixed-output derivation '...':
 \end{frame}
 
 % ------------------------------------------------------------------
+% --- CUT: same popularity lesson as Study 1; spoken on method+scale ---
+\iffalse
 \begin{frame}{Which repositories? Popularity does not protect}
     \sidefigbegin
     \begin{columns}[T,totalwidth=\linewidth]
@@ -806,6 +1021,8 @@ error: hash mismatch in fixed-output derivation '...':
     \end{columns}
     \sidefigend
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{What changed: category taxonomy}
@@ -837,6 +1054,8 @@ error: hash mismatch in fixed-output derivation '...':
 \end{frame}
 
 % ------------------------------------------------------------------
+% --- CUT: LICENSE at #20 mentioned on the case-study slide ---
+\iffalse
 \begin{frame}{File patterns in alterations}
     \begin{columns}[T,totalwidth=\textwidth]
         \begin{column}{0.58\textwidth}
@@ -872,8 +1091,42 @@ error: hash mismatch in fixed-output derivation '...':
         \end{column}
     \end{columns}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{Two case studies: licences and secrets}
+    \begin{columns}[T,totalwidth=\textwidth]
+        \begin{column}{0.48\textwidth}
+            \small
+            \textbf{Licences --- rewriting the past}
+            \begin{itemize}
+                \item \LicenseAllShort{} altered license files on \textbf{main};
+                      \LicenseOrigins{} repositories (\texttt{LICENSE} is rank \#20 among altered files).
+                \item ScanCode~\cite{scancode-home}:
+                      \LicenseUpdate{} version updates,
+                      \LicenseFullChange{} full changes,
+                      \LicensePartialChange{} partial.
+                \item Retroactive rewrite: as if the \emph{new} license had always been the only valid one --- rights already granted may disappear.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.50\textwidth}
+            \small
+            \textbf{Secrets --- bridge to Study 3}
+            \begin{itemize}
+                \item \SecretsRemovedAllShort{} secret-looking file removals,
+                      \SecretsOriginsAllShort{} repositories.
+                \item \textbf{Removal $\neq$ security:} clones and archives persist.
+                \item Keys must be \textbf{rotated} at the provider.
+                \item Study~3 recovers the content and checks what those files held.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- CUT: merged into ``Two case studies'' ---
+\iffalse
 \begin{frame}{Case study 1: license changes --- rewriting the past}
     \begin{itemize}
         \item \textbf{\LicenseAllShort{}} altered license files on \textbf{main} branches;
@@ -891,7 +1144,6 @@ error: hash mismatch in fixed-output derivation '...':
     \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Case study 2: removing secrets (bridge to Study 3)}
     \begin{itemize}
         \item \textbf{\SecretsRemovedAllShort{}} file removals whose names suggest secrets
@@ -904,24 +1156,26 @@ error: hash mismatch in fixed-output derivation '...':
               really held.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}[fragile]{GitHistorian: making the archive queryable}
     \begin{columns}[T,totalwidth=\textwidth]
-        \begin{column}{0.46\textwidth}
+        \begin{column}{0.42\textwidth}
             \small
             \begin{itemize}
-                \item Open-source automated detection tool.
-                \item Detects repository history alterations with detailed categorisation.
-                \item CI/CD integration (Git hooks, pipelines).
-                \item \url{github.com/srapaport/git-historian}
-                \item Dataset and scripts released as a replication
-                      package~\cite{replication-package-altered-histories}.
+                \item Open-source detection of history alterations, with categorisation and CI/CD hooks.\footnote[frame]{\url{https://github.com/srapaport/git-historian}}
+                \item Replication package~\cite{replication-package-altered-histories}.
             \end{itemize}
+            \vspace{0.5em}
+            {\small\textbf{Takeaway:} \GitOriginsRootCauseCommitsShort{} repositories,
+             11.4\% of alterations on \texttt{main}/\texttt{master};
+             protect production branches and treat rewritten history as a visibility gap.}
         \end{column}
-        \begin{column}{0.52\textwidth}
-            \begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true,escapeinside={(*}{*)}]
-(*\textcolor{green!60!black}{\bfseries\$}*) git-historian check \
+        \begin{column}{0.56\textwidth}
+            \begin{terminalboxsmall}
+$ git-historian check \
     github.com/example/project --verbose
 Connected to the database!
 Found 2 altered history records.
@@ -933,12 +1187,13 @@ Record #1:
   Category: FileModified
 
 Saved to ~/.local/state/git-historian/
-\end{lstlisting}
+            \end{terminalboxsmall}
         \end{column}
     \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------
+% --- CUT: takeaway folded into GitHistorian ---
+\iffalse
 \begin{frame}{Study 2 --- conclusion}
     \begin{itemize}
         \item First large-scale measurement: \GitOriginsRootCauseCommitsShort{} repositories,
@@ -954,6 +1209,8 @@ Saved to ~/.local/state/git-historian/
         \item \textbf{GitHistorian} turns the archival witness into a queryable check.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 %##############################################################################
 \section{Study 3: Removed Secrets}
@@ -966,9 +1223,9 @@ Saved to ~/.local/state/git-historian/
               class~\cite{DBLP:conf/ndss/MeliMR19,segura2022secrets,cwe798}.
         \item After a leak, two actions are \textbf{not interchangeable}~\cite{DBLP:journals/corr/abs-2211-06213}:
               \begin{itemize}
-                  \item \textbf{Cleanup} --- rewrite the repo (amend/rebase, force-push) so the
+                  \item \textbf{Cleanup} (optional) --- rewrite the repo (amend/rebase, force-push) so the
                         current view no longer shows the file. \emph{Visible, easy.}
-                  \item \textbf{Rotation} --- revoke/replace the credential at the provider that
+                  \item \textbf{Rotation} (mandatory) --- revoke/replace the credential at the provider that
                         issued it. \emph{The only thing that invalidates a
                         leak}~\cite{DBLP:conf/secdev/BasakNRW22}.
               \end{itemize}
@@ -979,6 +1236,39 @@ Saved to ~/.local/state/git-historian/
 \end{frame}
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{Detection funnel: from altered files to findings}
+    \begin{columns}[c,totalwidth=\textwidth]
+        \begin{column}{0.62\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                funnel/.style={draw=tptred, line width=0.8pt, rounded corners=2pt,
+                               align=center, inner sep=5pt, font=\small}
+            ]
+                \node[funnel, minimum width=0.95\linewidth, fill=tptred!12] (f1)
+                    {\textbf{\SecretFirstExtractionShort{}} broad filename matches};
+                \node[funnel, minimum width=0.82\linewidth, fill=tptred!8, below=5pt of f1] (f2)
+                    {\textbf{\SecretSecondExtractionShort{}} refined names ($\approx 128{:}1$)};
+                \node[funnel, minimum width=0.68\linewidth, fill=tptred!5, below=5pt of f2] (f3)
+                    {\textbf{\SecretResolvedBlobs{}} unique recoverable blobs};
+                \node[funnel, minimum width=0.55\linewidth, fill=tptred!18, below=5pt of f3] (f4)
+                    {\textbf{\SecretFindingBlobs{}} blobs with $\geq 1$ finding
+                     \quad(\SecretDetectionRate)};
+            \end{tikzpicture}
+        \end{column}
+        \begin{column}{0.36\textwidth}
+            \small
+            \begin{itemize}
+                \item Start from Study~2 altered files.
+                \item Recover from SWH, deduplicate, scan (gitleaks + TruffleHog).
+                \item Filename signal: \texttt{id\_rsa} 81\% vs.\ \texttt{.py} 1.5\%.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- CUT: replaced by funnel figure ---
+\iffalse
 \begin{frame}{A staged detection pipeline (recall $\to$ precision)}
     \begin{enumerate}
         \item \textbf{Start} from altered files in Study 2 --- far too many to scan directly.
@@ -991,12 +1281,8 @@ Saved to ~/.local/state/git-historian/
               precision is documented~\cite{DBLP:conf/msr/BasakNRW23,DBLP:conf/esem/BasakCRW23}.
         \item \textbf{Link} each finding back to \emph{every} repository location sharing that blob.
     \end{enumerate}
-    % \vspace{0.2em}
-    % {\small No ground truth marks a file as credential-bearing;\\
-    %  the filename is the only cheap signal.}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Detection funnel: candidates $\to$ findings}
     \begin{center}
     \small
@@ -1016,11 +1302,45 @@ Saved to ~/.local/state/git-historian/
         \bottomrule
     \end{tabular}
     \end{center}
-    % \vspace{0.3em}
-    % {\small A rate over a filename-enriched sample --- \emph{not} a claim that 9\% of altered files leak.}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{What we found: recoverable secrets, mostly well-formed keys}
+    \begin{columns}[T,totalwidth=\textwidth]
+        \begin{column}{0.52\textwidth}
+            \small
+            \begin{itemize}
+                \item \SecretDetectionRate{} of recovered blobs still look like secrets
+                      (\SecretFindingBlobs{} of \SecretResolvedBlobs).
+                \item \textbf{Private keys dominate} both detector rankings.
+                \item Offline parse (Tier~A): \SecretPKValidBlobs{} of
+                      \SecretPKFlaggedBlobs{} gitleaks private-key blobs are
+                      \textbf{cryptographically valid} (\SecretPKValidPct).
+                \item Syntactic validity $\neq$ still active --- a revoked key still parses.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.46\textwidth}
+            \centering
+            \begin{tikzpicture}[
+                box/.style={draw=tptred, line width=0.8pt, rounded corners=2pt,
+                            align=center, inner sep=7pt, font=\small, minimum width=0.92\linewidth}
+            ]
+                \node[box, fill=tptred!10] (a)
+                    {\textbf{\SecretDetectionRate}\\[-1pt]{\footnotesize blob-level detection}};
+                \node[box, fill=tptred!6, below=8pt of a] (b)
+                    {Private keys dominate\\[-1pt]{\footnotesize gitleaks + TruffleHog}};
+                \node[box, fill=tptred!14, below=8pt of b] (c)
+                    {\textbf{\SecretPKValidPct} valid keys\\[-1pt]{\footnotesize offline crypto parse}};
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- CUT: tables kept for restore; numbers folded into results slide ---
+\iffalse
 \begin{frame}{The filename heuristic works: hit-rate by file type}
     \begin{columns}[T,totalwidth=\textwidth]
         \begin{column}{0.55\textwidth}
@@ -1053,7 +1373,6 @@ Saved to ~/.local/state/git-historian/
     \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{What kind of secrets? Private keys dominate}
     \begin{center}
     \small
@@ -1071,12 +1390,8 @@ Saved to ~/.local/state/git-historian/
         \bottomrule
     \end{tabular}
     \end{center}
-    % \vspace{0.3em}
-    % {\small Counts over distinct (blob, path) locations; the taxonomies differ, so the columns
-    %  are separate rankings. \texttt{generic-api-key} is high-volume, least actionable.}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Tier A: are the private keys even real?}
     \begin{center}
     \small
@@ -1097,8 +1412,37 @@ Saved to ~/.local/state/git-historian/
         \item \textbf{But:} syntactic validity $\neq$ active --- a revoked key still parses.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{Honest scope: active-rate is still open}
+    \begin{center}
+    \begin{tikzpicture}[
+        t/.style={draw=tptred, line width=0.7pt, rounded corners=2pt, align=center,
+                  inner sep=4pt, font=\footnotesize, minimum height=1.15cm}
+    ]
+        \node[t, fill=tptred!14, minimum width=3.4cm] (ta) {\textbf{A --- offline}\\done (private keys)};
+        \node[t, fill=tptred!6, minimum width=3.4cm, right=6pt of ta] (tb) {\textbf{B --- provider}\\GitHub denied};
+        \node[t, fill=tptred!6, minimum width=3.4cm, right=6pt of tb] (tc) {\textbf{C --- network}\\only with written OK};
+        \draw[->, tptred, thick] (ta) -- (tb);
+        \draw[->, tptred, thick] (tb) -- (tc);
+    \end{tikzpicture}
+    \end{center}
+    \vspace{0.3em}
+    \small
+    \begin{itemize}
+        \item \textbf{Established:} after a ``cleanup'' rewrite, secrets often remain in the
+              archive --- mostly well-formed private keys.
+        \item \textbf{Not established:} whether any of those credentials are \textbf{still active}.
+        \item Forge-side push protection blocks \emph{new} leaks; it says nothing about what is already archived.
+        \item Any future rate is a \textbf{lower bound} tied to the archive's vintage (\FullDataset).
+    \end{itemize}
+\end{frame}
+
+% --- CUT: three-tier folded into honest-scope ladder ---
+\iffalse
 \begin{frame}{Validation without abuse: a three-tier model}
     \begin{itemize}
         \item \textbf{Tier A --- offline.} Local structural/crypto checks, no network.
@@ -1108,11 +1452,8 @@ Saved to ~/.local/state/git-historian/
         \item \textbf{Tier C --- researcher network check.} One predefined read-only / metadata-only
               probe, \emph{only} after explicit written provider authorisation.
     \end{itemize}
-    % \vspace{0.3em}
-    % {\small Silence is never authorisation. Database and unreachable-host credentials are excluded from probing.}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Honest scope: active-rate is still open}
     \small
     \begin{itemize}
@@ -1127,12 +1468,16 @@ Saved to ~/.local/state/git-historian/
               (\FullDataset): keys may have expired, rotated, or been revoked since.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 %##############################################################################
 \section{Synthesis and Conclusion}
 %##############################################################################
 
 % ------------------------------------------------------------------
+% --- CUT: popularity already told in Study 1; SWH already told in Method ---
+\iffalse
 \begin{frame}{Visibility is not stability}
     \begin{itemize}
         \item Across \emph{both} the tag and history corpora, $P(\geq 1$ alteration$)$
@@ -1146,7 +1491,6 @@ Saved to ~/.local/state/git-historian/
     \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------------
 \begin{frame}{Software Heritage as an integrity witness}
     \begin{itemize}
         \item Every study needs evidence that \textbf{outlives} the forge's current state:
@@ -1160,8 +1504,38 @@ Saved to ~/.local/state/git-historian/
               visit frequency, and scalable graph access.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+\begin{frame}{The remediation gap}
+    \begin{center}
+    \begin{tikzpicture}[
+        op/.style={draw=tptbrown, line width=0.7pt, rounded corners=2pt, align=center,
+                   inner sep=5pt, font=\small, minimum width=3.6cm, minimum height=1.05cm,
+                   fill=tptbrown!8},
+        cons/.style={draw=tptred, line width=0.7pt, rounded corners=2pt, align=center,
+                     inner sep=5pt, font=\small, minimum width=5.4cm, minimum height=1.05cm,
+                     fill=tptred!8}
+    ]
+        \node[font=\footnotesize\bfseries, text=tptbrown] at (1.8, 2.55) {Git operation};
+        \node[font=\footnotesize\bfseries, text=tptred] at (8.0, 2.55) {Where the consequence lives};
+        \node[op] (a1) at (1.8, 1.7) {Move a tag};
+        \node[cons] (b1) at (8.0, 1.7) {Build pin / content hash};
+        \node[op] (a2) at (1.8, 0.4) {Rewrite history};
+        \node[cons] (b2) at (8.0, 0.4) {Archive, auditor, fork};
+        \node[op] (a3) at (1.8, -0.9) {Remove a file};
+        \node[cons] (b3) at (8.0, -0.9) {Provider-side revocation};
+        \foreach \s/\t in {a1/b1, a2/b2, a3/b3}
+            \draw[->, thick, tptred] (\s.east) -- node[above, font=\scriptsize, yshift=1pt] {does not fix} (\t.west);
+    \end{tikzpicture}
+    \end{center}
+    \vspace{0.15em}
+    {\small Remediation must hit the layer where the consequence persists --- a clean current branch is \textbf{not} a closure test.}
+\end{frame}
+
+% --- CUT: original bullet version of remediation gap ---
+\iffalse
 \begin{frame}{The remediation gap}
     \begin{itemize}
         \item A repository operation is not the same as the consequence it targets:
@@ -1177,8 +1551,33 @@ Saved to ~/.local/state/git-historian/
               live credentials were repaired.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
+% ------------------------------------------------------------------
+\begin{frame}{A thesis-level assurance model}
+
+    Three minimal conditions to \emph{demonstrate} integrity (not infer it):
+    \vspace{0.4em}
+    \begin{center}
+    \begin{tikzpicture}[
+        c/.style={draw=tptred, line width=0.8pt, rounded corners=2pt, align=left,
+                  inner xsep=8pt, inner ysep=6pt, font=\small,
+                  text width=0.90\linewidth, fill=tptred!6}
+    ]
+        \node[c] (c1) {\textbf{1.\ Preserve evidence at the mutation boundary.}
+            Forges can log reference create/retarget/delete/force-push in append-only logs before prior targets vanish~\cite{torresarias2016gitmetadata}.};
+        \node[c, below=6pt of c1] (c2) {\textbf{2.\ Bind consumption to verifiable identity.}
+            A reproducible build/audit should retain and verify the resolved content identifier, not just a name.};
+        \node[c, below=6pt of c2] (c3) {\textbf{3.\ Close incidents at the layer of authority.}
+            Fix each incident where its effects live: build records, audit evidence, provider-side revocation~\cite{DBLP:conf/secdev/BasakNRW22}.};
+    \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+% --- CUT: original prose block ---
+\iffalse
 \begin{frame}{A thesis-level assurance model}
     \begin{block}{Three minimal conditions to \emph{demonstrate} integrity (not infer it)}
     \begin{enumerate}
@@ -1193,8 +1592,11 @@ Saved to ~/.local/state/git-historian/
     \end{enumerate}
     \end{block}
 \end{frame}
+\fi
+% --- END CUT ---
 
-% ------------------------------------------------------------------
+% --- CUT: 1--2 bullets folded into Final remarks ---
+\iffalse
 \begin{frame}{Perspectives}
     \begin{itemize}
         \item \textbf{Longitudinal integrity infrastructure:} update alteration indices as new
@@ -1207,27 +1609,34 @@ Saved to ~/.local/state/git-historian/
               finish the secrets validation campaign; measure the gap between alert and genuine fix.
     \end{itemize}
 \end{frame}
+\fi
+% --- END CUT ---
 
 % ------------------------------------------------------------------
 \begin{frame}{Final remarks}
-    \begin{itemize}
+    \begingroup\small
+    \begin{itemize}\setlength{\itemsep}{0.35em}
         \item Git protects \textbf{object identity}; consumers depend on continuity of
               \textbf{names, histories, and external authority} that Git does not enforce.
         \item Three studies, one instrument (independent archival snapshots), one discipline
               (cheap comparison first, honest classification, no inferred intent).
         \item Most alterations are harmless, and the forge's current state is not useless ---
               but the guarantees supply-chain security needs \textbf{cannot be read off it alone}.
+        \item Next: integrity contracts that are machine-readable, and closing the gap between detection and genuine fix.
     \end{itemize}
-    \vspace{0.8em}
+    \endgroup
+    \vspace{0.25em}
     \begin{center}
         \textbf{In a supply chain built on mutable references,\\
         integrity must be demonstrated by evidence that outlasts the last push.}
     \end{center}
-    \vspace{0.6em}
+    \vspace{0.15em}
     \begin{center}\small Thank you.\end{center}
 \end{frame}
 
 % ------------------------------------------------------------------
+% --- CUT: park as 15s/backup, not in the main 1:30 path ---
+\iffalse
 \begin{frame}{Publications and artefacts}
     \begingroup\small
     \textbf{Peer-reviewed papers}
@@ -1251,8 +1660,11 @@ Saved to ~/.local/state/git-historian/
     \end{itemize}
     \endgroup
 \end{frame}
+\fi
+% --- END CUT ---
 
-% ------------------------------------------------------------------
+% --- CUT: moved after title ---
+\iffalse
 \begin{frame}{Doctoral committee}
 
     {\small
@@ -1276,6 +1688,8 @@ Saved to ~/.local/state/git-historian/
 
     {\small Thesis prepared at T\'el\'ecom Paris, Institut Polytechnique de Paris.}
 \end{frame}
+\fi
+% --- END CUT ---
 
 %##############################################################################
 % BACKUP SLIDES (for jury Q&A) -- kept inside the document, after the talk.
@@ -1379,6 +1793,79 @@ aws sts get-caller-identity
 # OpenAI API key: active iff HTTP 200
 curl -H "Authorization: Bearer sk-..." https://api.openai.com/v1/models
     \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Backup --- The filename heuristic works: hit-rate by file type}
+    % \begin{columns}[T,totalwidth=\textwidth]
+    %     \begin{column}{0.55\textwidth}
+            \centering
+            % \small
+            \begin{tabular}{lrr}
+                \toprule
+                \textbf{File type} & \textbf{Blobs} & \textbf{Rate} \\
+                \midrule
+                \texttt{id\_dsa}     & \num{14}    & \SI{100.0}{\percent} \\
+                \texttt{id\_rsa}     & \num{129}   & \SI{81.4}{\percent}  \\
+                \texttt{.key}        & \num{8270}  & \SI{57.2}{\percent}  \\
+                \texttt{.pem}        & \num{26641} & \SI{24.2}{\percent}  \\
+                \texttt{.env}        & \num{14705} & \SI{13.7}{\percent}  \\
+                \texttt{.yml}        & \num{69586} & \SI{10.6}{\percent}  \\
+                \texttt{.json}       & \num{31190} & \SI{5.8}{\percent}   \\
+                \texttt{.py}         & \num{58065} & \SI{1.5}{\percent}   \\
+                \texttt{.xml}        & \num{19647} & \SI{1.0}{\percent}   \\
+                \bottomrule
+            \end{tabular}
+    %     \end{column}
+    %     \begin{column}{0.42\textwidth}
+    %         \begin{itemize}
+    %             \item Key-material names almost always convert to a finding.
+    %             \item Broad source/config extensions add \textbf{volume, little signal}.
+    %             \item The refined pass concentrates the sample on names that pay off ---
+    %                   and gives a \textbf{priority order} for validation.
+    %         \end{itemize}
+    %     \end{column}
+    % \end{columns}
+\end{frame}
+
+\begin{frame}{Backup --- What kind of secrets? Private keys dominate}
+    \begin{center}
+    % \small
+    \begin{tabular}{lr@{\hskip 1.2cm}lr}
+        \toprule
+        \multicolumn{2}{c}{\textbf{gitleaks}} & \multicolumn{2}{c}{\textbf{TruffleHog}} \\
+        \textbf{Type} & \textbf{Count} & \textbf{Type} & \textbf{Count} \\
+        \midrule
+        \texttt{generic-api-key}     & \num{24133} & \texttt{PrivateKey}         & \num{19157} \\
+        \texttt{private-key}         & \num{22275} & \texttt{JDBC}               & \num{6299}  \\
+        \texttt{gcp-api-key}         & \num{739}   & \texttt{Circle}             & \num{1737}  \\
+        \texttt{jwt}                 & \num{200}   & \texttt{MongoDB}            & \num{801}   \\
+        \texttt{aws-access-token}    & \num{107}   & \texttt{Postgres}           & \num{764}   \\
+        \texttt{stripe-access-token} & \num{59}    & \texttt{GoogleGeminiAPIKey} & \num{723}   \\
+        \bottomrule
+    \end{tabular}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Backup --- Tier A: are the private keys even real?}
+    % \begin{center}
+    % \small
+    \centering
+    \begin{tabular}{lrrrr}
+        \toprule
+        \textbf{Detector} & \textbf{Blobs} & \textbf{valid} & \textbf{encrypted} & \textbf{invalid} \\
+        \midrule
+        Gitleaks   & \num{11613} & \num{10038} (\SI{86.4}{\percent}) & \num{1091} (\SI{9.4}{\percent}) & \num{479} (\SI{4.1}{\percent}) \\
+        TruffleHog & \num{9812}  & \num{9444} (\SI{96.3}{\percent})  & \num{134} (\SI{1.4}{\percent})  & \num{232} (\SI{2.4}{\percent}) \\
+        \bottomrule
+    \end{tabular}
+    % \end{center}
+    % \begin{itemize}
+    %     \item Tier A = \textbf{offline} parsing (\texttt{ssh-keygen}, OpenSSL). No network traffic.
+    %     \item \SecretPKValidBlobs{} of \SecretPKFlaggedBlobs{} gitleaks private-key blobs parse as
+    %           \textbf{cryptographically valid} (\SecretPKValidPct).
+    %     \item TruffleHog is the better pre-filter; gitleaks-only matches carry most scanner noise.
+    %     \item \textbf{But:} syntactic validity $\neq$ active --- a revoked key still parses.
+    % \end{itemize}
 \end{frame}
 
 \end{document}
