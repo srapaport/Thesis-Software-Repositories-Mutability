@@ -58,6 +58,7 @@
 
 % Resolve every figure from the two talks WITHOUT copying them locally.
 \graphicspath{%
+  {figs/}%
   {pdfs/}%
   {previous_talks/REP_talk/figs/}{previous_talks/REP_talk/pdfs/}%
   {previous_talks/ASE_talk/figs/}{previous_talks/ASE_talk/pdfs/}%
@@ -113,7 +114,8 @@
     listing options={
         basicstyle=\ttfamily\small\bfseries\color{green!70!white},
         frame=none,
-        breaklines=true
+        breaklines=true,
+        escapeinside={(*}{*)}
     }
 }
 \newtcblisting{terminalboxsmall}{
@@ -265,34 +267,30 @@
 
 \maketitle
 
-\begin{frame}{Doctoral committee}
-
-    {\small
-    \begin{tabular}{@{}lll@{}}
-        \toprule
-        \textbf{Name} & \textbf{Affiliation} & \textbf{Role} \\
-        \midrule
-        Samia Bouzefrane     & Professeure, CNAM                      & Reviewer \\
-        Yvon Kermarrec       & Professeur, IMT-Atlantic               & Reviewer \\
-        Christelle Urtado    & Professeure, IMT-Mines d'Ales          & Examiner \\
-        Olivier Zendra       & Charg\'e de Recherche, INRIA           & Examiner \\
-        Laurent Pautet       & Professeur, T\'el\'ecom Paris          & Supervisor \\
-        Stefano Zacchiroli   & Professeur, T\'el\'ecom Paris          & Co-supervisor \\
-        Samuel Tardieu       & Ma\^itre de Conf.,\ T\'el\'ecom Paris  & Co-supervisor \\
-        Gregory Blanc        & Ma\^itre de Conf.,\ T\'el\'ecom SudParis & Guest \\
-        \bottomrule
-    \end{tabular}
-    }
-
-    \vspace{1em}
-
-    {\small Thesis prepared at T\'el\'ecom Paris, Institut Polytechnique de Paris.}
-\end{frame}
-
 \begin{frame}{Outline}
     \small
     \tableofcontents
 \end{frame}
+
+% \begin{frame}{Roadmap}
+%     \small
+%     After a general introduction to the domain --- how modern software is
+%     assembled and why the mutability of Git references threatens that trust ---
+%     I present three studies that share a single method: comparing archival
+%     snapshots to detect, measure, and classify changes at ecosystem scale.
+%     \vspace{0.8em}
+%     \begin{enumerate}\setlength{\itemsep}{0.6em}
+%         \item \textbf{Mutable tags and release integrity} --- a release
+%               \emph{name} that resolves to different code over time.
+%         \item \textbf{History alterations in public repositories} --- a published
+%               \emph{commit graph} that is rewritten and republished.
+%         \item \textbf{Secret removal in version-control archives} --- a
+%               \emph{file} erased in a rewrite that survives in the archive.
+%     \end{enumerate}
+%     \vspace{0.8em}
+%     I close by drawing these together --- how each layer reinforces the same
+%     integrity gap --- and conclude.
+% \end{frame}
 
 %##############################################################################
 \section{Trust in Assembled Software}
@@ -322,7 +320,7 @@
 \end{frame}
 
 % ------------------------------------------------------------------
-\begin{frame}{A public repository plays two roles at once}
+\begin{frame}{A public repository serves two purposes at once}
     \sidefigbegin
     \begin{columns}[T,totalwidth=\linewidth]
         \begin{column}{0.44\linewidth}
@@ -337,7 +335,7 @@
                         \item \textbf{Reproducible}
                         \item \textbf{Secure}
                     \end{itemize}
-                \item Can those two roles collaborate?
+                \item Can one repository serve both at once?
                 % \item \textbf{Thesis:} focu mutability of published names and states.
             \end{itemize}
             }
@@ -354,21 +352,23 @@
 % ------------------------------------------------------------------
 \begin{frame}[fragile]{March 2025: a tag that changed meaning}
     \begingroup\small
-    \begin{itemize}
-        \item \texttt{tj-actions/changed-files}: a widely reused GitHub Actions helper.
+    \begin{itemize}\setlength{\itemsep}{0.25em}
+        \item \textbf{GitHub Actions} are CI/CD steps that each \texttt{uses:} a
+              third-party action pinned by a \textbf{tag} --- like
+              \texttt{tj-actions/changed-files}.
         \item Attackers retargeted \AttackTagMovesCount{} existing versions
               (\texttt{v39}\dots\texttt{v47}) to \textbf{one malicious commit}.
         \item \AttackStableCases{} of those tags had been stable
-              $\geq\AttackStableDaysLowerBound{}$ days --- trusted pins, not fresh noise.
-        \item Anyone resolving a familiar version name then \textbf{ran attacker code}
-              that could leak developer credentials.
+              $\geq\AttackStableDaysLowerBound{}$ days --- trusted pins, not noise.
+        \item Anyone resolving the name then \textbf{ran attacker code}, leaking
+              developer credentials.
     \end{itemize}
     \endgroup
     \vspace{0.1em}
     \begin{terminalbox}
 $ # your workflow, unchanged:
 $ uses: tj-actions/changed-files@v45
-$ # same name -> different code after the next fetch
+$ # same name (*$\Rightarrow$*) different code after the next fetch
     \end{terminalbox}
     \vspace{0.1em}
     {\small No exploit --- an ordinary Git update. So how does a published name change?}
@@ -388,7 +388,9 @@ $ # same name -> different code after the next fetch
         \begin{column}{0.34\linewidth}
             \vspace{1.5em}
             {\small
-            \begin{itemize}\setlength{\itemsep}{0.7em}
+            \begin{itemize}\setlength{\itemsep}{0.55em}
+                \item A tag is \emph{lightweight} (a bare ref) or \emph{annotated}
+                      (a Git object with tagger, date, message).
                 \item Same name.
                 \item Add a commit, or change the history.
                 \item Retarget the tag.
@@ -461,13 +463,15 @@ $ # same name -> different code after the next fetch
         \begin{column}{0.42\linewidth}
             \small
             \vspace{1em}
-            \begin{itemize}\setlength{\itemsep}{0.55em}
+            \begin{itemize}\setlength{\itemsep}{0.4em}
                 \item The largest public archive of open-source software.
                 \item Main instrument to study at the \textbf{ecosystem scale}.
                 \item One global Merkle graph:
                       \textbf{\num{442}\,M\xspace} origins,
                       \textbf{\num{6.1}\,B\xspace} revisions.
-                \item Same Git objects, plus a \textbf{snapshot} of for each visit.
+                \item Every object has a \textbf{SWHID} content identifier
+                      (\texttt{swh:1:rev:\ldots}), the Git hash plus a type prefix.
+                \item Plus a \textbf{snapshot} per visit.
             \end{itemize}
         \end{column}
         \begin{column}{0.56\linewidth}
@@ -551,10 +555,11 @@ $ # same name -> different code after the next fetch
 % this study answers; the bullets are why a forge cannot answer them.
 \begin{frame}{What we need to know about tag alterations}
     \begin{block}{Questions}
-        {
-        How can we detect an alteration? Can we detect them at scale?
-        \\How common is the phenomenon? Who uses it?
-        \\What changes when the tag is altered? Can we observe the impact?}
+        \begin{enumerate}\setlength{\itemsep}{0.1em}
+            \item \textbf{Detection.} Can we detect an alteration at scale?
+            \item \textbf{Prevalence.} How common is it, and who does it?
+            \item \textbf{Impact.} What changes, and can we observe the consequences?
+        \end{enumerate}
     \end{block}
     %\vspace{0.6em}
     \begingroup\small
@@ -606,8 +611,9 @@ $ # same name -> different code after the next fetch
         \begin{column}{0.36\linewidth}
             \begin{itemize}\setlength{\itemsep}{0.5em}
                 \item \textbf{\TotalAlterationsShort{}} alterations over \TemporalSpan{},
-                      in \AlteredRepositoriesShort{} repositories
-                      (\AlteredRepositoriesPercent{} of tagged origins).
+                      in \AlteredRepositoriesShort{} repositories ---
+                      \AlteredRepositoriesPercent{} of the \OriginsWithTagsShort{}
+                      repositories that carry at least one tag.
                 \item \textbf{Persistent}, not a one-off spike --- the rate holds across
                       the whole window.
                 \item Quantity is not the same as relevance: most of that volume could
@@ -631,8 +637,9 @@ $ # same name -> different code after the next fetch
             \vspace{0.5em}
             \small
             \begin{itemize}\setlength{\itemsep}{0.6em}
-                \item How we measure popularity. \textbf{GitHub stars}: a signal
-                      available for every repository at this scale.
+                \item How we measure popularity. \textbf{GitHub stars}, from
+                      metadata crawled by SWH --- so popularity analyses are
+                      restricted to the GitHub subset.
                 \item $P(\geq 1$ alteration$)$ \textbf{rises monotonically with stars}
                       \\\StarPropZeroOnePctTrunc{} (0--1) $\rightarrow$ \StarPropFiveHundredPlusPctTrunc{} (501+).
                 \item So yes: widely popular projects alter tags too.
@@ -641,7 +648,7 @@ $ # same name -> different code after the next fetch
         \end{column}
         \begin{column}{0.59\linewidth}
             \begin{center}
-                \includegraphics[width=\linewidth,height=0.64\textheight,keepaspectratio]%
+                \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]%
                                 {popularity_proportion.pdf}
             \end{center}
         \end{column}
@@ -670,7 +677,7 @@ $ # same name -> different code after the next fetch
             \end{itemize}
         \end{column}
         \begin{column}{0.59\linewidth}
-            \includegraphics[width=\linewidth,height=0.88\textheight,keepaspectratio]{taxonomy.pdf}
+            \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]{taxonomy.pdf}
         \end{column}
     \end{columns}
     \sidefigend
@@ -755,10 +762,11 @@ error: hash mismatch:
 % what is missing / what ``altered'' can mean. Root-cause isolation is method.
 \begin{frame}{What we need to know about rewritten histories}
     \begin{block}{Questions}
-        {
-        How can we detect a rewritten history? Can we detect them at scale?
-        \\How common is the phenomenon? Who uses it?
-        \\What changes when history is rewritten? Can we observe the impact?}
+        \begin{enumerate}\setlength{\itemsep}{0.1em}
+            \item \textbf{Detection.} Can we detect a rewritten history at scale?
+            \item \textbf{Prevalence.} How common is it, and who does it?
+            \item \textbf{Impact.} What changes, and can we observe the consequences?
+        \end{enumerate}
     \end{block}
     \begingroup\small
     \begin{itemize}\setlength{\itemsep}{0.55em}
@@ -786,10 +794,12 @@ error: hash mismatch:
                 \item A forge only advertises Snapshot~B. The archive still holds
                       Snapshot~A, so the orphaned commit stays comparable.
                 \item Diff reachable sets; peel the snowball; classify what remains.
-                \item \textbf{\GitOriginsRootCauseCommitsShort{}} repositories
-                      (\textasciitilde\PercentOriginsAltered{}) carry
+                \item \textbf{\GitOriginsRootCauseCommitsShort{}} Git repositories
+                      archived by SWH --- GitHub, public GitLab instances and
+                      others --- (\textasciitilde\PercentOriginsAltered{}) carry
                       \textbf{\GitRootCauseCommitsShort{}} root-cause commits.
-                \item Same popularity gradient as tag alterations:
+                \item On the \textbf{GitHub} subset, the same popularity gradient
+                      as tag alterations:\\
                       \StarAlterRateZeroOne{} (0--1 stars) $\rightarrow$
                       \StarAlterRateThousandPlus{} (1000+).
             \end{itemize}
@@ -849,8 +859,10 @@ error: hash mismatch:
                 \item \textbf{Metadata-only} rewrites (\PercentMETARootCauseCommits):
                       author, committer, dates, messages --- committer date alone
                       \PercentCategCommitterDate.
-                \item The profile of \textbf{1000+ star} repositories matches the whole
-                      corpus: this is not a beginners' mistake.
+                \item The profile of \textbf{1000+ star} repositories (just
+                      \num{1.9}\% of the corpus) matches the whole: this is not a
+                      beginners' mistake --- so we plot ``all'' as the stable
+                      reference.
             \end{itemize}
         \end{column}
         \begin{column}{0.56\linewidth}
@@ -1158,17 +1170,17 @@ Saved to ~/.local/state/git-historian/
     \begin{itemize}\setlength{\itemsep}{0.25em}
         \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli.
               \emph{Altered Histories in Version Control System Repositories: Evidence from
-              the Trenches.} ASE 2025 \cite{DBLP:conf/kbse/RapaportPTZ25}.
+              the Trenches.} ASE 2025.
         \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli, T.~Zimmermann.
               \emph{Mutating the ``Immutable'': A Large-Scale Study of Git Tag Alterations.}
-              ACM REP 2026 \cite{rapaport2026tagalterations}.
+              ACM REP 2026.
     \end{itemize}
     \vspace{0.4em}
     \textbf{Artefacts}
     \begin{itemize}\setlength{\itemsep}{0.25em}
-        \item Replication package, altered histories \cite{replication-package-altered-histories}
+        \item Replication package, altered histories
               --- \texttt{10.5281/zenodo.15544257}.
-        \item Replication package, tag alterations \cite{replication-package}
+        \item Replication package, tag alterations
               --- \texttt{10.5281/zenodo.19191606}.
         \item \textbf{GitHistorian}, open-source detection tool ---
               \url{https://github.com/srapaport/git-historian}.
@@ -1181,6 +1193,30 @@ Saved to ~/.local/state/git-historian/
 % BACKUP SLIDES (for jury Q&A) -- kept inside the document, after the talk.
 %##############################################################################
 \appendix
+
+\begin{frame}{Backup --- Doctoral committee}
+
+    {\small
+    \begin{tabular}{@{}lll@{}}
+        \toprule
+        \textbf{Name} & \textbf{Affiliation} & \textbf{Role} \\
+        \midrule
+        Samia Bouzefrane     & Professeure, CNAM                      & Reviewer \\
+        Yvon Kermarrec       & Professeur, IMT-Atlantic               & Reviewer \\
+        Christelle Urtado    & Professeure, IMT-Mines d'Ales          & Examiner \\
+        Olivier Zendra       & Charg\'e de Recherche, INRIA           & Examiner \\
+        Laurent Pautet       & Professeur, T\'el\'ecom Paris          & Supervisor \\
+        Stefano Zacchiroli   & Professeur, T\'el\'ecom Paris          & Co-supervisor \\
+        Samuel Tardieu       & Ma\^itre de Conf.,\ T\'el\'ecom Paris  & Co-supervisor \\
+        Gregory Blanc        & Ma\^itre de Conf.,\ T\'el\'ecom SudParis & Guest \\
+        \bottomrule
+    \end{tabular}
+    }
+
+    \vspace{1em}
+
+    {\small Thesis prepared at T\'el\'ecom Paris, Institut Polytechnique de Paris.}
+\end{frame}
 
 % Works whose inline citation was removed from the slides (the claim is not
 % contentious enough to spend screen space on) but which must stay listed here.
