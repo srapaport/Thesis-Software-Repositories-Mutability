@@ -133,7 +133,8 @@
     listing options={
         basicstyle=\ttfamily\footnotesize\bfseries\color{green!70!white},
         frame=none,
-        breaklines=true
+        breaklines=true,
+        escapeinside={(*}{*)}
     }
 }
 
@@ -228,15 +229,15 @@
 \newcommand{\SecretRateIdRsa}{\SI{81.4}{\percent}\xspace}
 \newcommand{\SecretRatePy}{\SI{1.5}{\percent}\xspace}
 
-% Source line pinned to the bottom of a frame. Used only where the claim is
-% contentious enough that the jury may want the reference on screen; the
-% \cite call stays inside so natbib keeps numbering the entry.
-% Width is capped so the line never runs under the footer logo on the right.
+% Source line pinned to the bottom of a frame. \srcmark in the sentence and
+% the same mark on the note send the eye down. Width is capped so the line
+% never runs under the footer logo on the right.
+\newcommand{\srcmark}{\textsuperscript{\scriptsize 1}}
 \newcommand{\srcnote}[1]{%
   \vfill
   \begingroup
     \scriptsize\color{black!55}%
-    \parbox{0.86\linewidth}{\raggedright #1}\par
+    \parbox{0.86\linewidth}{\raggedright\textsuperscript{1}~#1}\par
   \endgroup
 }
 
@@ -261,7 +262,7 @@
 \author{Solal Rapaport}
 % Footer carries the section name instead; no institute/email box any more.
 \institute{}
-\date[Defense --- October 2 2026]{PhD Defense --- October 2 2026}
+\date[PhD Defense --- October 2 2026]{PhD Defense --- October 2 2026}
 
 \begin{document}
 
@@ -305,8 +306,8 @@
             {\small
             \begin{itemize}
                 \item Hundreds to thousands of upstream components.
-                \item Fetched by a \textbf{version name} (\texttt{2.3.1}), not by a hash.
-                \item Premise: resolving that name today yields the \textbf{same artifact} as yesterday.
+                \item Fetched by a \textbf{version name} (\texttt{2.3.1}) or \textbf{tag}, not by a hash.
+                \item Assumption: resolving that name today yields the \textbf{same artifact} as yesterday.
             \end{itemize}
             }
         \end{column}
@@ -324,55 +325,58 @@
     \sidefigbegin
     \begin{columns}[T,totalwidth=\linewidth]
         \begin{column}{0.44\linewidth}
-            \vspace{3em}
+            \vspace{2.2em}
             {\small
             \begin{itemize}
                 % \item \textbf{Expectations:} safety, reproducibility, security.
-                \item \textbf{Workspace:} rewriting recent work is accepted practice.
+                \item \textbf{Workspace:} \textbf{retroactively} rewriting recent work is accepted practice.
                 \item \textbf{Distribution:} the \emph{same} repo is expected to be:
                     \begin{itemize}
                         \item \textbf{Safe}
                         \item \textbf{Reproducible}
                         \item \textbf{Secure}
                     \end{itemize}
-                \item Can one repository serve both at once?
+                \item There are attack vectors targeting this tension \srcmark
                 % \item \textbf{Thesis:} focu mutability of published names and states.
             \end{itemize}
             }
         \end{column}
         \begin{column}{0.54\linewidth}
             \begin{center}
-                \includegraphics[width=\linewidth]{supply_chain.drawio.pdf}
+                \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]{supply_chain.drawio.pdf}
             \end{center}
         \end{column}
     \end{columns}
     \sidefigend
+    \srcnote{Ladisa et al., \emph{SoK: Taxonomy of Attacks on Open-Source Software Supply Chains}, IEEE S\&P 2023.}
 \end{frame}
 
 % ------------------------------------------------------------------
-\begin{frame}[fragile]{March 2025: a tag that changed meaning}
-    \begingroup\small
-    \begin{itemize}\setlength{\itemsep}{0.25em}
+\begin{frame}[fragile,squeeze]{March 2025: a tag that changed meaning}
+
+    \begingroup\footnotesize
+    \begin{itemize}\setlength{\itemsep}{0.05em}
         \item \textbf{GitHub Actions} are CI/CD steps that each \texttt{uses:} a
               third-party action pinned by a \textbf{tag} --- like
               \texttt{tj-actions/changed-files}.
         \item Attackers retargeted \AttackTagMovesCount{} existing versions
-              (\texttt{v39}\dots\texttt{v47}) to \textbf{one malicious commit}.
+              (\texttt{v39}\dots\texttt{v47}) to \textbf{one malicious commit}.\srcmark
         \item \AttackStableCases{} of those tags had been stable
               $\geq\AttackStableDaysLowerBound{}$ days --- trusted pins, not noise.
         \item Anyone resolving the name then \textbf{ran attacker code}, leaking
               developer credentials.
     \end{itemize}
     \endgroup
-    \vspace{0.1em}
-    \begin{terminalbox}
+    \vspace{0.15em}
+    \begin{terminalboxsmall}
 $ # your workflow, unchanged:
 $ uses: tj-actions/changed-files@v45
 $ # same name (*$\Rightarrow$*) different code after the next fetch
-    \end{terminalbox}
-    \vspace{0.1em}
-    {\small No exploit --- an ordinary Git update. So how does a published name change?}
-    % \srcnote{Incident analysis: Palo Alto Unit~42~\cite{paloalto_unit42_2025}.}
+    \end{terminalboxsmall}
+    \vspace{0.15em}
+    {\footnotesize No exploit --- an ordinary Git update. So how does a published name change?}
+    \srcnote{Palo Alto Unit~42, \emph{GitHub Actions Supply Chain Attack}, 2025.
+    \url{https://unit42.paloaltonetworks.com/github-actions-supply-chain-attack/}}
 \end{frame}
 
 %##############################################################################
@@ -400,7 +404,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
         \end{column}
         \begin{column}{0.64\linewidth}
             \begin{center}
-                \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{fig_git_model.drawio.pdf}
+                \includegraphics[width=1.1\linewidth,height=\textheight,keepaspectratio]{fig_git_model.drawio.pdf}
             \end{center}
         \end{column}
     \end{columns}
@@ -464,7 +468,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
             \small
             \vspace{1em}
             \begin{itemize}\setlength{\itemsep}{0.4em}
-                \item The largest public archive of open-source software.
+                \item The largest public archive of open-source software.\srcmark
                 \item Main instrument to study at the \textbf{ecosystem scale}.
                 \item One global Merkle graph:
                       \textbf{\num{442}\,M\xspace} origins,
@@ -482,6 +486,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
         \end{column}
     \end{columns}
     \sidefigend
+    \srcnote{Di Cosmo and Zacchiroli, \emph{Software Heritage: Why and How to Preserve Software Source Code}, iPRES 2017.}
 \end{frame}
 
 
@@ -637,7 +642,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
             \vspace{0.5em}
             \small
             \begin{itemize}\setlength{\itemsep}{0.6em}
-                \item How we measure popularity. \textbf{GitHub stars}, from
+                \item How we measure popularity. \textbf{GitHub stars}\srcmark, from
                       metadata crawled by SWH --- so popularity analyses are
                       restricted to the GitHub subset.
                 \item $P(\geq 1$ alteration$)$ \textbf{rises monotonically with stars}
@@ -648,14 +653,13 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
         \end{column}
         \begin{column}{0.59\linewidth}
             \begin{center}
-                \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]%
+                \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]%
                                 {popularity_proportion.pdf}
             \end{center}
         \end{column}
     \end{columns}
     \sidefigend
-    % \srcnote{Stars are a gameable, imperfect popularity
-    %  proxy~\cite{borges-2016-github-stars,DBLP:journals/corr/abs-2412-13459}.}
+    \srcnote{He et al., \emph{4.5 Million (Suspected) Fake Stars in GitHub}, arXiv:2412.13459, 2024.}
 \end{frame}
 
 % ------------------------------------------------------------------
@@ -675,6 +679,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
                 \\But does it have an impact?
                 \\Besides one supply-chain attack and one issue.
             \end{itemize}
+        \vspace{1em}
         \end{column}
         \begin{column}{0.59\linewidth}
             \includegraphics[width=\linewidth,height=\textheight,keepaspectratio]{taxonomy.pdf}
@@ -734,7 +739,7 @@ error: hash mismatch:
                 \node[side, fill=tptbrown!10]
                     {\textbf{Feature}\par\smallskip
                      Tidy your own work \emph{before} sharing it: squash, reorder, fix a
-                     typo. Expected practice on some branches.};
+                     typo. Expected practice on some branches.\srcmark};
             \end{tikzpicture}
         \end{column}
         \begin{column}{0.48\textwidth}
@@ -750,10 +755,7 @@ error: hash mismatch:
             \end{tikzpicture}
         \end{column}
     \end{columns}
-    % \vspace{0.6em}
-    % \begin{center}\small
-    % Git offers \textbf{one} operation for both, and nothing in the protocol tells them apart.
-    % \end{center}
+    \srcnote{Chacon and Straub, \emph{Pro Git}, 2nd ed., Chapter~7.6 ``Rewriting History'', 2014.}
 \end{frame}
 
 
@@ -875,7 +877,7 @@ error: hash mismatch:
 \end{frame}
 
 % ------------------------------------------------------------------
-\begin{frame}{Case study: rewriting a licence on \texttt{main}}
+\begin{frame}{Case study: \textbf{retroactively} rewriting a licence on \texttt{main}}
     \sidefigbegin
     \begin{columns}[T,totalwidth=\linewidth]
         \begin{column}{0.40\linewidth}
@@ -887,7 +889,7 @@ error: hash mismatch:
                       of them with 1000+ stars.
                 \item ScanCode on the before/after pair: three kinds of rewrite,
                       not one.
-                \item Retroactive: as if the \emph{new} licence had always been
+                \item \textbf{Retroactive}: as if the \emph{new} licence had always been
                       the only valid one. Rights already granted may disappear
                       from the public repository.
             \end{itemize}
@@ -1015,7 +1017,7 @@ Saved to ~/.local/state/git-historian/
                       pass cuts it down to more precise filenames.
                 \item Same bytes, one blob: \texttt{repoA:foo/.env} and
                       \texttt{repoB:.env} collapse to a single content hash.
-                \item Scan (gitleaks + TruffleHog).\\
+                \item Secret scanners:\\gitleaks + TruffleHog\\
                       \texttt{id\_rsa} \SecretRateIdRsa{}, \texttt{.py} only
                       \SecretRatePy{}.
             \end{itemize}
@@ -1037,7 +1039,7 @@ Saved to ~/.local/state/git-historian/
                       low-value tokens.
                 \item Parsed offline, with no network traffic: \SecretPKValidBlobs{} of
                       \SecretPKFlaggedBlobs{} private-key files are
-                      \textbf{cryptographically valid} (\SecretPKValidPct).
+                      \textbf{syntactically valid} (\SecretPKValidPct).
                 \item Well-formed $\neq$ still active --- a revoked key still parses.
             \end{itemize}
         \end{column}
@@ -1060,10 +1062,10 @@ Saved to ~/.local/state/git-historian/
 
 
 % ------------------------------------------------------------------
-\begin{frame}{How do you test a secret's validity without abusing it?}
+\begin{frame}{Future work: are recovered secrets still active?}
     \begingroup\footnotesize
-    \textbf{Problem.} A key is only proven \emph{active} by using it --- and using someone
-    else's credential is exactly what we must not do.
+    Proving that a key is still active raises ethical questions.
+    To answer that as far as we can, we define a protocol for testing it.
     \endgroup
     \vspace{0.5em}
     \begin{center}
@@ -1083,14 +1085,10 @@ Saved to ~/.local/state/git-historian/
     \vspace{0.4em}
     \begingroup\footnotesize
     \begin{itemize}\setlength{\itemsep}{0.25em}
-        \item \textbf{Conclusion --- established:} after a ``cleanup'' rewrite, secrets
-              can remain recoverable, mostly as cryptographically valid private keys.
-        \item \textbf{Conclusion --- open:} whether any are \textbf{still active}. Push
-              protection blocks some \emph{new} leaks and says nothing about the archive.
+        \item \textbf{Done:} a cleanup rewrite can leave secrets in the archive, mostly as syntactically valid private keys.
+        \item \textbf{Next:} extend the offline parse past private keys and GitHub, then ask providers to check activity. Where one agrees in writing, a single read-only probe. An active rate only for those families.
     \end{itemize}
     \endgroup
-    % \srcnote{Same disclosure friction as reported for cloud-bucket
-    %  leaks~\cite{yadmani2025}.}
 \end{frame}
 
 
@@ -1121,6 +1119,32 @@ Saved to ~/.local/state/git-historian/
     %  rotation as the only effective remediation~\cite{DBLP:conf/secdev/BasakNRW22}.}
 \end{frame}
 
+% ------------------------------------------------------------------
+% Last frame before the appendix: shown while the jury opens the questions,
+% not spoken.
+\begin{frame}{Publications and artefacts}
+    \begingroup\small
+    \textbf{Peer-reviewed papers}
+    \begin{itemize}\setlength{\itemsep}{0.25em}
+        \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli.
+              \emph{Altered Histories in Version Control System Repositories: Evidence from
+              the Trenches.} ASE 2025.
+        \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli, T.~Zimmermann.
+              \emph{Mutating the ``Immutable'': A Large-Scale Study of Git Tag Alterations.}
+              ACM REP 2026.
+    \end{itemize}
+    \vspace{0.4em}
+    \textbf{Artefacts}
+    \begin{itemize}\setlength{\itemsep}{0.25em}
+        \item Replication package, altered histories
+              --- \texttt{10.5281/zenodo.15544257}.
+        \item Replication package, tag alterations
+              --- \texttt{10.5281/zenodo.19191606}.
+        \item \textbf{GitHistorian}, open-source detection tool ---
+              \url{https://github.com/srapaport/git-historian}.
+    \end{itemize}
+    \endgroup
+\end{frame}
 
 % ------------------------------------------------------------------
 % Merge of the old ``remediation gap'' and ``final remarks'': the mapping is now
@@ -1159,33 +1183,6 @@ Saved to ~/.local/state/git-historian/
     \end{center}
     \vspace{0.3em}
     \begin{center}\small Thank you.\end{center}
-\end{frame}
-
-% ------------------------------------------------------------------
-% Last frame before the appendix: shown while the jury opens the questions,
-% not spoken.
-\begin{frame}{Publications and artefacts}
-    \begingroup\small
-    \textbf{Peer-reviewed papers}
-    \begin{itemize}\setlength{\itemsep}{0.25em}
-        \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli.
-              \emph{Altered Histories in Version Control System Repositories: Evidence from
-              the Trenches.} ASE 2025.
-        \item S.~Rapaport, L.~Pautet, S.~Tardieu, S.~Zacchiroli, T.~Zimmermann.
-              \emph{Mutating the ``Immutable'': A Large-Scale Study of Git Tag Alterations.}
-              ACM REP 2026.
-    \end{itemize}
-    \vspace{0.4em}
-    \textbf{Artefacts}
-    \begin{itemize}\setlength{\itemsep}{0.25em}
-        \item Replication package, altered histories
-              --- \texttt{10.5281/zenodo.15544257}.
-        \item Replication package, tag alterations
-              --- \texttt{10.5281/zenodo.19191606}.
-        \item \textbf{GitHistorian}, open-source detection tool ---
-              \url{https://github.com/srapaport/git-historian}.
-    \end{itemize}
-    \endgroup
 \end{frame}
 
 
@@ -1434,7 +1431,7 @@ curl -H "Authorization: Bearer sk-..." https://api.openai.com/v1/models
     % \begin{itemize}
     %     \item Tier A = \textbf{offline} parsing (\texttt{ssh-keygen}, OpenSSL). No network traffic.
     %     \item \SecretPKValidBlobs{} of \SecretPKFlaggedBlobs{} gitleaks private-key blobs parse as
-    %           \textbf{cryptographically valid} (\SecretPKValidPct).
+    %           \textbf{syntactically valid} (\SecretPKValidPct).
     %     \item TruffleHog is the better pre-filter; gitleaks-only matches carry most scanner noise.
     %     \item \textbf{But:} syntactic validity $\neq$ active --- a revoked key still parses.
     % \end{itemize}

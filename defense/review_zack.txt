@@ -1,0 +1,45 @@
+#    -*- mode: org -*-
+
+* Slide-by-slide notes
+** Intro discourse
+*** No refs?
+*** Maybe some VCS terminology explanation?
+e.g., "git", "tag", "repository", etc.
+Rationale: you go very quickly into Git-specific terminology and tech
+** History rewrite part
+*** insist more on the fact they are retroactive/destructive changes
+it's a tricky one, that many would miss
+** 4
+*** s/Premise/Assumption/ ?
+** 6
+*** URL or academic ref. for the attack?
+** 10
+*** what you said about developer "intent" wasn't really clear
+Q: if it's a threat to validity, do you need to mention it at all at this stage?
+** 13
+*** it's not about Linus himself, it's a view shared among many developers
+** 16
+*** the difficulty about having timestamps "was not easy" → not a scientific argument
+skip it
+** 27
+*** you said "our *main* use case is […] license rewrites"
+it's not, but it was probably just a oral slip
+*** license update
+you can insist on the fact that, still, there is no apparent/valid reasons to
+do this *retroactively*; it should be done in an additional commit
+** 31
+*** do we care about the first pass (with `*.py` in it)?
+just skip it
+*** you said "scanners" for gitleaks & TruffleHog, should be "secret scanners" or so
+** 32
+*** "cryptographically valid" → "syntactically valid"
+** 33
+*** pitched as a failure; shouldn't this be pitched as future work instead?
+** No future work?
+
+* Practical aspects
+** Do you want a clicker?
+** "our publication" → "my contribution"
+
+* Timing
+** Overflow by ~5 minutes
