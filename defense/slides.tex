@@ -2,8 +2,7 @@
 % PhD defense deck -- Solal Rapaport
 % The Impact of Repository Mutability for Software Integrity and Supply-Chain Security.
 % Self-contained: theme (beamerthemetptng.sty) and logo PDFs live in defense/;
-% figures are resolved from the two conference talks via \graphicspath below,
-% and every numeric macro is embedded directly in this file.
+% figures live in figs/, and every numeric macro is embedded directly in this file.
 %
 % Build from defense/ :  latexmk -pdf slides.tex   (or pdflatex twice)
 %==============================================================================
@@ -56,14 +55,10 @@
 \fi
 \makeatother
 
-% Resolve every figure from the two talks WITHOUT copying them locally.
+% Figures live in figs/; institutional logos stay in pdfs/.
 \graphicspath{%
   {figs/}%
   {pdfs/}%
-  {previous_talks/REP_talk/figs/}{previous_talks/REP_talk/pdfs/}%
-  {previous_talks/ASE_talk/figs/}{previous_talks/ASE_talk/pdfs/}%
-  {previous_talks/SWHSec/figs/}{previous_talks/SWHSec/pdfs/}%
-  {../chapters/chapter02/fig02/}{../figures/}%
 }
 \DeclareGraphicsExtensions{.pdf,.png,.jpg,.jpeg}
 \usepackage{figlatex}
@@ -336,7 +331,7 @@
                         \item \textbf{Reproducible}
                         \item \textbf{Secure}
                     \end{itemize}
-                \item There are attack vectors targeting this tension \srcmark
+                \item Attack vectors exploit that double role.\srcmark
                 % \item \textbf{Thesis:} focu mutability of published names and states.
             \end{itemize}
             }
@@ -481,7 +476,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
         \begin{column}{0.56\linewidth}
             \begin{center}
                 \includegraphics[width=1.1\linewidth,height=\textheight,keepaspectratio]%
-                                {../chapters/chapter02/fig02/SWH_arch.drawio.pdf}
+                                {SWH_arch.drawio.pdf}
             \end{center}
         \end{column}
     \end{columns}
