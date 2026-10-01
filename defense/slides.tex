@@ -301,8 +301,8 @@
             {\small
             \begin{itemize}
                 \item Hundreds to thousands of upstream components.
-                \item Fetched by a \textbf{version name} (\texttt{2.3.1}) or \textbf{tag}, not by a hash.
-                \item Assumption: resolving that name today yields the \textbf{same artifact} as yesterday.
+                \item Components are fetched by a \textbf{version name} (\texttt{2.3.1}) or \textbf{tag}, not by a hash.
+                \item The assumption is that resolving that name today yields the \textbf{same artifact} as yesterday.
             \end{itemize}
             }
         \end{column}
@@ -331,7 +331,7 @@
                         \item \textbf{Reproducible}
                         \item \textbf{Secure}
                     \end{itemize}
-                \item Attack vectors exploit that double role.\srcmark
+                \item Attack vectors exploit this dual role.\srcmark
                 % \item \textbf{Thesis:} focu mutability of published names and states.
             \end{itemize}
             }
@@ -470,7 +470,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
                       \textbf{\num{6.1}\,B\xspace} revisions.
                 \item Every object has a \textbf{SWHID} content identifier
                       (\texttt{swh:1:rev:\ldots}), the Git hash plus a type prefix.
-                \item Plus a \textbf{snapshot} per visit.
+                \item Each visit also records a \textbf{snapshot}.
             \end{itemize}
         \end{column}
         \begin{column}{0.56\linewidth}
@@ -675,8 +675,7 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
                       not: \textbf{\PercentMovesContentChange{} change source-tree
                       content} (\MovesWithContentChangeShort{}).
                 \item That is an integrity issue.
-                \\But does it have an impact?
-                \\Besides one supply-chain attack and one issue.
+                    \\But does it have an impact beyond the supply-chain attack and the reported issue?
             \end{itemize}
         \vspace{1em}
         \end{column}
@@ -738,7 +737,7 @@ error: hash mismatch:
                 \node[side, fill=tptbrown!10]
                     {\textbf{Feature}\par\smallskip
                      Tidy your own work \emph{before} sharing it: squash, reorder, fix a
-                     typo. Expected practice on some branches.\srcmark};
+                     typo. This is expected practice on some branches.\srcmark};
             \end{tikzpicture}
         \end{column}
         \begin{column}{0.48\textwidth}
@@ -792,8 +791,8 @@ error: hash mismatch:
             \vspace{0.5em}
             {\small
             \begin{itemize}\setlength{\itemsep}{0.55em}
-                \item A forge only advertises Snapshot~B. The archive still holds
-                      Snapshot~A, so the orphaned commit stays comparable.
+                    \item A forge only advertises Snapshot~B. The archive still holds
+                        Snapshot~A, so the orphaned commit remains available for comparison.
                 \item Diff reachable sets; peel the snowball; classify what remains.
                 \item \textbf{\GitOriginsRootCauseCommitsShort{}} Git repositories
                       archived by SWH --- GitHub, public GitLab instances and
@@ -860,9 +859,9 @@ error: hash mismatch:
                 \item \textbf{Metadata-only} rewrites (\PercentMETARootCauseCommits):
                       author, committer, dates, messages --- committer date alone
                       \PercentCategCommitterDate.
-                \item The profile of \textbf{1000+ star} repositories (just
+                    \item The profile of \textbf{1000+ star} repositories (just
                       \num{1.9}\% of the corpus) matches the whole: this is not a
-                      beginners' mistake --- so we plot ``all'' as the stable
+                        beginner's mistake --- so we plot ``all'' as the stable
                       reference.
             \end{itemize}
         \end{column}
@@ -886,8 +885,8 @@ error: hash mismatch:
                 \item \LicenseAllShort{} altered licence files on \textbf{main};
                       \LicenseOrigins{} repositories, \LicenseOriginsThousandPlus{}
                       of them with 1000+ stars.
-                \item ScanCode on the before/after pair: three kinds of rewrite,
-                      not one.
+                    \item ScanCode identified three kinds of rewrite in the before/after
+                        pair, not just one.
                 \item \textbf{Retroactive}: as if the \emph{new} licence had always been
                       the only valid one. Rights already granted may disappear
                       from the public repository.
@@ -932,7 +931,7 @@ error: hash mismatch:
                       \textbf{not trivial}.
                 \item GitHistorian queries \textbf{precomputed} results:
                       one command per origin, CI/CD hooks, categorised output.
-                \item Open source, written in Rust.\footnote[frame]{\url{https://github.com/srapaport/git-historian}}
+                \item It is open source and written in Rust.\footnote[frame]{\url{https://github.com/srapaport/git-historian}}
             \end{itemize}
             % \vspace{0.6em}
             % {\footnotesize\textbf{Takeaway:} \GitOriginsRootCauseCommitsShort{} repositories
@@ -968,14 +967,14 @@ Saved to ~/.local/state/git-historian/
 \begin{frame}{Removal is not revocation}
     \begingroup
     \begin{itemize}\setlength{\itemsep}{1em}
-        \item Hard-coded credentials leak at scale and are a long-standing weakness class.
+        \item Hard-coded credentials are a long-standing weakness and leak at scale.
         \item After a leak, two actions are \textbf{not interchangeable}:
               \begin{itemize}
                   \item \textbf{Cleanup} (optional) --- rewrite the repository so the
                         current view no longer shows the file. \emph{Visible, easy.}
                   \item \textbf{Rotation} (mandatory) --- revoke the credential at the
                         provider that issued it. \emph{The only thing that invalidates
-                        a leak.}
+                        an exposed credential.}
               \end{itemize}
         \item Cleanup is easy to mistake for rotation. An archive cannot see rotation ---
               but it \textbf{can} show whether erased secrets remain \textbf{recoverable}.
@@ -1016,7 +1015,7 @@ Saved to ~/.local/state/git-historian/
                       pass cuts it down to more precise filenames.
                 \item Same bytes, one blob: \texttt{repoA:foo/.env} and
                       \texttt{repoB:.env} collapse to a single content hash.
-                \item Secret scanners:\\gitleaks + TruffleHog\\
+                \item Secret scanners: gitleaks and TruffleHog.\\
                       \texttt{id\_rsa} \SecretRateIdRsa{}, \texttt{.py} only
                       \SecretRatePy{}.
             \end{itemize}
@@ -1027,7 +1026,7 @@ Saved to ~/.local/state/git-historian/
 
 
 % ------------------------------------------------------------------
-\begin{frame}{Mostly private keys, and mostly well-formed}
+\begin{frame}{Mostly private keys and mostly well-formed}
     \begin{columns}[T,totalwidth=\textwidth]
         \begin{column}{0.52\textwidth}
             \small
@@ -1064,7 +1063,7 @@ Saved to ~/.local/state/git-historian/
 \begin{frame}{Future work: are recovered secrets still active?}
     \begingroup\footnotesize
     Proving that a key is still active raises ethical questions.
-    To answer that as far as we can, we define a protocol for testing it.
+    To investigate this as far as we can, we define a protocol for testing it.
     \endgroup
     \vspace{0.5em}
     \begin{center}
@@ -1085,7 +1084,7 @@ Saved to ~/.local/state/git-historian/
     \begingroup\footnotesize
     \begin{itemize}\setlength{\itemsep}{0.25em}
         \item \textbf{Done:} a cleanup rewrite can leave secrets in the archive, mostly as syntactically valid private keys.
-        \item \textbf{Next:} extend the offline parse past private keys and GitHub, then ask providers to check activity. Where one agrees in writing, a single read-only probe. An active rate only for those families.
+        \item \textbf{Next:} extend the offline parse beyond private keys and GitHub, then ask providers to check activity. For any provider that agrees in writing, make a single read-only probe and report an active rate only for that credential family.
     \end{itemize}
     \endgroup
 \end{frame}
