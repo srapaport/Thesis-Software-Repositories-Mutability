@@ -607,23 +607,27 @@ $ # same name (*$\Rightarrow$*) different code after the next fetch
 % Result: quantity first. Deletions-vs-moves wait until after popularity.
 \begin{frame}{Not anecdotal: \TotalAlterationsShort{} alterations, steady over eight years}
     \sidefigbegin
+    \centering
+    \includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{temporal_evolution.pdf}
+    \vspace{0.6em}
     \begin{columns}[T,totalwidth=\linewidth]
-        \begin{column}{0.36\linewidth}
-            \begin{itemize}\setlength{\itemsep}{0.5em}
+        \begin{column}{0.48\linewidth}
+            \footnotesize\raggedright
+            \begin{itemize}
                 \item \textbf{\TotalAlterationsShort{}} alterations over \TemporalSpan{},
                       in \AlteredRepositoriesShort{} repositories ---
                       \AlteredRepositoriesPercent{} of the \OriginsWithTagsShort{}
                       repositories that carry at least one tag.
                 \item \textbf{Persistent}, not a one-off spike --- the rate holds across
                       the whole window.
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.48\linewidth}
+            \footnotesize\raggedright
+            \begin{itemize}
                 \item Quantity is not the same as relevance: most of that volume could
                       still sit in repositories nobody depends on.
             \end{itemize}
-        \end{column}
-        \begin{column}{0.64\linewidth}
-            \begin{center}
-                \includegraphics[width=1.05\linewidth]{temporal_evolution.pdf}
-            \end{center}
         \end{column}
     \end{columns}
     \sidefigend
@@ -785,7 +789,7 @@ error: hash mismatch:
     \sidefigbegin
     \begin{columns}[T,totalwidth=\linewidth]
         \begin{column}{0.49\linewidth}
-            \vspace{1em}
+            \vspace{0.5em}
             {\small
             \begin{itemize}\setlength{\itemsep}{0.55em}
                 \item A forge only advertises Snapshot~B. The archive still holds
